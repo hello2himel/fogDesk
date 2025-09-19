@@ -10,15 +10,16 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
 </head>
 <body>
+
     <!-- Lockscreen Full Screen -->
     <div id="lockscreenFull" class="lockscreen-full hidden">
         <div class="lockscreen-content">
             <h3>Enter PIN</h3>
             <div class="pin-display">
-                <span id="pinDigit1" class="pin-digit"></span>
-                <span id="pinDigit2" class="pin-digit"></span>
-                <span id="pinDigit3" class="pin-digit"></span>
-                <span id="pinDigit4" class="pin-digit"></span>
+                <span id="pinDigit1"></span>
+                <span id="pinDigit2"></span>
+                <span id="pinDigit3"></span>
+                <span id="pinDigit4"></span>
             </div>
             <div class="pin-pad">
                 <button class="pin-btn" onclick="enterPinDigit('1')">1</button>
@@ -48,6 +49,7 @@
             <h1>Syllabus Pulse</h1>
             <p>Track time left vs chapters done</p>
             <p style="font-size: 0.875rem; color: #6b7280;">15 Sep 2025 — 30 Sep 2026</p>
+            
             <!-- Sync Status -->
             <div class="sync-status">
                 <i id="syncIcon" class="ri-cloud-line text-gray-400"></i>
@@ -86,8 +88,8 @@
             <div class="hero-tasks" id="heroTasks"></div>
         </section>
 
-        <!-- Desktop Action Buttons -->
-        <div class="action-buttons desktop-only">
+        <!-- Action Buttons -->
+        <div class="action-buttons">
             <button class="btn btn-primary" onclick="openSyllabusEditor()">
                 <i class="ri-edit-line"></i>
                 Edit Syllabus
@@ -106,26 +108,6 @@
             </button>
         </div>
     </div>
-
-    <!-- Mobile Bottom Navigation -->
-    <nav class="bottom-nav mobile-only">
-        <button class="nav-item" onclick="openSyllabusEditor()">
-            <i class="ri-edit-line"></i>
-            <span>Edit</span>
-        </button>
-        <button class="nav-item" onclick="openScheduleModal()">
-            <i class="ri-calendar-line"></i>
-            <span>Routine</span>
-        </button>
-        <button class="nav-item" onclick="openHistoryModal()">
-            <i class="ri-history-line"></i>
-            <span>History</span>
-        </button>
-        <button class="nav-item" onclick="window.location.href='settings.html'">
-            <i class="ri-settings-line"></i>
-            <span>Settings</span>
-        </button>
-    </nav>
 
     <!-- Toast Notification -->
     <div id="toast" class="toast hidden"></div>
@@ -224,6 +206,7 @@
                         <h4>Classes & Coaching</h4>
                         <div class="task-list" id="modalMorningTasks"></div>
                     </div>
+                    
                     <div>
                         <h4>Self Study</h4>
                         <div class="task-list" id="modalSelfStudyTasks"></div>
@@ -249,22 +232,6 @@
                         <tbody id="modalHistoryTableBody"></tbody>
                     </table>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- QR Export Modal -->
-    <div id="qrExportModal" class="modal-overlay hidden">
-        <div class="modal">
-            <div class="modal-header">
-                <h3>Gist QR Code</h3>
-                <button class="btn-close" onclick="closeQRModal()">
-                    <i class="ri-close-line"></i>
-                </button>
-            </div>
-            <div class="modal-content">
-                <p>Do not share this QR code with others.</p>
-                <div id="qrCodeContainer"></div>
             </div>
         </div>
     </div>

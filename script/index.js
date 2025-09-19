@@ -17,7 +17,6 @@ let currentPinInput = '';
 let pendingConfirmationAction = null;
 let hasPinConfirmation = false;
 let qrCanvas = null;
-let autoSyncEnabled = localStorage.getItem('autoSyncEnabled') === 'true' || false;
 
 // Date constants
 const startDate = new Date('2025-09-15');
@@ -92,135 +91,6 @@ async function submitPin() {
         document.getElementById('pinError').textContent = 'Incorrect PIN';
         currentPinInput = '';
         updatePinDisplay();
-    }
-}
-
-// Cloud sync functions
-async function fetchFromCloud() {
-    if (!githubToken || !gistId) {
-        return false;
-    }
-    
-    try {
-        const response = await fetch(`https://api.github.com/gists/${gistId}`, {
-            headers: {
-                'Authorization': `Bearer ${githubToken}`,
-                'Content-Type': 'application/json',
-            }
-        });
-
-        if (!response.ok) {
-            console.warn('Failed to fetch from cloud:', response.status, response.statusText);
-            return false;
-        }
-
-        const gistData = await response.json();
-        const fileContent = gistData.files['hsc-study-tracker.json']?.content;
-        
-        if (fileContent) {
-            const cloudData = JSON.parse(fileContent);
-            
-            // Only update if cloud data is newer or if no local data exists
-            const cloudTimestamp = new Date(cloudData.lastUpdated || 0);
-            const localTimestamp = new Date(localStorage.getItem('lastUpdated') || 0);
-            
-            if (cloudTimestamp > localTimestamp || !localStorage.getItem('hsc-study-tracker-v2')) {
-                chapters = cloudData.chapters || {};
-                dailyTasks = cloudData.dailyTasks || {};
-                saveData();
-                localStorage.setItem('lastUpdated', cloudData.lastUpdated || new Date().toISOString());
-                console.log('Synced data from cloud');
-                return true;
-            }
-        }
-    } catch (error) {
-        console.warn('Error fetching from cloud:', error);
-    }
-    
-    return false;
-}
-
-async function syncToCloud() {
-    if (!githubToken || !gistId) {
-        showToast('Missing token or Gist ID', 'error');
-        return false;
-    }
-    
-    syncStatus = 'syncing';
-    updateSyncStatus();
-    
-    if (document.getElementById('syllabusLoading')) {
-        document.getElementById('syllabusLoading').classList.remove('hidden');
-    }
-    
-    try {
-        const data = {
-            chapters,
-            dailyTasks,
-            lastUpdated: new Date().toISOString(),
-            device: navigator.userAgent.includes('Mobile') ? 'mobile' : 'desktop'
-        };
-
-        const response = await fetch(`https://api.github.com/gists/${gistId}`, {
-            method: 'PATCH',
-            headers: {
-                'Authorization': `Bearer ${githubToken}`,
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                files: {
-                    'hsc-study-tracker.json': {
-                        content: JSON.stringify(data, null, 2)
-                    }
-                }
-            })
-        });
-
-        if (response.ok) {
-            syncStatus = 'success';
-            showToast('Sync successful', 'success');
-            const syncTime = new Date().toLocaleString();
-            lastSync = syncTime;
-            localStorage.setItem('last-sync', syncTime);
-            localStorage.setItem('lastUpdated', data.lastUpdated);
-            
-            setTimeout(() => {
-                syncStatus = 'idle';
-                updateSyncStatus();
-            }, 2000);
-            
-            return true;
-        } else {
-            throw new Error(`${response.status} ${response.statusText}`);
-        }
-    } catch (error) {
-        syncStatus = 'error';
-        showToast(`Sync failed: ${error.message}`, 'error');
-        setTimeout(() => {
-            syncStatus = 'idle';
-            updateSyncStatus();
-        }, 3000);
-        return false;
-    } finally {
-        if (document.getElementById('syllabusLoading')) {
-            document.getElementById('syllabusLoading').classList.add('hidden');
-        }
-        updateSyncStatus();
-    }
-}
-
-// Auto-sync after any data changes
-function saveDataAndSync() {
-    saveData();
-    localStorage.setItem('lastUpdated', new Date().toISOString());
-    
-    // Auto-sync if configured
-    if (autoSyncEnabled && githubToken && gistId) {
-        // Debounce auto-sync to avoid too many requests
-        clearTimeout(window.autoSyncTimeout);
-        window.autoSyncTimeout = setTimeout(() => {
-            syncToCloud();
-        }, 2000);
     }
 }
 
@@ -303,12 +173,6 @@ function importGistQR(event, fromWizard = false) {
                         }
                         updateSyncStatus();
                         showToast('Gist and PIN imported successfully', 'success');
-                        // Fetch data from cloud after importing Gist
-                        fetchFromCloud().then(() => {
-                            updateProgress();
-                            updateHeroTasks();
-                            renderChapters();
-                        });
                     } catch (err) {
                         showToast('Invalid QR code data', 'error');
                     }
@@ -324,18 +188,6 @@ function importGistQR(event, fromWizard = false) {
 
 // Load saved data
 async function loadData() {
-    // Always attempt to fetch from cloud first on new load
-    if (githubToken && gistId) {
-        const cloudSynced = await fetchFromCloud();
-        if (cloudSynced) {
-            // Data was loaded from cloud, update progress and return
-            updateProgress();
-            updateHeroTasks();
-            return;
-        }
-    }
-    
-    // Load from localStorage if cloud sync failed or not configured
     const savedChapters = localStorage.getItem('hsc-study-tracker-v2');
     if (savedChapters) {
         chapters = JSON.parse(savedChapters);
@@ -479,7 +331,7 @@ function toggleDailyTask(dateStr, taskId) {
         dailyTasks[dateStr] = {};
     }
     dailyTasks[dateStr][taskId] = !dailyTasks[dateStr][taskId];
-    saveDataAndSync();
+    saveData();
     updateHeroTasks();
     updateScheduleModal();
 }
@@ -704,42 +556,6 @@ function closeSyllabusEditor() {
     document.getElementById('syllabusModal').classList.add('hidden');
 }
 
-function openSettingsModal() {
-    document.getElementById('settingsModal').classList.remove('hidden');
-    document.getElementById('autoSyncToggle').checked = autoSyncEnabled;
-    document.getElementById('githubTokenInput').value = githubToken;
-    document.getElementById('gistIdInput').value = gistId;
-}
-
-function closeSettingsModal() {
-    document.getElementById('settingsModal').classList.add('hidden');
-}
-
-function saveSettings() {
-    autoSyncEnabled = document.getElementById('autoSyncToggle').checked;
-    githubToken = document.getElementById('githubTokenInput').value.trim();
-    gistId = document.getElementById('gistIdInput').value.trim();
-    
-    localStorage.setItem('autoSyncEnabled', autoSyncEnabled);
-    localStorage.setItem('github-token', githubToken);
-    localStorage.setItem('gist-id', gistId);
-    
-    updateSyncStatus();
-    updateSyncButton();
-    showToast('Settings saved', 'success');
-    
-    // Attempt to fetch from cloud after updating settings
-    if (githubToken && gistId) {
-        fetchFromCloud().then(() => {
-            updateProgress();
-            updateHeroTasks();
-            renderChapters();
-        });
-    }
-    
-    closeSettingsModal();
-}
-
 function toggleHelp() {
     document.getElementById('helpSection').classList.toggle('hidden');
 }
@@ -774,7 +590,7 @@ function renderChapters() {
                         </div>
                     </div>
                     <div id="note-${chapter.id}" class="chapter-note ${expandedNotes[chapter.id] ? '' : 'hidden'}">
-                        <textarea placeholder="Add a note..." oninput="updateNote('${activeTab}', '${paper}', '${chapter.id}', this.value)">${chapter.note || ''}</textarea>
+                        <textarea placeholder="Add a note..." oninput="updateNote('${activeTab}', '${paper}', '${chapter.id}', this.value)">${chapter.note}</textarea>
                     </div>
                 `).join('')}
             </div>
@@ -786,7 +602,7 @@ function toggleChapter(subject, paper, chapterId) {
     chapters[subject][paper] = chapters[subject][paper].map(ch => 
         ch.id === chapterId ? { ...ch, done: !ch.done } : ch
     );
-    saveDataAndSync();
+    saveData();
     updateProgress();
     renderChapters();
 }
@@ -800,7 +616,7 @@ function updateNote(subject, paper, chapterId, note) {
     chapters[subject][paper] = chapters[subject][paper].map(ch => 
         ch.id === chapterId ? { ...ch, note } : ch
     );
-    saveDataAndSync();
+    saveData();
 }
 
 function updateSyncStatus() {
@@ -829,8 +645,10 @@ function updateSyncStatus() {
 
 function updateSyncButton() {
     const syncButton = document.getElementById('syncButton');
-    if (syncButton) {
-        syncButton.style.display = githubToken && gistId ? 'block' : 'none';
+    if (githubToken && gistId) {
+        syncButton.style.display = 'block';
+    } else {
+        syncButton.style.display = 'none';
     }
 }
 
@@ -843,6 +661,65 @@ function showToast(message, type) {
         toast.classList.add('hidden');
         toast.classList.remove(type);
     }, 3000);
+}
+
+async function syncToCloud() {
+    if (!githubToken || !gistId) {
+        showToast('Missing token or Gist ID', 'error');
+        return;
+    }
+    
+    syncStatus = 'syncing';
+    updateSyncStatus();
+    document.getElementById('syllabusLoading').classList.remove('hidden');
+    
+    try {
+        const data = {
+            chapters,
+            dailyTasks,
+            lastUpdated: new Date().toISOString(),
+            device: navigator.userAgent.includes('Mobile') ? 'mobile' : 'desktop'
+        };
+
+        const response = await fetch(`https://api.github.com/gists/${gistId}`, {
+            method: 'PATCH',
+            headers: {
+                'Authorization': `Bearer ${githubToken}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                files: {
+                    'hsc-study-tracker.json': {
+                        content: JSON.stringify(data, null, 2)
+                    }
+                }
+            })
+        });
+
+        if (response.ok) {
+            syncStatus = 'success';
+            showToast('Sync successful', 'success');
+            const syncTime = new Date().toLocaleString();
+            lastSync = syncTime;
+            localStorage.setItem('last-sync', syncTime);
+            setTimeout(() => {
+                syncStatus = 'idle';
+                updateSyncStatus();
+            }, 2000);
+        } else {
+            throw new Error(`${response.status} ${response.statusText}`);
+        }
+    } catch (error) {
+        syncStatus = 'error';
+        showToast(`Sync failed: ${error.message}`, 'error');
+        setTimeout(() => {
+            syncStatus = 'idle';
+            updateSyncStatus();
+        }, 3000);
+    }
+    
+    document.getElementById('syllabusLoading').classList.add('hidden');
+    updateSyncStatus();
 }
 
 function exportData(format) {
@@ -882,7 +759,7 @@ function exportData(format) {
         const csvContent = [
             'Subject,Paper,Chapter,Completed,Note',
             ...flatChapters.map(ch => 
-                `"${ch.subject}","${ch.paper}","${ch.title}",${ch.done ? 'Yes' : 'No'},"${ch.note || ''}"`
+                `"${ch.subject}","${ch.paper}","${ch.title}",${ch.done ? 'Yes' : 'No'},"${ch.note}"`
             )
         ].join('\n');
         
@@ -903,19 +780,12 @@ function resetChapters() {
             chapters = data;
             dailyTasks = {};
             expandedNotes = {};
-            saveDataAndSync();
+            saveData();
             updateProgress();
             updateHeroTasks();
             renderChapters();
             showToast('All progress reset', 'success');
         });
-}
-
-// QR Modal functions
-function closeQRModal() {
-    document.getElementById('qrExportModal').classList.add('hidden');
-    document.getElementById('qrCodeContainer').innerHTML = '';
-    qrCanvas = null;
 }
 
 // Keyboard shortcuts
@@ -946,8 +816,6 @@ document.addEventListener('keydown', (e) => {
             closeHistoryModal();
         } else if (!document.getElementById('qrExportModal').classList.contains('hidden')) {
             closeQRModal();
-        } else if (!document.getElementById('settingsModal').classList.contains('hidden')) {
-            closeSettingsModal();
         }
     }
     if (e.key === 'Enter' && !document.getElementById('lockscreenFull').classList.contains('hidden')) {
@@ -968,3 +836,10 @@ async function init() {
 
 // Start the app
 checkLockscreen();
+
+// QR Modal functions
+function closeQRModal() {
+    document.getElementById('qrExportModal').classList.add('hidden');
+    document.getElementById('qrCodeContainer').innerHTML = '';
+    qrCanvas = null;
+}
