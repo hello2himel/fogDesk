@@ -11,7 +11,6 @@ let gistId = localStorage.getItem('gist-id') || '';
 let lastSync = localStorage.getItem('last-sync') || '';
 let pin = localStorage.getItem('app-pin') || '';
 let currentPinInput = '';
-let isAdvancedSettingsOpen = false;
 let pendingConfirmationAction = null;
 let hasPinConfirmation = false;
 
@@ -127,41 +126,6 @@ function submitPin() {
     }
 }
 
-function changePin() {
-    const newPin = document.getElementById('newPin').value;
-    if (newPin.length === 4 && /^\d+$/.test(newPin)) {
-        pin = newPin;
-        localStorage.setItem('app-pin', newPin);
-        showToast('PIN updated successfully', 'success');
-        document.getElementById('newPin').value = '';
-    } else {
-        showToast('PIN must be a 4-digit number', 'error');
-    }
-}
-
-function exportGistQR() {
-    const data = JSON.stringify({ gistId, pin });
-    const canvas = document.createElement('canvas');
-    QRCode.toCanvas(canvas, data, {
-        width: 256,
-        margin: 2,
-        color: {
-            dark: '#000000',
-            light: '#FFFFFF'
-        }
-    }, function (error) {
-        if (error) {
-            showToast('Failed to generate QR code', 'error');
-            return;
-        }
-        const link = document.createElement('a');
-        link.download = 'gist-qr.png';
-        link.href = canvas.toDataURL();
-        link.click();
-        showToast('QR code downloaded', 'success');
-    });
-}
-
 function importGistQR(event, fromWizard = false) {
     const file = event.target.files[0];
     if (file) {
@@ -185,7 +149,6 @@ function importGistQR(event, fromWizard = false) {
                         if (pin) localStorage.setItem('app-pin', pin);
                         if (!fromWizard) {
                             document.getElementById('gistId').value = gistId;
-                            updateSyncButtons();
                         } else {
                             localStorage.setItem('setup-completed', 'true');
                             document.getElementById('setupWizard').classList.add('hidden');
@@ -527,31 +490,6 @@ function closeHistoryModal() {
     document.getElementById('historyModal').classList.add('hidden');
 }
 
-function openSettings() {
-    document.getElementById('githubToken').value = githubToken;
-    document.getElementById('gistId').value = gistId;
-    document.getElementById('newPin').value = '';
-    toggleAdvancedSettings(false);
-    document.getElementById('settingsModal').classList.remove('hidden');
-}
-
-function closeSettings() {
-    githubToken = document.getElementById('githubToken').value;
-    gistId = document.getElementById('gistId').value;
-    if (githubToken) localStorage.setItem('github-token', githubToken);
-    if (gistId) localStorage.setItem('gist-id', gistId);
-    updateSyncStatus();
-    document.getElementById('settingsModal').classList.add('hidden');
-}
-
-function toggleAdvancedSettings(override = null) {
-    isAdvancedSettingsOpen = override !== null ? override : !isAdvancedSettingsOpen;
-    const advancedSettings = document.getElementById('advancedSettings');
-    const toggleIcon = document.getElementById('advancedToggleIcon');
-    advancedSettings.classList.toggle('hidden', !isAdvancedSettingsOpen);
-    toggleIcon.className = isAdvancedSettingsOpen ? 'ri-arrow-up-s-line' : 'ri-arrow-down-s-line';
-}
-
 function openConfirmationModal(action, message, hasPin = false) {
     pendingConfirmationAction = action;
     hasPinConfirmation = hasPin;
@@ -582,15 +520,6 @@ function executeConfirmationAction() {
             }
         }
         switch (pendingConfirmationAction) {
-            case 'clearGistData':
-                clearGistData();
-                break;
-            case 'clearSyllabusCompletion':
-                clearSyllabusCompletion();
-                break;
-            case 'clearLocalDatabase':
-                clearLocalDatabase();
-                break;
             case 'resetChapters':
                 resetChapters();
                 break;
@@ -673,51 +602,6 @@ function updateNote(subject, paper, chapterId, note) {
     saveData();
 }
 
-function clearGistData() {
-    gistId = '';
-    lastSync = '';
-    localStorage.removeItem('gist-id');
-    localStorage.removeItem('last-sync');
-    document.getElementById('gistId').value = '';
-    updateSyncButtons();
-    updateSyncStatus();
-    showToast('Gist data cleared', 'success');
-}
-
-function clearSyllabusCompletion() {
-    Object.keys(chapters).forEach(subject => {
-        Object.keys(chapters[subject]).forEach(paper => {
-            chapters[subject][paper] = chapters[subject][paper].map(ch => ({
-                ...ch,
-                done: false,
-                note: ''
-            }));
-        });
-    });
-    saveData();
-    updateProgress();
-    renderChapters();
-    showToast('Syllabus completion cleared', 'success');
-}
-
-function clearLocalDatabase() {
-    localStorage.clear();
-    chapters = {};
-    dailyTasks = {};
-    githubToken = '';
-    gistId = '';
-    lastSync = '';
-    pin = '';
-    localStorage.removeItem('app-pin');
-    localStorage.removeItem('setup-completed');
-    document.getElementById('githubToken').value = '';
-    document.getElementById('gistId').value = '';
-    document.getElementById('newPin').value = '';
-    showToast('Local database cleared', 'success');
-    document.getElementById('mainContainer').style.display = 'none';
-    startSetupWizard();
-}
-
 function updateSyncStatus() {
     const syncIcon = document.getElementById('syncIcon');
     const syncText = document.getElementById('syncText');
@@ -742,19 +626,6 @@ function updateSyncStatus() {
     }
 }
 
-function updateSyncButtons() {
-    const syncFromBtn = document.getElementById('syncFromCloudBtn');
-    const syncToBtn = document.getElementById('syncToCloudBtn');
-    
-    if (gistId) {
-        syncFromBtn.textContent = 'Sync From Cloud';
-        syncToBtn.style.display = 'block';
-    } else {
-        syncFromBtn.textContent = 'Create New Gist';
-        syncToBtn.style.display = 'none';
-    }
-}
-
 function updateSyncButton() {
     const syncButton = document.getElementById('syncButton');
     if (githubToken && gistId) {
@@ -776,9 +647,6 @@ function showToast(message, type) {
 }
 
 async function syncToCloud() {
-    githubToken = document.getElementById('githubToken').value;
-    gistId = document.getElementById('gistId').value;
-
     if (!githubToken || !gistId) {
         showToast('Missing token or Gist ID', 'error');
         return;
@@ -786,7 +654,6 @@ async function syncToCloud() {
     
     syncStatus = 'syncing';
     updateSyncStatus();
-    document.getElementById('settingsLoading').classList.remove('hidden');
     document.getElementById('syllabusLoading').classList.remove('hidden');
     
     try {
@@ -834,108 +701,6 @@ async function syncToCloud() {
         }, 3000);
     }
     
-    document.getElementById('settingsLoading').classList.add('hidden');
-    document.getElementById('syllabusLoading').classList.add('hidden');
-    updateSyncStatus();
-}
-
-async function syncFromCloud() {
-    githubToken = document.getElementById('githubToken').value;
-    gistId = document.getElementById('gistId').value;
-
-    if (!githubToken) {
-        showToast('Missing GitHub token', 'error');
-        return;
-    }
-    
-    syncStatus = 'syncing';
-    updateSyncStatus();
-    document.getElementById('settingsLoading').classList.remove('hidden');
-    document.getElementById('syllabusLoading').classList.remove('hidden');
-    
-    try {
-        if (gistId) {
-            const response = await fetch(`https://api.github.com/gists/${gistId}`, {
-                headers: {
-                    'Authorization': `Bearer ${githubToken}`,
-                }
-            });
-
-            if (response.ok) {
-                const gist = await response.json();
-                const fileContent = gist.files['hsc-study-tracker.json']?.content;
-                
-                if (fileContent) {
-                    const data = JSON.parse(fileContent);
-                    chapters = data.chapters;
-                    if (data.dailyTasks) dailyTasks = data.dailyTasks;
-                    saveData();
-                    updateProgress();
-                    updateHeroTasks();
-                    updateScheduleModal();
-                    syncStatus = 'success';
-                    showToast('Sync successful', 'success');
-                    const syncTime = new Date().toLocaleString();
-                    lastSync = syncTime;
-                    localStorage.setItem('last-sync', syncTime);
-                } else {
-                    throw new Error('No valid data in Gist');
-                }
-            } else {
-                throw new Error(`${response.status} ${response.statusText}`);
-            }
-        } else {
-            const data = {
-                chapters,
-                dailyTasks,
-                lastUpdated: new Date().toISOString(),
-                device: 'initial'
-            };
-
-            const response = await fetch('https://api.github.com/gists', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${githubToken}`,
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    description: 'HSC Study Tracker Progress',
-                    public: false,
-                    files: {
-                        'hsc-study-tracker.json': {
-                            content: JSON.stringify(data, null, 2)
-                        }
-                    }
-                })
-            });
-
-            if (response.ok) {
-                const gist = await response.json();
-                gistId = gist.id;
-                localStorage.setItem('gist-id', gistId);
-                document.getElementById('gistId').value = gistId;
-                updateSyncButtons();
-                syncStatus = 'success';
-                showToast('Gist created and synced', 'success');
-            } else {
-                throw new Error(`${response.status} ${response.statusText}`);
-            }
-        }
-        
-        setTimeout(() => {
-            syncStatus = 'idle';
-            updateSyncStatus();
-        }, 2000);
-    } catch (error) {
-        syncStatus = 'error';
-        showToast(`Sync failed: ${error.message}`, 'error');
-        setTimeout(() => {
-            syncStatus = 'idle';
-            updateSyncStatus();
-        }, 3000);
-    }
-    
-    document.getElementById('settingsLoading').classList.add('hidden');
     document.getElementById('syllabusLoading').classList.add('hidden');
     updateSyncStatus();
 }
@@ -1027,8 +792,6 @@ document.addEventListener('keydown', (e) => {
         }
         if (!document.getElementById('confirmationModal').classList.contains('hidden')) {
             closeConfirmationModal();
-        } else if (!document.getElementById('settingsModal').classList.contains('hidden')) {
-            closeSettings();
         } else if (!document.getElementById('syllabusModal').classList.contains('hidden')) {
             closeSyllabusEditor();
         } else if (!document.getElementById('scheduleModal').classList.contains('hidden')) {

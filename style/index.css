@@ -391,75 +391,6 @@ body {
     cursor: not-allowed;
 }
 
-.advanced-section {
-    margin-top: 2rem;
-    border-top: 1px solid #e5e7eb;
-    padding-top: 1.5rem;
-}
-
-.advanced-section h4 {
-    font-size: 1rem;
-    font-weight: 600;
-    color: #374151;
-    margin-bottom: 1rem;
-    padding: 0 1.5rem;
-}
-
-.advanced-toggle {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    cursor: pointer;
-    padding: 0.75rem 1.5rem;
-    background: #f9fafb;
-    border-radius: 0.375rem;
-}
-
-.advanced-toggle:hover {
-    background: #e5e7eb;
-}
-
-.advanced-toggle i {
-    font-size: 1.25rem;
-    color: #6b7280;
-    transition: transform 0.3s ease;
-}
-
-.advanced-toggle.open i {
-    transform: rotate(180deg);
-}
-
-.advanced-settings {
-    overflow: hidden;
-    transition: all 0.3s ease;
-    max-height: 0;
-}
-
-.advanced-settings:not(.hidden) {
-    max-height: 1000px;
-    margin-top: 1rem;
-}
-
-.advanced-group {
-    padding: 1rem 1.5rem;
-    background: #f9fafb;
-    border-radius: 0.375rem;
-}
-
-.advanced-group .form-group {
-    margin-bottom: 1.5rem;
-}
-
-.advanced-group .btn-group {
-    flex-wrap: wrap;
-    gap: 0.5rem;
-}
-
-.advanced-group .btn {
-    flex: 1 1 45%;
-    min-width: 120px;
-}
-
 .tabs {
     border-bottom: 1px solid #e5e7eb;
 }
@@ -1047,5 +978,9 @@ body {
     .wizard-panel {
         width: 95vw;
         padding: 2rem 1.5rem;
+    }
+
+    .modal-actions {
+        display: none;
     }
 }

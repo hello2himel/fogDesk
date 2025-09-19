@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Syllabus Pulse - Settings</title>
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.3.0/fonts/remixicon.css" rel="stylesheet">
+    <link rel="stylesheet" href="style/settings.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <button class="btn btn-back" onclick="window.location.href='index.html'" title="Back to Home">
+                <i class="ri-arrow-left-line"></i>
+            </button>
+            <h1>Settings</h1>
+        </header>
+
+        <div class="settings-sections">
+            <!-- Account & Sync -->
+            <div class="settings-card">
+                <div class="loading-overlay hidden" id="settingsLoading">
+                    <div class="loading-spinner"></div>
+                </div>
+                <h2>Account & Sync</h2>
+                <div class="form-group">
+                    <label class="form-label">GitHub Personal Access Token</label>
+                    <input type="password" id="githubToken" class="form-input" placeholder="ghp_xxxxxxxxxxxx">
+                    <div class="form-help">
+                        <a href="https://github.com/settings/tokens" target="_blank">Create token with 'gist' scope</a>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Gist ID</label>
+                    <input type="text" id="gistId" class="form-input" placeholder="Leave empty to create new">
+                </div>
+                <div class="btn-group">
+                    <button id="syncFromCloudBtn" class="btn btn-flex" onclick="syncFromCloud()">
+                        <i class="ri-download-cloud-2-line"></i> Sync From Cloud
+                    </button>
+                    <button id="syncToCloudBtn" class="btn btn-flex" onclick="syncToCloud()">
+                        <i class="ri-upload-cloud-2-line"></i> Save to Cloud
+                    </button>
+                </div>
+            </div>
+
+            <!-- Security -->
+            <div class="settings-card">
+                <h2>Security</h2>
+                <div class="form-group security-group">
+                    <label class="form-label">Change PIN</label>
+                    <div class="pin-input-group">
+                        <input type="password" id="newPin" class="form-input" placeholder="New 4-digit PIN" maxlength="4">
+                        <button class="btn" onclick="changePin()">Update</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Data Management -->
+            <div class="settings-card">
+                <h2>Data Management</h2>
+                <div class="form-group">
+                    <h3 class="subheading">Gist Management</h3>
+                    <div class="btn-group">
+                        <button class="btn" onclick="exportGistQR()">Export Gist QR</button>
+                        <button class="btn" onclick="openImportModal()">Import Gist QR</button>
+                        <input type="file" id="qrUpload" accept="image/*" style="display: none;" onchange="importGistQR(event)">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <h3 class="subheading">Data Deletion</h3>
+                    <div class="btn-group">
+                        <button class="btn btn-danger" onclick="openConfirmationModal('clearGistData', 'Clear Gist data? This removes Gist ID and sync info.', false)">Clear Gist Data</button>
+                        <button class="btn btn-danger" onclick="openConfirmationModal('clearSyllabusCompletion', 'Clear all syllabus progress? This resets all chapters.', false)">Clear Syllabus</button>
+                        <button class="btn btn-danger" onclick="openConfirmationModal('clearLocalDatabase', 'Clear local database? This resets all data.', true)">Clear Database</button>
+                    </div>
+                </div>
+                <div class="info-text">
+                    <p>These actions are permanent.</p>
+                </div>
+            </div>
+
+            <!-- Info -->
+            <div class="settings-card">
+                <h2>Info</h2>
+                <div class="info-text">
+                    <p>Token stored locally, never shared.</p>
+                    <p>Data syncs via private GitHub Gists.</p>
+                    <p>All sync operations are free.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toast Notification -->
+        <div id="toast" class="toast hidden"></div>
+
+        <!-- Confirmation Modal -->
+        <div id="confirmationModal" class="modal-overlay hidden">
+            <div class="modal">
+                <div class="modal-header">
+                    <h3>Confirm Action</h3>
+                    <button class="btn-close" onclick="closeConfirmationModal()">
+                        <i class="ri-close-line"></i>
+                    </button>
+                </div>
+                <div class="modal-content">
+                    <p id="confirmationMessage"></p>
+                    <div id="pinConfirmation" class="hidden">
+                        <input type="password" id="confirmPin" class="form-input" placeholder="Enter PIN" maxlength="4">
+                        <div id="pinConfirmError" class="pin-error hidden">Incorrect PIN</div>
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-flex" onclick="closeConfirmationModal()">Cancel</button>
+                        <button id="confirmActionBtn" class="btn btn-flex btn-danger" onclick="executeConfirmationAction()">Confirm</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- QR Export Modal -->
+        <div id="qrExportModal" class="modal-overlay hidden">
+            <div class="modal">
+                <div class="modal-header">
+                    <h3>Gist QR Code</h3>
+                    <button class="btn-close" onclick="closeQRModal()">
+                        <i class="ri-close-line"></i>
+                    </button>
+                </div>
+                <div class="modal-content">
+                    <p class="warning-text">Do not share this QR code with others.</p>
+                    <div id="qrCodeContainer" class="qr-container"></div>
+                    <div class="btn-group">
+                        <button class="btn btn-flex" onclick="downloadQRCode()">Download</button>
+                        <button class="btn btn-flex" onclick="closeQRModal()">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- QR Import Modal -->
+        <div id="qrImportModal" class="modal-overlay hidden">
+            <div class="modal">
+                <div class="modal-header">
+                    <h3>Import Gist QR</h3>
+                    <button class="btn-close" onclick="closeImportModal()">
+                        <i class="ri-close-line"></i>
+                    </button>
+                </div>
+                <div class="modal-content">
+                    <p>Choose an import method:</p>
+                    <div class="btn-group">
+                        <button class="btn btn-flex" onclick="startQRScan()">Scan QR Code</button>
+                        <button class="btn btn-flex" onclick="document.getElementById('qrUpload').click()">Load from Gallery</button>
+                    </div>
+                    <div id="qrScanContainer" class="qr-scan-container hidden">
+                        <video id="qrVideo" autoplay playsinline></video>
+                        <canvas id="qrCanvas" style="display: none;"></canvas>
+                        <button class="btn btn-flex" onclick="stopQRScan()">Stop Scanning</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script/settings.js"></script>
+</body>
+</html>

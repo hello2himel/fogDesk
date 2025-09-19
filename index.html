@@ -153,101 +153,15 @@
                 <i class="ri-history-line"></i>
                 View History
             </button>
-            <button class="btn" onclick="openSettings()">
+            <button class="btn" onclick="window.location.href='settings.html'">
                 <i class="ri-settings-line"></i>
+                Settings
             </button>
         </div>
     </div>
 
     <!-- Toast Notification -->
     <div id="toast" class="toast hidden"></div>
-
-    <!-- Settings Modal -->
-    <div id="settingsModal" class="modal-overlay hidden">
-        <div class="modal">
-            <div class="loading-overlay hidden" id="settingsLoading">
-                <div class="loading-spinner"></div>
-            </div>
-            <div class="modal-header">
-                <h3>Cloud Sync Settings</h3>
-                <button class="btn-close" onclick="closeSettings()">
-                    <i class="ri-close-line"></i>
-                </button>
-            </div>
-            
-            <div>
-                <div class="form-group">
-                    <label class="form-label">GitHub Personal Access Token</label>
-                    <input type="password" id="githubToken" class="form-input" placeholder="ghp_xxxxxxxxxxxx">
-                    <div class="form-help">
-                        <a href="https://github.com/settings/tokens" target="_blank">Create token here</a> with 'gist' scope
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">Gist ID (optional)</label>
-                    <input type="text" id="gistId" class="form-input" placeholder="Leave empty to create new">
-                </div>
-                
-                <div class="btn-group">
-                    <button id="syncFromCloudBtn" class="btn btn-blue btn-flex" onclick="syncFromCloud()">
-                        Sync From Cloud
-                    </button>
-                    <button id="syncToCloudBtn" class="btn btn-green btn-flex" onclick="syncToCloud()">
-                        Save to Cloud
-                    </button>
-                </div>
-                
-                <div style="font-size: 0.75rem; color: #6b7280; margin-top: 1rem;">
-                    <p>• Token is stored locally and never shared</p>
-                    <p>• Data syncs automatically after changes</p>
-                    <p>• Uses private GitHub Gists (completely free)</p>
-                </div>
-
-                <!-- Advanced Settings -->
-                <div class="advanced-section">
-                    <div class="advanced-toggle" onclick="toggleAdvancedSettings()">
-                        <div class="advanced-header">
-                            <label class="form-label">Advanced</label>
-                            <i id="advancedToggleIcon" class="ri-arrow-down-s-line"></i>
-                        </div>
-                    </div>
-                    <div id="advancedSettings" class="advanced-settings hidden">
-                        <div class="advanced-group">
-                            <!-- Security -->
-                            <h4>Security</h4>
-                            <div class="form-group">
-                                <label class="form-label">Change PIN</label>
-                                <input type="password" id="newPin" class="form-input" placeholder="Enter new 4-digit PIN">
-                                <button class="btn btn-blue" onclick="changePin()">Update PIN</button>
-                            </div>
-                            <!-- Cloud / Gist Management -->
-                            <h4>Cloud / Gist Management</h4>
-                            <div class="form-group">
-                                <div class="btn-group">
-                                    <button class="btn btn-red" onclick="openConfirmationModal('clearGistData', 'Are you sure you want to clear Gist data? This will remove the Gist ID and last sync information.', false)">Clear Gist Data</button>
-                                    <button class="btn btn-blue" onclick="exportGistQR()">Export Gist QR</button>
-                                    <button class="btn btn-green" onclick="document.getElementById('qrUpload').click()">Import Gist QR</button>
-                                    <input type="file" id="qrUpload" accept="image/*" style="display: none;" onchange="importGistQR(event)">
-                                </div>
-                            </div>
-                            <!-- Data Reset -->
-                            <h4>Data Reset</h4>
-                            <div class="form-group">
-                                <div class="btn-group">
-                                    <button class="btn btn-red" onclick="openConfirmationModal('clearSyllabusCompletion', 'Are you sure you want to clear all syllabus completion? This will reset all chapters to incomplete.', false)">Clear Syllabus Completion</button>
-                                    <button class="btn btn-red" onclick="openConfirmationModal('clearLocalDatabase', 'Are you sure you want to clear the local database? This will reset all progress, tasks, and settings.', true)">Clear Local Database</button>
-                                </div>
-                            </div>
-                        </div>
-                        <div style="font-size: 0.75rem; color: #6b7280; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e5e7eb;">
-                            <p>• These actions cannot be undone</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <!-- Confirmation Modal -->
     <div id="confirmationModal" class="modal-overlay hidden">
