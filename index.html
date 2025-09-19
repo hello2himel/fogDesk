@@ -6,9 +6,43 @@
     <title>Syllabus Pulse - HSC Study Tracker</title>
     <link href="https://cdn.jsdelivr.net/npm/remixicon@4.3.0/fonts/remixicon.css" rel="stylesheet">
     <link rel="stylesheet" href="style/index.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
 </head>
 <body>
-    <div class="container">
+    <!-- Lockscreen Full Screen -->
+    <div id="lockscreenFull" class="lockscreen-full">
+        <div class="lockscreen-content">
+            <h3>Enter PIN</h3>
+            <div class="pin-display">
+                <span id="pinDigit1"></span>
+                <span id="pinDigit2"></span>
+                <span id="pinDigit3"></span>
+                <span id="pinDigit4"></span>
+            </div>
+            <div class="pin-pad">
+                <button class="pin-btn" onclick="enterPinDigit('1')">1</button>
+                <button class="pin-btn" onclick="enterPinDigit('2')">2</button>
+                <button class="pin-btn" onclick="enterPinDigit('3')">3</button>
+                <button class="pin-btn" onclick="enterPinDigit('4')">4</button>
+                <button class="pin-btn" onclick="enterPinDigit('5')">5</button>
+                <button class="pin-btn" onclick="enterPinDigit('6')">6</button>
+                <button class="pin-btn" onclick="enterPinDigit('7')">7</button>
+                <button class="pin-btn" onclick="enterPinDigit('8')">8</button>
+                <button class="pin-btn" onclick="enterPinDigit('9')">9</button>
+                <button class="pin-btn clear-btn" onclick="clearPin()">C</button>
+                <button class="pin-btn" onclick="enterPinDigit('0')">0</button>
+                <button class="pin-btn submit-btn" onclick="submitPin()">✓</button>
+            </div>
+            <div class="remember-me">
+                <input type="checkbox" id="rememberMe" />
+                <label for="rememberMe">Remember me</label>
+            </div>
+            <div id="pinError" class="pin-error hidden">Incorrect PIN</div>
+        </div>
+    </div>
+
+    <div id="mainContainer" class="container" style="display: none;">
         <!-- Header -->
         <header class="header">
             <h1>Syllabus Pulse</h1>
@@ -117,6 +151,71 @@
                     <p>• Data syncs automatically after changes</p>
                     <p>• Uses private GitHub Gists (completely free)</p>
                 </div>
+
+                <!-- Advanced Settings -->
+                <div class="advanced-section">
+                    <div class="advanced-toggle" onclick="toggleAdvancedSettings()">
+                        <div class="advanced-header">
+                            <label class="form-label">Advanced</label>
+                            <i id="advancedToggleIcon" class="ri-arrow-down-s-line"></i>
+                        </div>
+                    </div>
+                    <div id="advancedSettings" class="advanced-settings hidden">
+                        <div class="advanced-group">
+                            <!-- Security -->
+                            <h4>Security</h4>
+                            <div class="form-group">
+                                <label class="form-label">Change PIN</label>
+                                <input type="password" id="newPin" class="form-input" placeholder="Enter new 4-digit PIN">
+                                <button class="btn btn-blue" onclick="changePin()">Update PIN</button>
+                            </div>
+                            <!-- Cloud / Gist Management -->
+                            <h4>Cloud / Gist Management</h4>
+                            <div class="form-group">
+                                <div class="btn-group">
+                                    <button class="btn btn-red" onclick="openConfirmationModal('clearGistData', 'Are you sure you want to clear Gist data? This will remove the Gist ID and last sync information.', false)">Clear Gist Data</button>
+                                    <button class="btn btn-blue" onclick="exportGistQR()">Export Gist QR</button>
+                                    <button class="btn btn-green" onclick="document.getElementById('qrUpload').click()">Import Gist QR</button>
+                                    <input type="file" id="qrUpload" accept="image/*" style="display: none;" onchange="importGistQR(event)">
+                                </div>
+                            </div>
+                            <!-- Data Reset -->
+                            <h4>Data Reset</h4>
+                            <div class="form-group">
+                                <div class="btn-group">
+                                    <button class="btn btn-red" onclick="openConfirmationModal('clearSyllabusCompletion', 'Are you sure you want to clear all syllabus completion? This will reset all chapters to incomplete.', false)">Clear Syllabus Completion</button>
+                                    <button class="btn btn-red" onclick="openConfirmationModal('clearLocalDatabase', 'Are you sure you want to clear the local database? This will reset all progress, tasks, and settings.', true)">Clear Local Database</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="font-size: 0.75rem; color: #6b7280; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e5e7eb;">
+                            <p>• These actions cannot be undone</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmationModal" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Confirm Action</h3>
+                <button class="btn-close" onclick="closeConfirmationModal()">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="modal-content">
+                <p id="confirmationMessage"></p>
+                <div id="pinConfirmation" class="hidden">
+                    <input type="password" id="confirmPin" class="form-input" placeholder="Enter PIN to confirm">
+                    <div id="pinConfirmError" class="pin-error hidden">Incorrect PIN</div>
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-flex" onclick="closeConfirmationModal()">Cancel</button>
+                    <button id="confirmActionBtn" class="btn btn-red btn-flex" onclick="executeConfirmationAction()">Confirm</button>
+                </div>
             </div>
         </div>
     </div>
@@ -139,7 +238,7 @@
                         <i class="ri-download-line"></i>
                         Export
                     </button>
-                    <button class="btn" onclick="resetChapters()">
+                    <button class="btn" onclick="openConfirmationModal('resetChapters', 'Reset all progress? This cannot be undone.', false)">
                         <i class="ri-refresh-line"></i>
                         Reset
                     </button>
@@ -188,13 +287,11 @@
             </div>
             <div class="modal-content">
                 <div class="schedule-grid" id="modalScheduleGrid">
-                    <!-- Morning Schedule -->
                     <div id="modalMorningSchedule">
                         <h4>Classes & Coaching</h4>
                         <div class="task-list" id="modalMorningTasks"></div>
                     </div>
                     
-                    <!-- Self Study Schedule -->
                     <div>
                         <h4>Self Study</h4>
                         <div class="task-list" id="modalSelfStudyTasks"></div>

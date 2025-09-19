@@ -1,6 +1,7 @@
 // Global state
 let chapters = {};
 let dailyTasks = {};
+let routine = {};
 let currentTask = '';
 let activeTab = 'Physics';
 let expandedNotes = {};
@@ -8,10 +9,142 @@ let syncStatus = 'idle';
 let githubToken = localStorage.getItem('github-token') || '';
 let gistId = localStorage.getItem('gist-id') || '';
 let lastSync = localStorage.getItem('last-sync') || '';
+let pin = localStorage.getItem('app-pin') || '1646';
+let currentPinInput = '';
+let isAdvancedSettingsOpen = false;
+let pendingConfirmationAction = null;
+let hasPinConfirmation = false;
 
 // Date constants
 const startDate = new Date('2025-09-15');
 const endDate = new Date('2026-09-30');
+
+// Lockscreen functions
+function checkLockscreen() {
+    if (localStorage.getItem('remember') === 'true') {
+        document.getElementById('lockscreenFull').classList.add('hidden');
+        document.getElementById('mainContainer').style.display = 'flex';
+        init();
+    } else {
+        document.getElementById('lockscreenFull').classList.remove('hidden');
+        document.getElementById('mainContainer').style.display = 'none';
+    }
+}
+
+function enterPinDigit(digit) {
+    if (currentPinInput.length < 4) {
+        currentPinInput += digit;
+        updatePinDisplay();
+    }
+}
+
+function clearPin() {
+    currentPinInput = '';
+    updatePinDisplay();
+    document.getElementById('pinError').classList.add('hidden');
+}
+
+function updatePinDisplay() {
+    for (let i = 1; i <= 4; i++) {
+        const digitSpan = document.getElementById(`pinDigit${i}`);
+        digitSpan.textContent = i <= currentPinInput.length ? '●' : '';
+    }
+}
+
+function submitPin() {
+    if (currentPinInput.length !== 4) {
+        document.getElementById('pinError').classList.remove('hidden');
+        return;
+    }
+    if (currentPinInput === pin) {
+        document.getElementById('lockscreenFull').classList.add('hidden');
+        document.getElementById('mainContainer').style.display = 'flex';
+        if (document.getElementById('rememberMe').checked) {
+            localStorage.setItem('remember', 'true');
+        }
+        currentPinInput = '';
+        updatePinDisplay();
+        init();
+    } else {
+        document.getElementById('pinError').classList.remove('hidden');
+        currentPinInput = '';
+        updatePinDisplay();
+    }
+}
+
+function changePin() {
+    const newPin = document.getElementById('newPin').value;
+    if (newPin.length === 4 && /^\d+$/.test(newPin)) {
+        pin = newPin;
+        localStorage.setItem('app-pin', newPin);
+        showToast('PIN updated successfully', 'success');
+        document.getElementById('newPin').value = '';
+    } else {
+        showToast('PIN must be a 4-digit number', 'error');
+    }
+}
+
+function exportGistQR() {
+    const data = JSON.stringify({ token: githubToken, id: gistId });
+    const canvas = document.createElement('canvas');
+    QRCode.toCanvas(canvas, data, {
+        width: 256,
+        margin: 2,
+        color: {
+            dark: '#000000',
+            light: '#FFFFFF'
+        }
+    }, function (error) {
+        if (error) {
+            showToast('Failed to generate QR code', 'error');
+            return;
+        }
+        const link = document.createElement('a');
+        link.download = 'gist-qr.png';
+        link.href = canvas.toDataURL();
+        link.click();
+        showToast('QR code downloaded', 'success');
+    });
+}
+
+function importGistQR(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = new Image();
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                canvas.width = img.width;
+                canvas.height = img.height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0);
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const code = jsQR(imageData.data, canvas.width, canvas.height);
+                if (code) {
+                    try {
+                        const data = JSON.parse(code.data);
+                        githubToken = data.token || '';
+                        gistId = data.id || '';
+                        localStorage.setItem('github-token', githubToken);
+                        localStorage.setItem('gist-id', gistId);
+                        document.getElementById('githubToken').value = githubToken;
+                        document.getElementById('gistId').value = gistId;
+                        updateSyncButtons();
+                        updateSyncStatus();
+                        showToast('Gist imported successfully', 'success');
+                    } catch (err) {
+                        showToast('Invalid QR code data', 'error');
+                    }
+                } else {
+                    showToast('No QR code found in image', 'error');
+                }
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+}
 
 // Load saved data
 async function loadData() {
@@ -19,9 +152,12 @@ async function loadData() {
     if (savedChapters) {
         chapters = JSON.parse(savedChapters);
     } else {
-        const response = await fetch('syllabus/syllabus.json');
+        const response = await fetch('config/syllabus.json');
         chapters = await response.json();
     }
+    
+    const routineResponse = await fetch('config/routine.json');
+    routine = await routineResponse.json();
     
     const savedDailyTasks = localStorage.getItem('daily-tasks');
     dailyTasks = savedDailyTasks ? JSON.parse(savedDailyTasks) : {};
@@ -79,57 +215,24 @@ function getDaySchedule(date = new Date()) {
     const rotationSubjects = ['Physics', 'Chemistry', 'Math', 'Biology', 'ICT', 'English'];
     const rotationSubject = rotationSubjects[rotationIndex];
 
+    let scheduleKey;
+    if (dayOfWeek === 5) {
+        scheduleKey = 'friday';
+    } else if ([0, 2, 4].includes(dayOfWeek)) {
+        scheduleKey = 'sunTueThu';
+    } else {
+        scheduleKey = 'satMonWed';
+    }
+
     const baseSchedule = {
-        morning: [],
-        selfStudy: [],
+        morning: routine[scheduleKey].morning.map(task => ({ ...task })),
+        selfStudy: routine[scheduleKey].selfStudy.map(task => ({
+            ...task,
+            name: task.name.includes('${rotationSubject}') ? task.name.replace('${rotationSubject}', rotationSubject) : task.name
+        })),
         dateStr,
         rotationSubject
     };
-
-    if (dayOfWeek === 5) { // Friday
-        baseSchedule.selfStudy = [
-            { id: 'chem-study', name: 'Chemistry Study', time: '6:30-7:30 PM' },
-            { id: 'math-study', name: 'Math Study', time: '7:30-8:30 PM' },
-            { id: 'revision-combined', name: 'Revision (Mixed)', time: '8:30-9:00 PM' },
-            { id: 'bio-ict-study', name: 'Biology/ICT Study', time: '9:00-9:30 PM' },
-            { id: 'dinner', name: 'Dinner', time: '9:30-10:00 PM' },
-            { id: 'eng-study', name: 'English Study', time: '10:00-10:30 PM' },
-            { id: 'revision-mixed', name: 'Revision (Mixed)', time: '10:30-11:00 PM' }
-        ];
-    } else if ([0, 2, 4].includes(dayOfWeek)) { // Sun, Tue, Thu
-        baseSchedule.morning = [
-            { id: 'chem-jahangir', name: 'Chemistry (Jahangir Sir)', time: '7:30-8:30 AM' },
-            { id: 'college', name: 'College', time: '9:00-12:00 PM' },
-            { id: 'online-chem', name: 'Online Chemistry', time: '2:00-3:30 PM' },
-            { id: 'physics-ashraf', name: 'Physics (Ashraf Sir)', time: '4:00-6:00 PM' }
-        ];
-        baseSchedule.selfStudy = [
-            { id: 'chem-study', name: 'Chemistry Study', time: '6:30-7:30 PM' },
-            { id: 'math-study', name: 'Math Study', time: '7:30-8:30 PM' },
-            { id: 'algorithm', name: `Algorithm (Physics/Chemistry)`, time: '8:30-9:00 PM' },
-            { id: 'bio-ict-study', name: 'Biology/ICT Study', time: '9:00-9:30 PM' },
-            { id: 'dinner', name: 'Dinner', time: '9:30-10:00 PM' },
-            { id: 'eng-bangla-study', name: 'English/Bangla Study', time: '10:00-10:30 PM' },
-            { id: 'questions', name: `Questions (${rotationSubject})`, time: '10:30-11:00 PM' }
-        ];
-    } else if ([6, 1, 3].includes(dayOfWeek)) { // Sat, Mon, Wed
-        baseSchedule.morning = [
-            { id: 'chem-jahangir', name: 'Chemistry (Jahangir Sir)', time: '7:30-8:30 AM' },
-            { id: 'college', name: 'College', time: '9:00-12:00 PM' },
-            { id: 'math-hanifa', name: 'Math (Hanifa Sir)', time: '2:20-3:30 PM' },
-            { id: 'bio-santo', name: 'Biology (Santo Sir)', time: '4:00-5:00 PM' },
-            { id: 'eng-ranju', name: 'English (Ranju Sir)', time: '5:00-6:00 PM' }
-        ];
-        baseSchedule.selfStudy = [
-            { id: 'chem-study', name: 'Chemistry Study', time: '6:30-7:30 PM' },
-            { id: 'math-study', name: 'Math Study', time: '7:30-8:30 PM' },
-            { id: 'algorithm', name: `Algorithm (Physics/Math)`, time: '8:30-9:00 PM' },
-            { id: 'bio-ict-study', name: 'Biology/ICT Study', time: '9:00-9:30 PM' },
-            { id: 'dinner', name: 'Dinner', time: '9:30-10:00 PM' },
-            { id: 'eng-bangla-study', name: 'English/Bangla Study', time: '10:00-10:30 PM' },
-            { id: 'questions', name: `Questions (${rotationSubject})`, time: '10:30-11:00 PM' }
-        ];
-    }
 
     return baseSchedule;
 }
@@ -207,12 +310,10 @@ function updateProgress() {
     const timeProgress = calculateTimeProgress();
     const syllabusProgress = calculateSyllabusProgress();
 
-    // Time progress
     document.getElementById('timePercentage').textContent = `${timeProgress.percentage}%`;
     document.getElementById('timeProgressBar').style.width = `${timeProgress.percentage}%`;
     document.getElementById('timeStats').textContent = `${timeProgress.daysPassed} / ${timeProgress.totalDays} days`;
 
-    // Syllabus progress
     document.getElementById('syllabusPercentage').textContent = `${syllabusProgress.percentage}%`;
     document.getElementById('syllabusProgressBar').style.width = `${syllabusProgress.percentage}%`;
     document.getElementById('syllabusStats').textContent = `${syllabusProgress.completedChapters} / ${syllabusProgress.totalChapters} chapters`;
@@ -239,7 +340,6 @@ function updateHeroTasks() {
         html += `<div class="task-card small"></div>`;
     }
 
-    // Current task
     html += `
         <div class="task-card">
             <div class="task-label">Now</div>
@@ -279,7 +379,6 @@ function updateHeroTasks() {
 function updateScheduleModal() {
     const schedule = getDaySchedule();
     
-    // Morning tasks
     const morningContainer = document.getElementById('modalMorningTasks');
     const morningScheduleDiv = document.getElementById('modalMorningSchedule');
     
@@ -303,7 +402,6 @@ function updateScheduleModal() {
         morningScheduleDiv.style.display = 'none';
     }
 
-    // Self study tasks
     const selfStudyContainer = document.getElementById('modalSelfStudyTasks');
     selfStudyContainer.innerHTML = schedule.selfStudy.map(task => {
         const isCompleted = getTaskCompletion(schedule.dateStr, task.id);
@@ -329,11 +427,9 @@ function updateHistoryModal() {
         return date;
     });
 
-    // Get all unique tasks from a sample day
     const sampleSchedule = getDaySchedule(new Date());
     const allTasks = [...sampleSchedule.morning, ...sampleSchedule.selfStudy];
 
-    // Create table header
     const tableHead = document.getElementById('modalHistoryTableHead');
     tableHead.innerHTML = `
         <tr>
@@ -342,7 +438,6 @@ function updateHistoryModal() {
         </tr>
     `;
 
-    // Create table body
     const tableBody = document.getElementById('modalHistoryTableBody');
     tableBody.innerHTML = last7Days.map(date => {
         const dateStr = date.toISOString().split('T')[0];
@@ -352,7 +447,7 @@ function updateHistoryModal() {
         return `
             <tr>
                 <td style="font-weight: 500;">${date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</td>
-                ${allTasks.map(task => {
+            ${allTasks.map(task => {
                     const dayTask = dayTasks.find(dt => dt.id === task.id);
                     const isCompleted = dayTask ? getTaskCompletion(dateStr, task.id) : false;
                     return `<td><i class="ri-${isCompleted ? 'check' : 'close'}-line history-icon ${isCompleted ? 'completed' : 'incomplete'}"></i></td>`;
@@ -384,7 +479,8 @@ function closeHistoryModal() {
 function openSettings() {
     document.getElementById('githubToken').value = githubToken;
     document.getElementById('gistId').value = gistId;
-    updateSyncButtons();
+    document.getElementById('newPin').value = '';
+    toggleAdvancedSettings(false); // Ensure collapsed by default
     document.getElementById('settingsModal').classList.remove('hidden');
 }
 
@@ -395,6 +491,61 @@ function closeSettings() {
     if (gistId) localStorage.setItem('gist-id', gistId);
     updateSyncStatus();
     document.getElementById('settingsModal').classList.add('hidden');
+}
+
+function toggleAdvancedSettings(override = null) {
+    isAdvancedSettingsOpen = override !== null ? override : !isAdvancedSettingsOpen;
+    const advancedSettings = document.getElementById('advancedSettings');
+    const toggleIcon = document.getElementById('advancedToggleIcon');
+    advancedSettings.classList.toggle('hidden', !isAdvancedSettingsOpen);
+    toggleIcon.className = isAdvancedSettingsOpen ? 'ri-arrow-up-s-line' : 'ri-arrow-down-s-line';
+}
+
+function openConfirmationModal(action, message, hasPin = false) {
+    pendingConfirmationAction = action;
+    hasPinConfirmation = hasPin;
+    const messageContainer = document.getElementById('confirmationMessage');
+    messageContainer.textContent = message;
+    const pinConfirmation = document.getElementById('pinConfirmation');
+    pinConfirmation.classList.toggle('hidden', !hasPin);
+    if (hasPin) {
+        document.getElementById('confirmPin').value = '';
+        document.getElementById('pinConfirmError').classList.add('hidden');
+    }
+    document.getElementById('confirmationModal').classList.remove('hidden');
+}
+
+function closeConfirmationModal() {
+    pendingConfirmationAction = null;
+    hasPinConfirmation = false;
+    document.getElementById('confirmationModal').classList.add('hidden');
+}
+
+function executeConfirmationAction() {
+    if (pendingConfirmationAction) {
+        if (hasPinConfirmation) {
+            const confirmPin = document.getElementById('confirmPin').value;
+            if (confirmPin !== pin) {
+                document.getElementById('pinConfirmError').classList.remove('hidden');
+                return;
+            }
+        }
+        switch (pendingConfirmationAction) {
+            case 'clearGistData':
+                clearGistData();
+                break;
+            case 'clearSyllabusCompletion':
+                clearSyllabusCompletion();
+                break;
+            case 'clearLocalDatabase':
+                clearLocalDatabase();
+                break;
+            case 'resetChapters':
+                resetChapters();
+                break;
+        }
+        closeConfirmationModal();
+    }
 }
 
 function openSyllabusEditor() {
@@ -472,6 +623,50 @@ function updateNote(subject, paper, chapterId, note) {
     saveData();
 }
 
+function clearGistData() {
+    gistId = '';
+    lastSync = '';
+    localStorage.removeItem('gist-id');
+    localStorage.removeItem('last-sync');
+    document.getElementById('gistId').value = '';
+    updateSyncButtons();
+    updateSyncStatus();
+    showToast('Gist data cleared', 'success');
+}
+
+function clearSyllabusCompletion() {
+    Object.keys(chapters).forEach(subject => {
+        Object.keys(chapters[subject]).forEach(paper => {
+            chapters[subject][paper] = chapters[subject][paper].map(ch => ({
+                ...ch,
+                done: false,
+                note: ''
+            }));
+        });
+    });
+    saveData();
+    updateProgress();
+    renderChapters();
+    showToast('Syllabus completion cleared', 'success');
+}
+
+function clearLocalDatabase() {
+    localStorage.clear();
+    chapters = {};
+    dailyTasks = {};
+    githubToken = '';
+    gistId = '';
+    lastSync = '';
+    pin = '1646';
+    localStorage.setItem('app-pin', '1646');
+    document.getElementById('githubToken').value = '';
+    document.getElementById('gistId').value = '';
+    document.getElementById('newPin').value = '';
+    showToast('Local database cleared', 'success');
+    document.getElementById('mainContainer').style.display = 'none';
+    checkLockscreen();
+}
+
 // Cloud sync functions
 function updateSyncStatus() {
     const syncIcon = document.getElementById('syncIcon');
@@ -531,7 +726,13 @@ function showToast(message, type) {
 }
 
 async function syncToCloud() {
-    if (!githubToken || !gistId) return;
+    githubToken = document.getElementById('githubToken').value;
+    gistId = document.getElementById('gistId').value;
+
+    if (!githubToken || !gistId) {
+        showToast('Missing token or Gist ID', 'error');
+        return;
+    }
     
     syncStatus = 'syncing';
     updateSyncStatus();
@@ -572,11 +773,11 @@ async function syncToCloud() {
                 updateSyncStatus();
             }, 2000);
         } else {
-            throw new Error('Sync failed');
+            throw new Error(`${response.status} ${response.statusText}`);
         }
     } catch (error) {
         syncStatus = 'error';
-        showToast('Sync failed', 'error');
+        showToast(`Sync failed: ${error.message}`, 'error');
         setTimeout(() => {
             syncStatus = 'idle';
             updateSyncStatus();
@@ -589,7 +790,13 @@ async function syncToCloud() {
 }
 
 async function syncFromCloud() {
-    if (!githubToken) return;
+    githubToken = document.getElementById('githubToken').value;
+    gistId = document.getElementById('gistId').value;
+
+    if (!githubToken) {
+        showToast('Missing GitHub token', 'error');
+        return;
+    }
     
     syncStatus = 'syncing';
     updateSyncStatus();
@@ -622,9 +829,11 @@ async function syncFromCloud() {
                     const syncTime = new Date().toLocaleString();
                     lastSync = syncTime;
                     localStorage.setItem('last-sync', syncTime);
+                } else {
+                    throw new Error('No valid data in Gist');
                 }
             } else {
-                throw new Error('Download failed');
+                throw new Error(`${response.status} ${response.statusText}`);
             }
         } else {
             // Create new gist
@@ -661,7 +870,7 @@ async function syncFromCloud() {
                 syncStatus = 'success';
                 showToast('Gist created and synced', 'success');
             } else {
-                throw new Error('Failed to create gist');
+                throw new Error(`${response.status} ${response.statusText}`);
             }
         }
         
@@ -671,7 +880,7 @@ async function syncFromCloud() {
         }, 2000);
     } catch (error) {
         syncStatus = 'error';
-        showToast('Sync failed', 'error');
+        showToast(`Sync failed: ${error.message}`, 'error');
         setTimeout(() => {
             syncStatus = 'idle';
             updateSyncStatus();
@@ -737,15 +946,13 @@ function exportData(format) {
 
 // Reset function
 function resetChapters() {
-    if (confirm('Reset all progress? This cannot be undone.')) {
-        chapters = JSON.parse(JSON.stringify(initialChapters));
-        dailyTasks = {};
-        expandedNotes = {};
-        saveData();
-        updateProgress();
-        updateHeroTasks();
-        renderChapters();
-    }
+    chapters = JSON.parse(JSON.stringify(initialChapters));
+    dailyTasks = {};
+    expandedNotes = {};
+    saveData();
+    updateProgress();
+    updateHeroTasks();
+    renderChapters();
 }
 
 // Keyboard shortcuts
@@ -753,7 +960,7 @@ document.addEventListener('keydown', (e) => {
     if (e.ctrlKey || e.metaKey) {
         if (e.key === 'r') {
             e.preventDefault();
-            resetChapters();
+            openConfirmationModal('resetChapters', 'Reset all progress? This cannot be undone.', false);
         } else if (e.key === 'e') {
             e.preventDefault();
             exportData('csv');
@@ -763,7 +970,12 @@ document.addEventListener('keydown', (e) => {
         }
     }
     if (e.key === 'Escape') {
-        if (!document.getElementById('settingsModal').classList.contains('hidden')) {
+        if (!document.getElementById('lockscreenFull').classList.contains('hidden')) {
+            return; // Prevent closing lockscreen with Escape
+        }
+        if (!document.getElementById('confirmationModal').classList.contains('hidden')) {
+            closeConfirmationModal();
+        } else if (!document.getElementById('settingsModal').classList.contains('hidden')) {
             closeSettings();
         } else if (!document.getElementById('syllabusModal').classList.contains('hidden')) {
             closeSyllabusEditor();
@@ -787,4 +999,4 @@ async function init() {
 }
 
 // Start the app
-init();
+checkLockscreen();
