@@ -9,7 +9,7 @@ let syncStatus = 'idle';
 let githubToken = localStorage.getItem('github-token') || '';
 let gistId = localStorage.getItem('gist-id') || '';
 let lastSync = localStorage.getItem('last-sync') || '';
-let pin = localStorage.getItem('app-pin') || '1646';
+let pin = localStorage.getItem('app-pin') || '';
 let currentPinInput = '';
 let isAdvancedSettingsOpen = false;
 let pendingConfirmationAction = null;
@@ -19,15 +19,63 @@ let hasPinConfirmation = false;
 const startDate = new Date('2025-09-15');
 const endDate = new Date('2026-09-30');
 
-// Lockscreen functions
-function checkLockscreen() {
-    if (localStorage.getItem('remember') === 'true') {
+// Setup Wizard
+function startSetupWizard() {
+    if (localStorage.getItem('setup-completed') === 'true') {
+        checkLockscreen();
+    } else {
+        document.getElementById('setupWizard').classList.remove('hidden');
         document.getElementById('lockscreenFull').classList.add('hidden');
+        document.getElementById('mainContainer').style.display = 'none';
+        showWizardStep(1);
+    }
+}
+
+function showWizardStep(step) {
+    document.getElementById('wizardStep1').classList.add('hidden');
+    document.getElementById('wizardStep2').classList.add('hidden');
+    document.getElementById('wizardStep3').classList.add('hidden');
+    document.getElementById(`wizardStep${step}`).classList.remove('hidden');
+    if (step === 3) {
+        document.getElementById('wizardPin').value = '';
+        document.getElementById('wizardPinConfirm').value = '';
+        document.getElementById('wizardPinError').classList.add('hidden');
+    }
+}
+
+function saveSyncSettings() {
+    githubToken = document.getElementById('wizardGithubToken').value;
+    gistId = document.getElementById('wizardGistId').value;
+    if (githubToken) localStorage.setItem('github-token', githubToken);
+    if (gistId) localStorage.setItem('gist-id', gistId);
+}
+
+function completeSetup() {
+    const pinInput = document.getElementById('wizardPin').value;
+    const pinConfirm = document.getElementById('wizardPinConfirm').value;
+    if (pinInput.length === 4 && /^\d+$/.test(pinInput) && pinInput === pinConfirm) {
+        pin = pinInput;
+        localStorage.setItem('app-pin', pin);
+        localStorage.setItem('setup-completed', 'true');
+        document.getElementById('setupWizard').classList.add('hidden');
         document.getElementById('mainContainer').style.display = 'flex';
         init();
     } else {
+        document.getElementById('wizardPinError').classList.remove('hidden');
+    }
+}
+
+// Lockscreen functions
+function checkLockscreen() {
+    if (localStorage.getItem('setup-completed') !== 'true') {
+        startSetupWizard();
+    } else if (pin && localStorage.getItem('remember') !== 'true') {
         document.getElementById('lockscreenFull').classList.remove('hidden');
         document.getElementById('mainContainer').style.display = 'none';
+    } else {
+        document.getElementById('lockscreenFull').classList.add('hidden');
+        document.getElementById('mainContainer').style.display = 'flex';
+        init();
     }
 }
 
@@ -35,6 +83,7 @@ function enterPinDigit(digit) {
     if (currentPinInput.length < 4) {
         currentPinInput += digit;
         updatePinDisplay();
+        document.getElementById('pinError').classList.add('hidden');
     }
 }
 
@@ -47,7 +96,13 @@ function clearPin() {
 function updatePinDisplay() {
     for (let i = 1; i <= 4; i++) {
         const digitSpan = document.getElementById(`pinDigit${i}`);
-        digitSpan.textContent = i <= currentPinInput.length ? '●' : '';
+        if (i <= currentPinInput.length) {
+            digitSpan.textContent = '●';
+            digitSpan.classList.add('filled');
+        } else {
+            digitSpan.textContent = '';
+            digitSpan.classList.remove('filled');
+        }
     }
 }
 
@@ -85,7 +140,7 @@ function changePin() {
 }
 
 function exportGistQR() {
-    const data = JSON.stringify({ token: githubToken, id: gistId });
+    const data = JSON.stringify({ gistId, pin });
     const canvas = document.createElement('canvas');
     QRCode.toCanvas(canvas, data, {
         width: 256,
@@ -107,7 +162,7 @@ function exportGistQR() {
     });
 }
 
-function importGistQR(event) {
+function importGistQR(event, fromWizard = false) {
     const file = event.target.files[0];
     if (file) {
         const reader = new FileReader();
@@ -124,15 +179,21 @@ function importGistQR(event) {
                 if (code) {
                     try {
                         const data = JSON.parse(code.data);
-                        githubToken = data.token || '';
-                        gistId = data.id || '';
-                        localStorage.setItem('github-token', githubToken);
+                        gistId = data.gistId || '';
+                        pin = data.pin || '';
                         localStorage.setItem('gist-id', gistId);
-                        document.getElementById('githubToken').value = githubToken;
-                        document.getElementById('gistId').value = gistId;
-                        updateSyncButtons();
+                        if (pin) localStorage.setItem('app-pin', pin);
+                        if (!fromWizard) {
+                            document.getElementById('gistId').value = gistId;
+                            updateSyncButtons();
+                        } else {
+                            localStorage.setItem('setup-completed', 'true');
+                            document.getElementById('setupWizard').classList.add('hidden');
+                            document.getElementById('mainContainer').style.display = 'flex';
+                            init();
+                        }
                         updateSyncStatus();
-                        showToast('Gist imported successfully', 'success');
+                        showToast('Gist and PIN imported successfully', 'success');
                     } catch (err) {
                         showToast('Invalid QR code data', 'error');
                     }
@@ -206,10 +267,9 @@ function calculateSyllabusProgress() {
 
 // Get day schedule
 function getDaySchedule(date = new Date()) {
-    const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+    const dayOfWeek = date.getDay();
     const dateStr = date.toISOString().split('T')[0];
     
-    // Get rotation index for subjects (cycles every 6 days)
     const daysSinceStart = Math.floor((date - new Date('2025-09-15')) / (1000 * 60 * 60 * 24));
     const rotationIndex = daysSinceStart % 6;
     const rotationSubjects = ['Physics', 'Chemistry', 'Math', 'Biology', 'ICT', 'English'];
@@ -253,7 +313,6 @@ function getSortedTasks(date = new Date()) {
     return allTasks;
 }
 
-// Get hero tasks (prev, current, next)
 function getHeroTasks() {
     const now = new Date();
     const currentTime = now.getHours() * 60 + now.getMinutes();
@@ -279,7 +338,6 @@ function getHeroTasks() {
         }
     }
 
-    // After last task
     if (!current) {
         current = { name: 'Free time', id: null, dateStr: null, time: '' };
         prev = sortedTasks.length > 0 ? { ...sortedTasks[sortedTasks.length - 1], dateStr } : null;
@@ -288,7 +346,6 @@ function getHeroTasks() {
     return { prev, current, next };
 }
 
-// Toggle daily task completion
 function toggleDailyTask(dateStr, taskId) {
     if (!dateStr || !taskId) return;
     if (!dailyTasks[dateStr]) {
@@ -300,12 +357,10 @@ function toggleDailyTask(dateStr, taskId) {
     updateScheduleModal();
 }
 
-// Get task completion status
 function getTaskCompletion(dateStr, taskId) {
     return dailyTasks[dateStr]?.[taskId] || false;
 }
 
-// Update progress displays
 function updateProgress() {
     const timeProgress = calculateTimeProgress();
     const syllabusProgress = calculateSyllabusProgress();
@@ -319,7 +374,6 @@ function updateProgress() {
     document.getElementById('syllabusStats').textContent = `${syllabusProgress.completedChapters} / ${syllabusProgress.totalChapters} chapters`;
 }
 
-// Update hero tasks display
 function updateHeroTasks() {
     const { prev, current, next } = getHeroTasks();
     let html = '';
@@ -375,7 +429,6 @@ function updateHeroTasks() {
     document.getElementById('heroTasks').innerHTML = html;
 }
 
-// Update schedule modal
 function updateScheduleModal() {
     const schedule = getDaySchedule();
     
@@ -419,7 +472,6 @@ function updateScheduleModal() {
     }).join('');
 }
 
-// Update history modal
 function updateHistoryModal() {
     const last7Days = Array.from({ length: 7 }, (_, i) => {
         const date = new Date();
@@ -447,7 +499,7 @@ function updateHistoryModal() {
         return `
             <tr>
                 <td style="font-weight: 500;">${date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</td>
-            ${allTasks.map(task => {
+                ${allTasks.map(task => {
                     const dayTask = dayTasks.find(dt => dt.id === task.id);
                     const isCompleted = dayTask ? getTaskCompletion(dateStr, task.id) : false;
                     return `<td><i class="ri-${isCompleted ? 'check' : 'close'}-line history-icon ${isCompleted ? 'completed' : 'incomplete'}"></i></td>`;
@@ -457,7 +509,6 @@ function updateHistoryModal() {
     }).join('');
 }
 
-// Modal open/close functions
 function openScheduleModal() {
     updateScheduleModal();
     document.getElementById('scheduleModal').classList.remove('hidden');
@@ -480,7 +531,7 @@ function openSettings() {
     document.getElementById('githubToken').value = githubToken;
     document.getElementById('gistId').value = gistId;
     document.getElementById('newPin').value = '';
-    toggleAdvancedSettings(false); // Ensure collapsed by default
+    toggleAdvancedSettings(false);
     document.getElementById('settingsModal').classList.remove('hidden');
 }
 
@@ -563,7 +614,6 @@ function toggleHelp() {
     document.getElementById('helpSection').classList.toggle('hidden');
 }
 
-// Syllabus editor functions
 function renderSubjectTabs() {
     const tabsContainer = document.getElementById('subjectTabs');
     tabsContainer.innerHTML = Object.keys(chapters).map(subject => 
@@ -657,17 +707,17 @@ function clearLocalDatabase() {
     githubToken = '';
     gistId = '';
     lastSync = '';
-    pin = '1646';
-    localStorage.setItem('app-pin', '1646');
+    pin = '';
+    localStorage.removeItem('app-pin');
+    localStorage.removeItem('setup-completed');
     document.getElementById('githubToken').value = '';
     document.getElementById('gistId').value = '';
     document.getElementById('newPin').value = '';
     showToast('Local database cleared', 'success');
     document.getElementById('mainContainer').style.display = 'none';
-    checkLockscreen();
+    startSetupWizard();
 }
 
-// Cloud sync functions
 function updateSyncStatus() {
     const syncIcon = document.getElementById('syncIcon');
     const syncText = document.getElementById('syncText');
@@ -805,7 +855,6 @@ async function syncFromCloud() {
     
     try {
         if (gistId) {
-            // Sync from existing gist
             const response = await fetch(`https://api.github.com/gists/${gistId}`, {
                 headers: {
                     'Authorization': `Bearer ${githubToken}`,
@@ -836,7 +885,6 @@ async function syncFromCloud() {
                 throw new Error(`${response.status} ${response.statusText}`);
             }
         } else {
-            // Create new gist
             const data = {
                 chapters,
                 dailyTasks,
@@ -892,7 +940,6 @@ async function syncFromCloud() {
     updateSyncStatus();
 }
 
-// Export functions
 function exportData(format) {
     const flatChapters = [];
     Object.entries(chapters).forEach(([subject, papers]) => {
@@ -944,15 +991,19 @@ function exportData(format) {
     }
 }
 
-// Reset function
 function resetChapters() {
-    chapters = JSON.parse(JSON.stringify(initialChapters));
-    dailyTasks = {};
-    expandedNotes = {};
-    saveData();
-    updateProgress();
-    updateHeroTasks();
-    renderChapters();
+    fetch('config/syllabus.json')
+        .then(response => response.json())
+        .then(data => {
+            chapters = data;
+            dailyTasks = {};
+            expandedNotes = {};
+            saveData();
+            updateProgress();
+            updateHeroTasks();
+            renderChapters();
+            showToast('All progress reset', 'success');
+        });
 }
 
 // Keyboard shortcuts
@@ -970,8 +1021,9 @@ document.addEventListener('keydown', (e) => {
         }
     }
     if (e.key === 'Escape') {
-        if (!document.getElementById('lockscreenFull').classList.contains('hidden')) {
-            return; // Prevent closing lockscreen with Escape
+        if (!document.getElementById('lockscreenFull').classList.contains('hidden') ||
+            !document.getElementById('setupWizard').classList.contains('hidden')) {
+            return;
         }
         if (!document.getElementById('confirmationModal').classList.contains('hidden')) {
             closeConfirmationModal();
@@ -999,4 +1051,4 @@ async function init() {
 }
 
 // Start the app
-checkLockscreen();
+startSetupWizard();
