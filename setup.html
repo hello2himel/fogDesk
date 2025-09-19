@@ -10,154 +10,148 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
 </head>
 <body>
-    <!-- Background decorations -->
-    <div class="bg-decoration bg-circle"></div>
-    <div class="bg-decoration bg-circle"></div>
-    <div class="bg-decoration bg-square"></div>
-    <div class="bg-decoration bg-square"></div>
-
     <div class="setup-container">
-        <!-- Sidebar -->
-        <div class="sidebar">
-            <div class="sidebar-content">
-                <div class="brand">
-                    <div class="brand-icon">
-                        <i class="ri-book-line"></i>
+        <!-- Progress Bar -->
+        <div class="progress-bar">
+            <div class="progress-step active" id="step1"></div>
+            <div class="progress-step" id="step2"></div>
+            <div class="progress-step" id="step3"></div>
+            <div class="progress-step" id="step4"></div>
+        </div>
+
+        <!-- Step 1: Welcome -->
+        <div id="wizardStep1" class="wizard-panel">
+            <h2>Welcome to Syllabus Pulse</h2>
+            <p>Your personal study progress tracker. Let's get started with a quick setup process.</p>
+            <div class="wizard-buttons">
+                <button class="btn btn-primary" onclick="nextStep(2)">Get Started</button>
+            </div>
+        </div>
+
+        <!-- Step 2: Data Storage -->
+        <div id="wizardStep2" class="wizard-panel hidden">
+            <h2>Data Storage</h2>
+            <p>Your data is saved locally on your device. Optionally enable cross-device sync.</p>
+            <div class="wizard-buttons">
+                <button class="btn" onclick="prevStep(1)">Back</button>
+                <button class="btn btn-primary" onclick="nextStep(3)">Continue</button>
+            </div>
+            <div class="advanced-options">
+                <span onclick="openSyncModal()">Advanced options</span>
+            </div>
+        </div>
+
+        <!-- Step 3: Enter PIN -->
+        <div id="wizardStep3" class="wizard-panel hidden">
+            <h2>Security PIN</h2>
+            <p>Enter a 4-digit PIN to secure your app and data.</p>
+            <div class="pin-section">
+                <label class="pin-label">Enter PIN</label>
+                <div class="pin-display" id="pinDisplay1">
+                    <span id="pinDigit1"></span>
+                    <span id="pinDigit2"></span>
+                    <span id="pinDigit3"></span>
+                    <span id="pinDigit4"></span>
+                </div>
+            </div>
+            <div class="pin-pad">
+                <button class="pin-btn" onclick="enterPinDigit('1')">1</button>
+                <button class="pin-btn" onclick="enterPinDigit('2')">2</button>
+                <button class="pin-btn" onclick="enterPinDigit('3')">3</button>
+                <button class="pin-btn" onclick="enterPinDigit('4')">4</button>
+                <button class="pin-btn" onclick="enterPinDigit('5')">5</button>
+                <button class="pin-btn" onclick="enterPinDigit('6')">6</button>
+                <button class="pin-btn" onclick="enterPinDigit('7')">7</button>
+                <button class="pin-btn" onclick="enterPinDigit('8')">8</button>
+                <button class="pin-btn" onclick="enterPinDigit('9')">9</button>
+                <button class="pin-btn clear-btn" onclick="clearPin()">C</button>
+                <button class="pin-btn" onclick="enterPinDigit('0')">0</button>
+                <button class="pin-btn submit-btn" onclick="nextStep(4)">✓</button>
+            </div>
+            <div class="wizard-buttons">
+                <button class="btn" onclick="prevStep(2)">Back</button>
+            </div>
+            <p id="pinError1" class="pin-error hidden"></p>
+        </div>
+
+        <!-- Step 4: Confirm PIN -->
+        <div id="wizardStep4" class="wizard-panel hidden">
+            <h2>Confirm PIN</h2>
+            <p>Re-enter your 4-digit PIN to confirm.</p>
+            <div class="pin-section">
+                <label class="pin-label">Confirm PIN</label>
+                <div class="pin-display" id="pinDisplay2">
+                    <span id="pinDigit5"></span>
+                    <span id="pinDigit6"></span>
+                    <span id="pinDigit7"></span>
+                    <span id="pinDigit8"></span>
+                </div>
+            </div>
+            <div class="pin-pad">
+                <button class="pin-btn" onclick="enterPinDigit('1')">1</button>
+                <button class="pin-btn" onclick="enterPinDigit('2')">2</button>
+                <button class="pin-btn" onclick="enterPinDigit('3')">3</button>
+                <button class="pin-btn" onclick="enterPinDigit('4')">4</button>
+                <button class="pin-btn" onclick="enterPinDigit('5')">5</button>
+                <button class="pin-btn" onclick="enterPinDigit('6')">6</button>
+                <button class="pin-btn" onclick="enterPinDigit('7')">7</button>
+                <button class="pin-btn" onclick="enterPinDigit('8')">8</button>
+                <button class="pin-btn" onclick="enterPinDigit('9')">9</button>
+                <button class="pin-btn clear-btn" onclick="clearPin()">C</button>
+                <button class="pin-btn" onclick="enterPinDigit('0')">0</button>
+                <button class="pin-btn submit-btn" onclick="completeSetup()">✓</button>
+            </div>
+            <div class="wizard-buttons">
+                <button class="btn" onclick="prevStep(3)">Back</button>
+            </div>
+            <p id="pinError2" class="pin-error hidden"></p>
+        </div>
+
+        <!-- Sync Modal -->
+        <div id="syncModal" class="modal-overlay hidden">
+            <div class="modal">
+                <div class="modal-header">
+                    <h3>Advanced Sync Setup</h3>
+                    <button class="btn-close" onclick="closeSyncModal()"><i class="ri-close-line"></i></button>
+                </div>
+                <div class="modal-content">
+                    <div id="loadingOverlay" class="loading-overlay hidden">
+                        <div class="loading-spinner"></div>
+                        <span id="loadingText" class="loading-text">Loading...</span>
                     </div>
-                    <div class="brand-text">Syllabus Pulse</div>
-                </div>
-
-                <div class="progress-indicator">
-                    <div class="progress-step active" id="step1"></div>
-                    <div class="progress-step" id="step2"></div>
-                    <div class="progress-step" id="step3"></div>
-                </div>
-
-                <div class="sidebar-info">
-                    <h3 id="sidebarTitle">Welcome</h3>
-                    <p id="sidebarDescription">Let's get you set up with Syllabus Pulse to track your study progress effectively.</p>
+                    <div class="form-group">
+                        <label class="form-label">GitHub Personal Access Token</label>
+                        <input type="password" id="githubToken" class="form-input" placeholder="ghp_xxxxxxxxxxxx">
+                        <div class="form-help">
+                            <a href="https://github.com/settings/tokens" target="_blank">Create token</a> with 'gist' scope
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Gist ID (optional)</label>
+                        <input type="text" id="gistId" class="form-input" placeholder="Leave empty to create new">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Import Configuration</label>
+                        <input type="file" id="qrUpload" accept="image/*" class="hidden" onchange="importQRCode(event)">
+                        <button class="btn btn-primary qr-upload-btn" onclick="document.getElementById('qrUpload').click()">
+                            Import via QR Code
+                        </button>
+                    </div>
+                    <div class="wizard-buttons">
+                        <button class="btn" onclick="closeSyncModal()">Cancel</button>
+                        <button class="btn btn-primary" onclick="saveSyncSettings()">Save</button>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Main Content -->
-        <div class="content-wrapper">
-            <div class="main-content">
-                <!-- Step 1: Welcome -->
-                <div id="wizardStep1" class="wizard-panel">
-                    <h2>Welcome to Syllabus Pulse</h2>
-                    <p>Your personal study progress tracker. Let's get you started with a quick setup process.</p>
-                    <div class="wizard-buttons">
-                        <button class="btn btn-primary" onclick="nextStep(2)">
-                            <span>Get Started</span>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Step 2: Data Storage -->
-                <div id="wizardStep2" class="wizard-panel hidden">
-                    <h2>Data Storage</h2>
-                    <p>Your data is saved locally on your device for privacy. You can optionally enable cross-device sync for advanced users.</p>
-                    <div class="wizard-buttons">
-                        <button class="btn" onclick="prevStep(1)">
-                            <span>Back</span>
-                        </button>
-                        <button class="btn btn-primary" onclick="nextStep(3)">
-                            <span>Continue</span>
-                        </button>
-                        <button class="btn" onclick="openSyncModal()">
-                            <span>Advanced Setup</span>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Step 3: PIN Setup -->
-                <div id="wizardStep3" class="wizard-panel hidden">
-                    <h2>Security PIN</h2>
-                    <p>Create a 4-digit PIN to protect your app and keep your data secure.</p>
-                    
-                    <div class="pin-display">
-                        <div class="pin-digit" id="pinDigit1"></div>
-                        <div class="pin-digit" id="pinDigit2"></div>
-                        <div class="pin-digit" id="pinDigit3"></div>
-                        <div class="pin-digit" id="pinDigit4"></div>
-                    </div>
-
-                    <div class="pin-pad">
-                        <button class="pin-btn" onclick="enterPinDigit('1')"><span>1</span></button>
-                        <button class="pin-btn" onclick="enterPinDigit('2')"><span>2</span></button>
-                        <button class="pin-btn" onclick="enterPinDigit('3')"><span>3</span></button>
-                        <button class="pin-btn" onclick="enterPinDigit('4')"><span>4</span></button>
-                        <button class="pin-btn" onclick="enterPinDigit('5')"><span>5</span></button>
-                        <button class="pin-btn" onclick="enterPinDigit('6')"><span>6</span></button>
-                        <button class="pin-btn" onclick="enterPinDigit('7')"><span>7</span></button>
-                        <button class="pin-btn" onclick="enterPinDigit('8')"><span>8</span></button>
-                        <button class="pin-btn" onclick="enterPinDigit('9')"><span>9</span></button>
-                        <button class="pin-btn clear-btn" onclick="clearPin()"><span>C</span></button>
-                        <button class="pin-btn" onclick="enterPinDigit('0')"><span>0</span></button>
-                        <button class="pin-btn submit-btn" onclick="completeSetup()"><span>✓</span></button>
-                    </div>
-
-                    <div class="wizard-buttons">
-                        <button class="btn" onclick="prevStep(2)">
-                            <span>Back</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
+        <!-- Toast -->
+        <div id="toast" class="toast hidden">
+            <i id="toastIcon" class="ri-check-line"></i>
+            <span id="toastMessage"></span>
         </div>
     </div>
 
-    <!-- Sync Modal -->
-    <div id="syncModal" class="modal-overlay">
-        <div class="modal">
-            <div class="modal-header">
-                <h3>Advanced Sync Setup</h3>
-                <button class="btn-close" onclick="closeSyncModal()">
-                    <i class="ri-close-line"></i>
-                </button>
-            </div>
-            <div class="modal-content">
-                <div class="form-group">
-                    <label class="form-label">GitHub Personal Access Token</label>
-                    <input type="password" id="githubToken" class="form-input" placeholder="ghp_xxxxxxxxxxxx">
-                    <div class="form-help">
-                        <a href="https://github.com/settings/tokens" target="_blank">Create token here</a> with 'gist' scope
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Gist ID (optional)</label>
-                    <input type="text" id="gistId" class="form-input" placeholder="Leave empty to create new">
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Import Configuration</label>
-                    <input type="file" id="qrUpload" accept="image/*" class="hidden" onchange="importQRCode(event)">
-                    <div class="qr-upload-btn" onclick="document.getElementById('qrUpload').click()">
-                        <i class="ri-qr-scan-line"></i>
-                        <span>Import via QR Code</span>
-                    </div>
-                </div>
-
-                <div class="wizard-buttons">
-                    <button class="btn" onclick="closeSyncModal()">
-                        <span>Cancel</span>
-                    </button>
-                    <button class="btn btn-primary" onclick="saveSyncSettings()">
-                        <span>Save Settings</span>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Toast -->
-    <div id="toast" class="toast">
-        <i id="toastIcon" class="ri-check-line"></i>
-        <span id="toastMessage"></span>
-    </div>
-
-    <script src="script/setup.js"></script>
+    <script src="script/setup.js" defer></script>
 </body>
 </html>
