@@ -86,8 +86,8 @@
             <div class="hero-tasks" id="heroTasks"></div>
         </section>
 
-        <!-- Action Buttons -->
-        <div class="action-buttons">
+        <!-- Desktop Action Buttons -->
+        <div class="action-buttons desktop-only">
             <button class="btn btn-primary" onclick="openSyllabusEditor()">
                 <i class="ri-edit-line"></i>
                 Edit Syllabus
@@ -106,6 +106,26 @@
             </button>
         </div>
     </div>
+
+    <!-- Mobile Bottom Navigation -->
+    <nav class="bottom-nav mobile-only">
+        <button class="nav-item" onclick="openSyllabusEditor()">
+            <i class="ri-edit-line"></i>
+            <span>Edit</span>
+        </button>
+        <button class="nav-item" onclick="openScheduleModal()">
+            <i class="ri-calendar-line"></i>
+            <span>Routine</span>
+        </button>
+        <button class="nav-item" onclick="openHistoryModal()">
+            <i class="ri-history-line"></i>
+            <span>History</span>
+        </button>
+        <button class="nav-item" onclick="window.location.href='settings.html'">
+            <i class="ri-settings-line"></i>
+            <span>Settings</span>
+        </button>
+    </nav>
 
     <!-- Toast Notification -->
     <div id="toast" class="toast hidden"></div>
