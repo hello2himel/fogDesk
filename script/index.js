@@ -1,3 +1,7 @@
+if (!localStorage.getItem('setupCompleted')) {
+    window.location.href = '/setup.html';
+}
+
 // Global state
 let chapters = {};
 let dailyTasks = {};
@@ -9,66 +13,27 @@ let syncStatus = 'idle';
 let githubToken = localStorage.getItem('github-token') || '';
 let gistId = localStorage.getItem('gist-id') || '';
 let lastSync = localStorage.getItem('last-sync') || '';
-let pin = localStorage.getItem('app-pin') || '';
 let currentPinInput = '';
 let pendingConfirmationAction = null;
 let hasPinConfirmation = false;
+let qrCanvas = null;
 
 // Date constants
 const startDate = new Date('2025-09-15');
 const endDate = new Date('2026-09-30');
 
-// Setup Wizard
-function startSetupWizard() {
-    if (localStorage.getItem('setup-completed') === 'true') {
-        checkLockscreen();
-    } else {
-        document.getElementById('setupWizard').classList.remove('hidden');
-        document.getElementById('lockscreenFull').classList.add('hidden');
-        document.getElementById('mainContainer').style.display = 'none';
-        showWizardStep(1);
-    }
-}
-
-function showWizardStep(step) {
-    document.getElementById('wizardStep1').classList.add('hidden');
-    document.getElementById('wizardStep2').classList.add('hidden');
-    document.getElementById('wizardStep3').classList.add('hidden');
-    document.getElementById(`wizardStep${step}`).classList.remove('hidden');
-    if (step === 3) {
-        document.getElementById('wizardPin').value = '';
-        document.getElementById('wizardPinConfirm').value = '';
-        document.getElementById('wizardPinError').classList.add('hidden');
-    }
-}
-
-function saveSyncSettings() {
-    githubToken = document.getElementById('wizardGithubToken').value;
-    gistId = document.getElementById('wizardGistId').value;
-    if (githubToken) localStorage.setItem('github-token', githubToken);
-    if (gistId) localStorage.setItem('gist-id', gistId);
-}
-
-function completeSetup() {
-    const pinInput = document.getElementById('wizardPin').value;
-    const pinConfirm = document.getElementById('wizardPinConfirm').value;
-    if (pinInput.length === 4 && /^\d+$/.test(pinInput) && pinInput === pinConfirm) {
-        pin = pinInput;
-        localStorage.setItem('app-pin', pin);
-        localStorage.setItem('setup-completed', 'true');
-        document.getElementById('setupWizard').classList.add('hidden');
-        document.getElementById('mainContainer').style.display = 'flex';
-        init();
-    } else {
-        document.getElementById('wizardPinError').classList.remove('hidden');
-    }
-}
-
 // Lockscreen functions
+async function hashPin(pin) {
+    const enc = new TextEncoder();
+    const data = enc.encode(pin);
+    const hash = await crypto.subtle.digest('SHA-256', data);
+    return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
 function checkLockscreen() {
-    if (localStorage.getItem('setup-completed') !== 'true') {
-        startSetupWizard();
-    } else if (pin && localStorage.getItem('remember') !== 'true') {
+    if (localStorage.getItem('setupCompleted') !== 'true') {
+        window.location.href = '/setup.html';
+    } else if (localStorage.getItem('pinHash') && localStorage.getItem('remember') !== 'true') {
         document.getElementById('lockscreenFull').classList.remove('hidden');
         document.getElementById('mainContainer').style.display = 'none';
     } else {
@@ -105,12 +70,14 @@ function updatePinDisplay() {
     }
 }
 
-function submitPin() {
+async function submitPin() {
     if (currentPinInput.length !== 4) {
         document.getElementById('pinError').classList.remove('hidden');
+        document.getElementById('pinError').textContent = 'Enter a 4-digit PIN';
         return;
     }
-    if (currentPinInput === pin) {
+    const hashedPin = await hashPin(currentPinInput);
+    if (hashedPin === localStorage.getItem('pinHash')) {
         document.getElementById('lockscreenFull').classList.add('hidden');
         document.getElementById('mainContainer').style.display = 'flex';
         if (document.getElementById('rememberMe').checked) {
@@ -121,8 +88,57 @@ function submitPin() {
         init();
     } else {
         document.getElementById('pinError').classList.remove('hidden');
+        document.getElementById('pinError').textContent = 'Incorrect PIN';
         currentPinInput = '';
         updatePinDisplay();
+    }
+}
+
+// QR Export/Import
+function exportGistQR() {
+    if (typeof QRCode === 'undefined') {
+        console.error('QRCode library not loaded');
+        showToast('QR code library not loaded', 'error');
+        return;
+    }
+
+    const pinHash = localStorage.getItem('pinHash') || '';
+    const data = JSON.stringify({ gistId, pinHash });
+    if (!gistId && !pinHash) {
+        console.error('No data to encode: gistId and pinHash are empty');
+        showToast('No data to encode in QR code', 'error');
+        return;
+    }
+    console.log('Generating QR code for data:', data);
+
+    const qrContainer = document.getElementById('qrCodeContainer');
+    qrContainer.innerHTML = '';
+    
+    try {
+        new QRCode(qrContainer, {
+            text: data,
+            width: 256,
+            height: 256,
+            colorDark: '#000000',
+            colorLight: '#FFFFFF',
+            correctLevel: QRCode.CorrectLevel.H
+        });
+        qrCanvas = qrContainer.querySelector('canvas');
+        if (!qrCanvas) {
+            console.error('No canvas generated by QRCode');
+            showToast('Failed to generate QR code: No canvas created', 'error');
+            return;
+        }
+        console.log('QR code generated successfully');
+        document.getElementById('qrExportModal').classList.remove('hidden');
+        // Auto-download QR code
+        const link = document.createElement('a');
+        link.href = qrCanvas.toDataURL('image/png');
+        link.download = 'syllabuspulse-gist-qr.png';
+        link.click();
+    } catch (err) {
+        console.error('Error in QR code generation:', err);
+        showToast(`Error generating QR code: ${err.message}`, 'error');
     }
 }
 
@@ -144,13 +160,13 @@ function importGistQR(event, fromWizard = false) {
                     try {
                         const data = JSON.parse(code.data);
                         gistId = data.gistId || '';
-                        pin = data.pin || '';
+                        const pinHash = data.pinHash || '';
                         localStorage.setItem('gist-id', gistId);
-                        if (pin) localStorage.setItem('app-pin', pin);
+                        localStorage.setItem('pinHash', pinHash);
                         if (!fromWizard) {
                             document.getElementById('gistId').value = gistId;
                         } else {
-                            localStorage.setItem('setup-completed', 'true');
+                            localStorage.setItem('setupCompleted', 'true');
                             document.getElementById('setupWizard').classList.add('hidden');
                             document.getElementById('mainContainer').style.display = 'flex';
                             init();
@@ -510,11 +526,12 @@ function closeConfirmationModal() {
     document.getElementById('confirmationModal').classList.add('hidden');
 }
 
-function executeConfirmationAction() {
+async function executeConfirmationAction() {
     if (pendingConfirmationAction) {
         if (hasPinConfirmation) {
             const confirmPin = document.getElementById('confirmPin').value;
-            if (confirmPin !== pin) {
+            const hashedConfirmPin = await hashPin(confirmPin);
+            if (hashedConfirmPin !== localStorage.getItem('pinHash')) {
                 document.getElementById('pinConfirmError').classList.remove('hidden');
                 return;
             }
@@ -786,8 +803,7 @@ document.addEventListener('keydown', (e) => {
         }
     }
     if (e.key === 'Escape') {
-        if (!document.getElementById('lockscreenFull').classList.contains('hidden') ||
-            !document.getElementById('setupWizard').classList.contains('hidden')) {
+        if (!document.getElementById('lockscreenFull').classList.contains('hidden')) {
             return;
         }
         if (!document.getElementById('confirmationModal').classList.contains('hidden')) {
@@ -798,7 +814,12 @@ document.addEventListener('keydown', (e) => {
             closeScheduleModal();
         } else if (!document.getElementById('historyModal').classList.contains('hidden')) {
             closeHistoryModal();
+        } else if (!document.getElementById('qrExportModal').classList.contains('hidden')) {
+            closeQRModal();
         }
+    }
+    if (e.key === 'Enter' && !document.getElementById('lockscreenFull').classList.contains('hidden')) {
+        submitPin();
     }
 });
 
@@ -814,4 +835,11 @@ async function init() {
 }
 
 // Start the app
-startSetupWizard();
+checkLockscreen();
+
+// QR Modal functions
+function closeQRModal() {
+    document.getElementById('qrExportModal').classList.add('hidden');
+    document.getElementById('qrCodeContainer').innerHTML = '';
+    qrCanvas = null;
+}

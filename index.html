@@ -10,67 +10,15 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
 </head>
 <body>
-    <!-- Setup Wizard -->
-    <div id="setupWizard" class="wizard-overlay hidden">
-        <!-- Step 1: Welcome -->
-        <div id="wizardStep1" class="wizard-panel">
-            <h2>Welcome to Syllabus Pulse</h2>
-            <p>Track your study progress easily.</p>
-            <div class="wizard-buttons">
-                <button class="btn btn-primary" onclick="showWizardStep(2)">Continue</button>
-                <button class="btn" onclick="document.getElementById('qrUploadWizard').click()">I already have setup / Import</button>
-                <input type="file" id="qrUploadWizard" accept="image/*" style="display: none;" onchange="importGistQR(event, true)">
-            </div>
-        </div>
-        <!-- Step 2: Sync Setup -->
-        <div id="wizardStep2" class="wizard-panel hidden">
-            <h2>Set up Cloud Sync</h2>
-            <p>Sync your progress using a GitHub Personal Access Token.</p>
-            <div class="form-group">
-                <label class="form-label">GitHub Personal Access Token</label>
-                <input type="password" id="wizardGithubToken" class="form-input" placeholder="ghp_xxxxxxxxxxxx">
-                <div class="form-help">
-                    <a href="https://github.com/settings/tokens" target="_blank">Create token here</a> with 'gist' scope
-                </div>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Gist ID (optional)</label>
-                <input type="text" id="wizardGistId" class="form-input" placeholder="Leave empty to create new">
-            </div>
-            <div class="wizard-buttons">
-                <button class="btn" onclick="showWizardStep(3)">Continue without sync</button>
-                <button class="btn btn-primary" onclick="saveSyncSettings(); showWizardStep(3)">Set up sync</button>
-            </div>
-            <p style="font-size: 0.75rem; color: #6b7280; margin-top: 1rem;">You can always set up sync later in Settings.</p>
-        </div>
-        <!-- Step 3: PIN Setup -->
-        <div id="wizardStep3" class="wizard-panel hidden">
-            <h2>Create a 4-digit PIN</h2>
-            <p>Protect your app with a secure PIN.</p>
-            <div class="form-group">
-                <label class="form-label">Enter PIN</label>
-                <input type="password" id="wizardPin" class="form-input" placeholder="Enter 4-digit PIN" maxlength="4">
-            </div>
-            <div class="form-group">
-                <label class="form-label">Confirm PIN</label>
-                <input type="password" id="wizardPinConfirm" class="form-input" placeholder="Confirm 4-digit PIN" maxlength="4">
-            </div>
-            <div id="wizardPinError" class="pin-error hidden">PINs must match and be 4 digits</div>
-            <div class="wizard-buttons">
-                <button class="btn btn-primary" onclick="completeSetup()">Complete Setup</button>
-            </div>
-        </div>
-    </div>
-
     <!-- Lockscreen Full Screen -->
     <div id="lockscreenFull" class="lockscreen-full hidden">
         <div class="lockscreen-content">
             <h3>Enter PIN</h3>
             <div class="pin-display">
-                <span id="pinDigit1"></span>
-                <span id="pinDigit2"></span>
-                <span id="pinDigit3"></span>
-                <span id="pinDigit4"></span>
+                <span id="pinDigit1" class="pin-digit"></span>
+                <span id="pinDigit2" class="pin-digit"></span>
+                <span id="pinDigit3" class="pin-digit"></span>
+                <span id="pinDigit4" class="pin-digit"></span>
             </div>
             <div class="pin-pad">
                 <button class="pin-btn" onclick="enterPinDigit('1')">1</button>
@@ -100,7 +48,6 @@
             <h1>Syllabus Pulse</h1>
             <p>Track time left vs chapters done</p>
             <p style="font-size: 0.875rem; color: #6b7280;">15 Sep 2025 — 30 Sep 2026</p>
-            
             <!-- Sync Status -->
             <div class="sync-status">
                 <i id="syncIcon" class="ri-cloud-line text-gray-400"></i>
@@ -257,7 +204,6 @@
                         <h4>Classes & Coaching</h4>
                         <div class="task-list" id="modalMorningTasks"></div>
                     </div>
-                    
                     <div>
                         <h4>Self Study</h4>
                         <div class="task-list" id="modalSelfStudyTasks"></div>
@@ -283,6 +229,22 @@
                         <tbody id="modalHistoryTableBody"></tbody>
                     </table>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- QR Export Modal -->
+    <div id="qrExportModal" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Gist QR Code</h3>
+                <button class="btn-close" onclick="closeQRModal()">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="modal-content">
+                <p>Do not share this QR code with others.</p>
+                <div id="qrCodeContainer"></div>
             </div>
         </div>
     </div>
