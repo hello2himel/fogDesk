@@ -1,97 +1,142 @@
+let currentStep = 1;
+let pinInput = '';
 let githubToken = '';
 let gistId = '';
-let wizardPinInput = '';
 
-// Start the setup wizard
-function startSetupWizard() {
+// Sidebar content for each step
+const stepInfo = {
+    1: { title: 'Welcome', description: 'Let\'s get you set up with Syllabus Pulse to track your study progress effectively.' },
+    2: { title: 'Data Storage', description: 'Configure how your data is stored and optionally enable cross-device synchronization.' },
+    3: { title: 'Security', description: 'Protect your data with a secure 4-digit PIN that only you know.' }
+};
+
+// Initialize setup
+function initSetup() {
     if (localStorage.getItem('setupCompleted') === 'true') {
         window.location.href = '/index.html';
-    } else {
-        document.getElementById('setupWizard').classList.remove('hidden');
-        showWizardStep(1);
+        return;
     }
+    showStep(1);
 }
 
-// Show specific wizard step
-function showWizardStep(step) {
-    document.getElementById('wizardStep1').classList.add('hidden');
-    document.getElementById('wizardStep2').classList.add('hidden');
-    document.getElementById('wizardStep3').classList.add('hidden');
+// Show specific step
+function showStep(step) {
+    document.querySelectorAll('.wizard-panel').forEach(panel => {
+        panel.classList.add('hidden');
+    });
     document.getElementById(`wizardStep${step}`).classList.remove('hidden');
+    updateProgress(step);
+    updateSidebar(step);
+    currentStep = step;
     if (step === 3) {
-        wizardPinInput = '';
-        updateWizardPinDisplay();
-        document.getElementById('wizardPinError').classList.add('hidden');
+        pinInput = '';
+        updatePinDisplay();
     }
 }
 
-// Open sync modal
-function openSyncModal() {
-    document.getElementById('syncModal').classList.remove('hidden');
+// Update progress indicators
+function updateProgress(step) {
+    document.querySelectorAll('.progress-step').forEach((indicator, index) => {
+        const stepNum = index + 1;
+        indicator.classList.remove('active', 'completed');
+        if (stepNum < step) {
+            indicator.classList.add('completed');
+        } else if (stepNum === step) {
+            indicator.classList.add('active');
+        }
+    });
 }
 
-// Close sync modal
-function closeSyncModal() {
-    document.getElementById('syncModal').classList.add('hidden');
-    document.getElementById('wizardGithubToken').value = '';
-    document.getElementById('wizardGistId').value = '';
+// Update sidebar content
+function updateSidebar(step) {
+    const info = stepInfo[step];
+    document.getElementById('sidebarTitle').textContent = info.title;
+    document.getElementById('sidebarDescription').textContent = info.description;
 }
 
-// Save sync settings
-function saveSyncSettings() {
-    githubToken = document.getElementById('wizardGithubToken').value.trim();
-    gistId = document.getElementById('wizardGistId').value.trim();
-    if (githubToken) localStorage.setItem('github-token', githubToken);
-    if (gistId) localStorage.setItem('gist-id', gistId);
-    showToast('Sync settings saved', 'success');
+// Navigation functions
+function nextStep(step) {
+    showStep(step);
 }
 
-// PIN entry handling
-function enterWizardPinDigit(digit) {
-    if (wizardPinInput.length < 4) {
-        wizardPinInput += digit;
-        updateWizardPinDisplay();
-        document.getElementById('wizardPinError').classList.add('hidden');
+function prevStep(step) {
+    showStep(step);
+}
+
+// PIN entry functions
+function enterPinDigit(digit) {
+    if (pinInput.length < 4) {
+        pinInput += digit;
+        updatePinDisplay();
     }
 }
 
-function clearWizardPin() {
-    wizardPinInput = '';
-    updateWizardPinDisplay();
-    document.getElementById('wizardPinError').classList.add('hidden');
+function clearPin() {
+    pinInput = '';
+    updatePinDisplay();
 }
 
-function updateWizardPinDisplay() {
+function updatePinDisplay() {
     for (let i = 1; i <= 4; i++) {
-        const digitSpan = document.getElementById(`wizardPinDigit${i}`);
-        if (i <= wizardPinInput.length) {
-            digitSpan.classList.add('filled');
+        const digit = document.getElementById(`pinDigit${i}`);
+        if (i <= pinInput.length) {
+            digit.classList.add('filled');
         } else {
-            digitSpan.classList.remove('filled');
+            digit.classList.remove('filled');
         }
     }
 }
 
+// Hash PIN for secure storage
+async function hashPin(pin) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(pin);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
 // Complete setup
 async function completeSetup() {
-    if (wizardPinInput.length === 4 && /^\d+$/.test(wizardPinInput)) {
-        const pinHash = await hashPin(wizardPinInput);
-        localStorage.setItem('pinHash', pinHash);
+    if (pinInput.length !== 4 || !/^\d{4}$/.test(pinInput)) {
+        showToast('PIN must be exactly 4 digits', 'error');
+        return;
+    }
+    try {
+        const hashedPin = await hashPin(pinInput);
+        localStorage.setItem('pinHash', hashedPin);
         localStorage.setItem('setupCompleted', 'true');
-        document.getElementById('setupWizard').classList.add('hidden');
-        window.location.href = '/index.html';
-    } else {
-        document.getElementById('wizardPinError').classList.remove('hidden');
-        document.getElementById('wizardPinError').textContent = 'PIN must be 4 digits';
+        showToast('Setup completed successfully!', 'success');
+        setTimeout(() => {
+            window.location.href = '/index.html';
+        }, 1500);
+    } catch (error) {
+        showToast('Failed to complete setup: ' + error.message, 'error');
+        console.error('Setup error:', error);
     }
 }
 
-// Hash PIN for storage
-async function hashPin(pin) {
-    const enc = new TextEncoder();
-    const data = enc.encode(pin);
-    const hash = await crypto.subtle.digest('SHA-256', data);
-    return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+// Sync modal functions
+function openSyncModal() {
+    const modal = document.getElementById('syncModal');
+    modal.classList.add('show');
+}
+
+function closeSyncModal() {
+    const modal = document.getElementById('syncModal');
+    modal.classList.remove('show');
+    document.getElementById('githubToken').value = '';
+    document.getElementById('gistId').value = '';
+}
+
+// Save sync settings
+function saveSyncSettings() {
+    githubToken = document.getElementById('githubToken').value.trim();
+    gistId = document.getElementById('gistId').value.trim();
+    if (githubToken) localStorage.setItem('github-token', githubToken);
+    if (gistId) localStorage.setItem('gist-id', gistId);
+    showToast('Sync settings saved', 'success');
+    closeSyncModal();
 }
 
 // Validate QR data
@@ -111,8 +156,8 @@ function validateSyllabusPulseData(data) {
     return true;
 }
 
-// Import Gist via QR code
-async function importGistQR(event) {
+// Import QR code
+async function importQRCode(event) {
     const file = event.target.files[0];
     if (file) {
         const reader = new FileReader();
@@ -134,22 +179,26 @@ async function importGistQR(event) {
                         gistId = data.gistId || '';
                         const pin = data.pin || '';
                         if (!pin) throw new Error('Missing pin in QR data');
+                        // Autofill form inputs
+                        document.getElementById('githubToken').value = githubToken;
+                        document.getElementById('gistId').value = gistId;
+                        // Save data to localStorage
                         const pinHash = await hashPin(pin);
                         localStorage.setItem('github-token', githubToken);
                         localStorage.setItem('gist-id', gistId);
                         localStorage.setItem('pinHash', pinHash);
                         localStorage.setItem('setupCompleted', 'true');
-                        document.getElementById('wizardGithubToken').value = '';
-                        document.getElementById('wizardGistId').value = '';
-                        document.getElementById('setupWizard').classList.add('hidden');
-                        closeSyncModal();
                         showToast('Setup imported successfully', 'success');
-                        window.location.href = '/index.html';
+                        setTimeout(() => {
+                            window.location.href = '/index.html';
+                        }, 1500);
                     } catch (err) {
                         showToast(`Failed to import setup: ${err.message}`, 'error');
+                        console.error('QR import error:', err);
                     }
                 } else {
                     showToast('Failed to import setup: No QR code found in image', 'error');
+                    console.error('QR import error: No QR code found');
                 }
             };
             img.src = e.target.result;
@@ -161,14 +210,17 @@ async function importGistQR(event) {
 // Show toast notification
 function showToast(message, type) {
     const toast = document.getElementById('toast');
-    toast.textContent = message;
+    const toastIcon = document.getElementById('toastIcon');
+    const toastMessage = document.getElementById('toastMessage');
+    toastMessage.textContent = message;
+    toast.classList.remove('success', 'error');
     toast.classList.add(type);
-    toast.classList.remove('hidden');
+    toastIcon.className = type === 'success' ? 'ri-check-line' : 'ri-error-warning-line';
+    toast.classList.add('show');
     setTimeout(() => {
-        toast.classList.add('hidden');
-        toast.classList.remove(type);
+        toast.classList.remove('show');
     }, 3000);
 }
 
 // Initialize setup
-startSetupWizard();
+initSetup();
