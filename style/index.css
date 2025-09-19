@@ -207,15 +207,20 @@ body {
     background: white;
     border-top: 1px solid #e5e7eb;
     display: flex;
-    padding: 0.5rem 0;
+    flex-direction: row; /* Explicitly set to row */
+    flex-wrap: nowrap; /* Prevent wrapping */
+    justify-content: space-around; /* Distribute items evenly */
+    align-items: center;
+    padding: 0.5rem;
     z-index: 40;
 }
 
 .nav-item {
     flex: 1;
     display: flex;
-    flex-direction: column;
+    flex-direction: column; /* Stack icon and text vertically within each item */
     align-items: center;
+    justify-content: center;
     gap: 0.25rem;
     padding: 0.5rem;
     background: none;
@@ -224,6 +229,7 @@ body {
     color: #6b7280;
     transition: color 0.2s;
     text-decoration: none;
+    max-width: 25%; /* Ensure items don't exceed 25% of container width */
 }
 
 .nav-item:hover {
