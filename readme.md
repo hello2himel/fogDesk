@@ -2,7 +2,7 @@
 
 A modern, responsive web application designed to help HSC (Higher Secondary Certificate) students track their syllabus progress and manage their study schedule effectively. Built with vanilla JavaScript, HTML5, and CSS3 for optimal performance and compatibility.
 
-**Live Demo:** [studybuddy.netlify.app](https://studybuddy.netlify.app)
+**Live Demo:** [logdoinik.netlify.app](https://logdoinik.netlify.app)
 
 ## Features
 
@@ -43,7 +43,7 @@ A modern, responsive web application designed to help HSC (Higher Secondary Cert
 ## Getting Started
 
 ### Quick Start
-1. Visit [studybuddy.netlify.app](https://studybuddy.netlify.app)
+1. Visit [logdoinik.netlify.app](https://logdoinik.netlify.app)
 2. Configure your study period in Settings
 3. Choose your syllabus type
 4. Start tracking your progress!
