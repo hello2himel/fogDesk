@@ -69,7 +69,7 @@ The application requires an HTTP server due to CORS restrictions when loading JS
 ## File Structure
 
 ```
-syllabus-pulse/
+Study-Buddy/
 ├── index.html              # Main application page
 ├── settings.html           # Settings and configuration page
 ├── style/
