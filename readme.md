@@ -1,4 +1,4 @@
-# Syllabus Pulse - HSC Study Tracker
+# Study Buddy - HSC Study Tracker
 
 A modern, responsive web application designed to help HSC (Higher Secondary Certificate) students track their syllabus progress and manage their study schedule effectively. Built with vanilla JavaScript, HTML5, and CSS3 for optimal performance and compatibility.
 
@@ -51,10 +51,10 @@ A modern, responsive web application designed to help HSC (Higher Secondary Cert
 ### Local Development
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/syllabus-pulse.git
+git clone https://github.com/hello2himel/studybuddy.git
 
 # Navigate to project directory
-cd syllabus-pulse
+cd studyBuddy
 
 # Serve locally (any HTTP server works)
 npx serve .
@@ -150,7 +150,7 @@ The `config/routine.json` file defines daily schedules:
 | `Ctrl+E` | Export data as CSV |
 | `Ctrl+R` | Reset all progress |
 | `Escape` | Close current modal |
-| `Space` | Toggle chapter completion (when focused) |
+| `Space`  | Toggle chapter completion (when focused) |
 
 ## API Integration
 
