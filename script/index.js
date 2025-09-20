@@ -1,7 +1,3 @@
-if (!localStorage.getItem('setupCompleted')) {
-    window.location.href = '/setup.html';
-}
-
 // Global state
 let chapters = {};
 let dailyTasks = {};
@@ -13,177 +9,39 @@ let syncStatus = 'idle';
 let githubToken = localStorage.getItem('github-token') || '';
 let gistId = localStorage.getItem('gist-id') || '';
 let lastSync = localStorage.getItem('last-sync') || '';
-let currentPinInput = '';
 let pendingConfirmationAction = null;
-let hasPinConfirmation = false;
-let qrCanvas = null;
 
-// Date constants
-const startDate = new Date('2025-09-15');
-const endDate = new Date('2026-09-30');
-
-// Lockscreen functions
-async function hashPin(pin) {
-    const enc = new TextEncoder();
-    const data = enc.encode(pin);
-    const hash = await crypto.subtle.digest('SHA-256', data);
-    return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+// Get dates from localStorage with defaults
+function getDateRange() {
+    const startDate = new Date(localStorage.getItem('start-date') || '2025-09-15');
+    const endDate = new Date(localStorage.getItem('end-date') || '2026-09-30');
+    return { startDate, endDate };
 }
 
-function checkLockscreen() {
-    if (localStorage.getItem('setupCompleted') !== 'true') {
-        window.location.href = '/setup.html';
-    } else if (localStorage.getItem('pinHash') && localStorage.getItem('remember') !== 'true') {
-        document.getElementById('lockscreenFull').classList.remove('hidden');
-        document.getElementById('mainContainer').style.display = 'none';
-    } else {
-        document.getElementById('lockscreenFull').classList.add('hidden');
-        document.getElementById('mainContainer').style.display = 'flex';
-        init();
+// Update date range display
+function updateDateRangeDisplay() {
+    const { startDate, endDate } = getDateRange();
+    const dateRangeElement = document.getElementById('dateRange');
+    if (dateRangeElement) {
+        dateRangeElement.textContent = `${startDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })} — ${endDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}`;
     }
 }
 
-function enterPinDigit(digit) {
-    if (currentPinInput.length < 4) {
-        currentPinInput += digit;
-        updatePinDisplay();
-        document.getElementById('pinError').classList.add('hidden');
-    }
+// Check if tasks/schedule should be shown
+function shouldShowTasks() {
+    return localStorage.getItem('show-tasks') !== 'false';
 }
 
-function clearPin() {
-    currentPinInput = '';
-    updatePinDisplay();
-    document.getElementById('pinError').classList.add('hidden');
-}
-
-function updatePinDisplay() {
-    for (let i = 1; i <= 4; i++) {
-        const digitSpan = document.getElementById(`pinDigit${i}`);
-        if (i <= currentPinInput.length) {
-            digitSpan.textContent = '●';
-            digitSpan.classList.add('filled');
-        } else {
-            digitSpan.textContent = '';
-            digitSpan.classList.remove('filled');
-        }
-    }
-}
-
-async function submitPin() {
-    if (currentPinInput.length !== 4) {
-        document.getElementById('pinError').classList.remove('hidden');
-        document.getElementById('pinError').textContent = 'Enter a 4-digit PIN';
-        return;
-    }
-    const hashedPin = await hashPin(currentPinInput);
-    if (hashedPin === localStorage.getItem('pinHash')) {
-        document.getElementById('lockscreenFull').classList.add('hidden');
-        document.getElementById('mainContainer').style.display = 'flex';
-        if (document.getElementById('rememberMe').checked) {
-            localStorage.setItem('remember', 'true');
-        }
-        currentPinInput = '';
-        updatePinDisplay();
-        init();
-    } else {
-        document.getElementById('pinError').classList.remove('hidden');
-        document.getElementById('pinError').textContent = 'Incorrect PIN';
-        currentPinInput = '';
-        updatePinDisplay();
-    }
-}
-
-// QR Export/Import
-function exportGistQR() {
-    if (typeof QRCode === 'undefined') {
-        console.error('QRCode library not loaded');
-        showToast('QR code library not loaded', 'error');
-        return;
-    }
-
-    const pinHash = localStorage.getItem('pinHash') || '';
-    const data = JSON.stringify({ gistId, pinHash });
-    if (!gistId && !pinHash) {
-        console.error('No data to encode: gistId and pinHash are empty');
-        showToast('No data to encode in QR code', 'error');
-        return;
-    }
-    console.log('Generating QR code for data:', data);
-
-    const qrContainer = document.getElementById('qrCodeContainer');
-    qrContainer.innerHTML = '';
+// Update task visibility
+function updateTaskVisibility() {
+    const showTasks = shouldShowTasks();
+    const heroTasksSection = document.getElementById('heroTasksSection');
+    const scheduleBtn = document.getElementById('scheduleBtn');
+    const historyBtn = document.getElementById('historyBtn');
     
-    try {
-        new QRCode(qrContainer, {
-            text: data,
-            width: 256,
-            height: 256,
-            colorDark: '#000000',
-            colorLight: '#FFFFFF',
-            correctLevel: QRCode.CorrectLevel.H
-        });
-        qrCanvas = qrContainer.querySelector('canvas');
-        if (!qrCanvas) {
-            console.error('No canvas generated by QRCode');
-            showToast('Failed to generate QR code: No canvas created', 'error');
-            return;
-        }
-        console.log('QR code generated successfully');
-        document.getElementById('qrExportModal').classList.remove('hidden');
-        // Auto-download QR code
-        const link = document.createElement('a');
-        link.href = qrCanvas.toDataURL('image/png');
-        link.download = 'syllabuspulse-gist-qr.png';
-        link.click();
-    } catch (err) {
-        console.error('Error in QR code generation:', err);
-        showToast(`Error generating QR code: ${err.message}`, 'error');
-    }
-}
-
-function importGistQR(event, fromWizard = false) {
-    const file = event.target.files[0];
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const img = new Image();
-            img.onload = function() {
-                const canvas = document.createElement('canvas');
-                canvas.width = img.width;
-                canvas.height = img.height;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0);
-                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                const code = jsQR(imageData.data, canvas.width, canvas.height);
-                if (code) {
-                    try {
-                        const data = JSON.parse(code.data);
-                        gistId = data.gistId || '';
-                        const pinHash = data.pinHash || '';
-                        localStorage.setItem('gist-id', gistId);
-                        localStorage.setItem('pinHash', pinHash);
-                        if (!fromWizard) {
-                            document.getElementById('gistId').value = gistId;
-                        } else {
-                            localStorage.setItem('setupCompleted', 'true');
-                            document.getElementById('setupWizard').classList.add('hidden');
-                            document.getElementById('mainContainer').style.display = 'flex';
-                            init();
-                        }
-                        updateSyncStatus();
-                        showToast('Gist and PIN imported successfully', 'success');
-                    } catch (err) {
-                        showToast('Invalid QR code data', 'error');
-                    }
-                } else {
-                    showToast('No QR code found in image', 'error');
-                }
-            };
-            img.src = e.target.result;
-        };
-        reader.readAsDataURL(file);
-    }
+    if (heroTasksSection) heroTasksSection.style.display = showTasks ? 'block' : 'none';
+    if (scheduleBtn) scheduleBtn.style.display = showTasks ? 'flex' : 'none';
+    if (historyBtn) historyBtn.style.display = showTasks ? 'flex' : 'none';
 }
 
 // Load saved data
@@ -192,25 +50,32 @@ async function loadData() {
     if (savedChapters) {
         chapters = JSON.parse(savedChapters);
     } else {
-        const response = await fetch('config/syllabus.json');
+        const syllabusFile = localStorage.getItem('selected-syllabus') || 'syllabus.json';
+        const response = await fetch(`config/${syllabusFile}`);
         chapters = await response.json();
     }
     
-    const routineResponse = await fetch('config/routine.json');
-    routine = await routineResponse.json();
-    
-    const savedDailyTasks = localStorage.getItem('daily-tasks');
-    dailyTasks = savedDailyTasks ? JSON.parse(savedDailyTasks) : {};
+    // Only load routine if tasks are enabled
+    if (shouldShowTasks()) {
+        const routineResponse = await fetch('config/routine.json');
+        routine = await routineResponse.json();
+        
+        const savedDailyTasks = localStorage.getItem('daily-tasks');
+        dailyTasks = savedDailyTasks ? JSON.parse(savedDailyTasks) : {};
+    }
 }
 
-// Save data to localStorage
+// Save data
 function saveData() {
     localStorage.setItem('hsc-study-tracker-v2', JSON.stringify(chapters));
-    localStorage.setItem('daily-tasks', JSON.stringify(dailyTasks));
+    if (shouldShowTasks()) {
+        localStorage.setItem('daily-tasks', JSON.stringify(dailyTasks));
+    }
 }
 
 // Calculate time progress
 function calculateTimeProgress() {
+    const { startDate, endDate } = getDateRange();
     const now = new Date();
     const totalDays = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
     const daysPassed = Math.max(0, Math.ceil((now - startDate) / (1000 * 60 * 60 * 24)));
@@ -246,10 +111,13 @@ function calculateSyllabusProgress() {
 
 // Get day schedule
 function getDaySchedule(date = new Date()) {
+    if (!shouldShowTasks() || !routine) return { morning: [], selfStudy: [], dateStr: '', rotationSubject: '' };
+    
     const dayOfWeek = date.getDay();
     const dateStr = date.toISOString().split('T')[0];
     
-    const daysSinceStart = Math.floor((date - new Date('2025-09-15')) / (1000 * 60 * 60 * 24));
+    const { startDate } = getDateRange();
+    const daysSinceStart = Math.floor((date - startDate) / (1000 * 60 * 60 * 24));
     const rotationIndex = daysSinceStart % 6;
     const rotationSubjects = ['Physics', 'Chemistry', 'Math', 'Biology', 'ICT', 'English'];
     const rotationSubject = rotationSubjects[rotationIndex];
@@ -264,11 +132,11 @@ function getDaySchedule(date = new Date()) {
     }
 
     const baseSchedule = {
-        morning: routine[scheduleKey].morning.map(task => ({ ...task })),
-        selfStudy: routine[scheduleKey].selfStudy.map(task => ({
+        morning: routine[scheduleKey]?.morning?.map(task => ({ ...task })) || [],
+        selfStudy: routine[scheduleKey]?.selfStudy?.map(task => ({
             ...task,
             name: task.name.includes('${rotationSubject}') ? task.name.replace('${rotationSubject}', rotationSubject) : task.name
-        })),
+        })) || [],
         dateStr,
         rotationSubject
     };
@@ -286,6 +154,8 @@ function parseTime(timeStr) {
 }
 
 function getSortedTasks(date = new Date()) {
+    if (!shouldShowTasks()) return [];
+    
     const schedule = getDaySchedule(date);
     const allTasks = [...schedule.morning, ...schedule.selfStudy];
     allTasks.sort((a, b) => parseTime(a.time.split('-')[0]) - parseTime(b.time.split('-')[0]));
@@ -293,6 +163,8 @@ function getSortedTasks(date = new Date()) {
 }
 
 function getHeroTasks() {
+    if (!shouldShowTasks()) return { prev: null, current: null, next: null };
+    
     const now = new Date();
     const currentTime = now.getHours() * 60 + now.getMinutes();
     const dateStr = now.toISOString().split('T')[0];
@@ -326,7 +198,7 @@ function getHeroTasks() {
 }
 
 function toggleDailyTask(dateStr, taskId) {
-    if (!dateStr || !taskId) return;
+    if (!dateStr || !taskId || !shouldShowTasks()) return;
     if (!dailyTasks[dateStr]) {
         dailyTasks[dateStr] = {};
     }
@@ -354,6 +226,8 @@ function updateProgress() {
 }
 
 function updateHeroTasks() {
+    if (!shouldShowTasks()) return;
+    
     const { prev, current, next } = getHeroTasks();
     let html = '';
 
@@ -405,17 +279,22 @@ function updateHeroTasks() {
         html += `<div class="task-card small"></div>`;
     }
 
-    document.getElementById('heroTasks').innerHTML = html;
+    const heroTasksElement = document.getElementById('heroTasks');
+    if (heroTasksElement) {
+        heroTasksElement.innerHTML = html;
+    }
 }
 
 function updateScheduleModal() {
+    if (!shouldShowTasks()) return;
+    
     const schedule = getDaySchedule();
     
     const morningContainer = document.getElementById('modalMorningTasks');
     const morningScheduleDiv = document.getElementById('modalMorningSchedule');
     
-    if (schedule.morning.length > 0) {
-        morningScheduleDiv.style.display = 'block';
+    if (morningContainer && schedule.morning.length > 0) {
+        if (morningScheduleDiv) morningScheduleDiv.style.display = 'block';
         morningContainer.innerHTML = schedule.morning.map(task => {
             const isCompleted = getTaskCompletion(schedule.dateStr, task.id);
             return `
@@ -430,28 +309,32 @@ function updateScheduleModal() {
                 </div>
             `;
         }).join('');
-    } else {
+    } else if (morningScheduleDiv) {
         morningScheduleDiv.style.display = 'none';
     }
 
     const selfStudyContainer = document.getElementById('modalSelfStudyTasks');
-    selfStudyContainer.innerHTML = schedule.selfStudy.map(task => {
-        const isCompleted = getTaskCompletion(schedule.dateStr, task.id);
-        return `
-            <div class="task-item">
-                <div class="task-checkbox ${isCompleted ? 'completed' : ''}" onclick="toggleDailyTask('${schedule.dateStr}', '${task.id}')">
-                    ${isCompleted ? '<i class="ri-check-line animate-scale-in"></i>' : ''}
+    if (selfStudyContainer) {
+        selfStudyContainer.innerHTML = schedule.selfStudy.map(task => {
+            const isCompleted = getTaskCompletion(schedule.dateStr, task.id);
+            return `
+                <div class="task-item">
+                    <div class="task-checkbox ${isCompleted ? 'completed' : ''}" onclick="toggleDailyTask('${schedule.dateStr}', '${task.id}')">
+                        ${isCompleted ? '<i class="ri-check-line animate-scale-in"></i>' : ''}
+                    </div>
+                    <div class="task-content">
+                        <div class="task-name ${isCompleted ? 'completed' : ''}">${task.name}</div>
+                        <div class="task-time">${task.time}</div>
+                    </div>
                 </div>
-                <div class="task-content">
-                    <div class="task-name ${isCompleted ? 'completed' : ''}">${task.name}</div>
-                    <div class="task-time">${task.time}</div>
-                </div>
-            </div>
-        `;
-    }).join('');
+            `;
+        }).join('');
+    }
 }
 
 function updateHistoryModal() {
+    if (!shouldShowTasks()) return;
+    
     const last7Days = Array.from({ length: 7 }, (_, i) => {
         const date = new Date();
         date.setDate(date.getDate() - (6 - i));
@@ -462,33 +345,38 @@ function updateHistoryModal() {
     const allTasks = [...sampleSchedule.morning, ...sampleSchedule.selfStudy];
 
     const tableHead = document.getElementById('modalHistoryTableHead');
-    tableHead.innerHTML = `
-        <tr>
-            <th>Date</th>
-            ${allTasks.map(task => `<th>${task.name.split(' (')[0]}</th>`).join('')}
-        </tr>
-    `;
-
-    const tableBody = document.getElementById('modalHistoryTableBody');
-    tableBody.innerHTML = last7Days.map(date => {
-        const dateStr = date.toISOString().split('T')[0];
-        const schedule = getDaySchedule(date);
-        const dayTasks = [...schedule.morning, ...schedule.selfStudy];
-        
-        return `
+    if (tableHead) {
+        tableHead.innerHTML = `
             <tr>
-                <td style="font-weight: 500;">${date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</td>
-                ${allTasks.map(task => {
-                    const dayTask = dayTasks.find(dt => dt.id === task.id);
-                    const isCompleted = dayTask ? getTaskCompletion(dateStr, task.id) : false;
-                    return `<td><i class="ri-${isCompleted ? 'check' : 'close'}-line history-icon ${isCompleted ? 'completed' : 'incomplete'}"></i></td>`;
-                }).join('')}
+                <th>Date</th>
+                ${allTasks.map(task => `<th>${task.name.split(' (')[0]}</th>`).join('')}
             </tr>
         `;
-    }).join('');
+    }
+
+    const tableBody = document.getElementById('modalHistoryTableBody');
+    if (tableBody) {
+        tableBody.innerHTML = last7Days.map(date => {
+            const dateStr = date.toISOString().split('T')[0];
+            const schedule = getDaySchedule(date);
+            const dayTasks = [...schedule.morning, ...schedule.selfStudy];
+            
+            return `
+                <tr>
+                    <td style="font-weight: 500;">${date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</td>
+                    ${allTasks.map(task => {
+                        const dayTask = dayTasks.find(dt => dt.id === task.id);
+                        const isCompleted = dayTask ? getTaskCompletion(dateStr, task.id) : false;
+                        return `<td><i class="ri-${isCompleted ? 'check' : 'close'}-line history-icon ${isCompleted ? 'completed' : 'incomplete'}"></i></td>`;
+                    }).join('')}
+                </tr>
+            `;
+        }).join('');
+    }
 }
 
 function openScheduleModal() {
+    if (!shouldShowTasks()) return;
     updateScheduleModal();
     document.getElementById('scheduleModal').classList.remove('hidden');
 }
@@ -498,6 +386,7 @@ function closeScheduleModal() {
 }
 
 function openHistoryModal() {
+    if (!shouldShowTasks()) return;
     updateHistoryModal();
     document.getElementById('historyModal').classList.remove('hidden');
 }
@@ -506,36 +395,20 @@ function closeHistoryModal() {
     document.getElementById('historyModal').classList.add('hidden');
 }
 
-function openConfirmationModal(action, message, hasPin = false) {
+function openConfirmationModal(action, message) {
     pendingConfirmationAction = action;
-    hasPinConfirmation = hasPin;
     const messageContainer = document.getElementById('confirmationMessage');
     messageContainer.textContent = message;
-    const pinConfirmation = document.getElementById('pinConfirmation');
-    pinConfirmation.classList.toggle('hidden', !hasPin);
-    if (hasPin) {
-        document.getElementById('confirmPin').value = '';
-        document.getElementById('pinConfirmError').classList.add('hidden');
-    }
     document.getElementById('confirmationModal').classList.remove('hidden');
 }
 
 function closeConfirmationModal() {
     pendingConfirmationAction = null;
-    hasPinConfirmation = false;
     document.getElementById('confirmationModal').classList.add('hidden');
 }
 
-async function executeConfirmationAction() {
+function executeConfirmationAction() {
     if (pendingConfirmationAction) {
-        if (hasPinConfirmation) {
-            const confirmPin = document.getElementById('confirmPin').value;
-            const hashedConfirmPin = await hashPin(confirmPin);
-            if (hashedConfirmPin !== localStorage.getItem('pinHash')) {
-                document.getElementById('pinConfirmError').classList.remove('hidden');
-                return;
-            }
-        }
         switch (pendingConfirmationAction) {
             case 'resetChapters':
                 resetChapters();
@@ -590,7 +463,7 @@ function renderChapters() {
                         </div>
                     </div>
                     <div id="note-${chapter.id}" class="chapter-note ${expandedNotes[chapter.id] ? '' : 'hidden'}">
-                        <textarea placeholder="Add a note..." oninput="updateNote('${activeTab}', '${paper}', '${chapter.id}', this.value)">${chapter.note}</textarea>
+                        <textarea placeholder="Add a note..." oninput="updateNote('${activeTab}', '${paper}', '${chapter.id}', this.value)">${chapter.note || ''}</textarea>
                     </div>
                 `).join('')}
             </div>
@@ -759,7 +632,7 @@ function exportData(format) {
         const csvContent = [
             'Subject,Paper,Chapter,Completed,Note',
             ...flatChapters.map(ch => 
-                `"${ch.subject}","${ch.paper}","${ch.title}",${ch.done ? 'Yes' : 'No'},"${ch.note}"`
+                `"${ch.subject}","${ch.paper}","${ch.title}",${ch.done ? 'Yes' : 'No'},"${ch.note || ''}"`
             )
         ].join('\n');
         
@@ -774,7 +647,8 @@ function exportData(format) {
 }
 
 function resetChapters() {
-    fetch('config/syllabus.json')
+    const syllabusFile = localStorage.getItem('selected-syllabus') || 'syllabus.json';
+    fetch(`config/${syllabusFile}`)
         .then(response => response.json())
         .then(data => {
             chapters = data;
@@ -782,7 +656,7 @@ function resetChapters() {
             expandedNotes = {};
             saveData();
             updateProgress();
-            updateHeroTasks();
+            if (shouldShowTasks()) updateHeroTasks();
             renderChapters();
             showToast('All progress reset', 'success');
         });
@@ -793,7 +667,7 @@ document.addEventListener('keydown', (e) => {
     if (e.ctrlKey || e.metaKey) {
         if (e.key === 'r') {
             e.preventDefault();
-            openConfirmationModal('resetChapters', 'Reset all progress? This cannot be undone.', false);
+            openConfirmationModal('resetChapters', 'Reset all progress? This cannot be undone.');
         } else if (e.key === 'e') {
             e.preventDefault();
             exportData('csv');
@@ -803,9 +677,6 @@ document.addEventListener('keydown', (e) => {
         }
     }
     if (e.key === 'Escape') {
-        if (!document.getElementById('lockscreenFull').classList.contains('hidden')) {
-            return;
-        }
         if (!document.getElementById('confirmationModal').classList.contains('hidden')) {
             closeConfirmationModal();
         } else if (!document.getElementById('syllabusModal').classList.contains('hidden')) {
@@ -814,32 +685,24 @@ document.addEventListener('keydown', (e) => {
             closeScheduleModal();
         } else if (!document.getElementById('historyModal').classList.contains('hidden')) {
             closeHistoryModal();
-        } else if (!document.getElementById('qrExportModal').classList.contains('hidden')) {
-            closeQRModal();
         }
-    }
-    if (e.key === 'Enter' && !document.getElementById('lockscreenFull').classList.contains('hidden')) {
-        submitPin();
     }
 });
 
 // Initialize app
 async function init() {
     await loadData();
+    updateDateRangeDisplay();
+    updateTaskVisibility();
     updateProgress();
-    updateHeroTasks();
+    if (shouldShowTasks()) updateHeroTasks();
     updateSyncStatus();
 
-    // Update hero tasks every minute
-    setInterval(updateHeroTasks, 60000);
+    // Update hero tasks every minute if tasks are enabled
+    if (shouldShowTasks()) {
+        setInterval(updateHeroTasks, 60000);
+    }
 }
 
 // Start the app
-checkLockscreen();
-
-// QR Modal functions
-function closeQRModal() {
-    document.getElementById('qrExportModal').classList.add('hidden');
-    document.getElementById('qrCodeContainer').innerHTML = '';
-    qrCanvas = null;
-}
+init();

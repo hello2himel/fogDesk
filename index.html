@@ -6,49 +6,15 @@
     <title>Syllabus Pulse - HSC Study Tracker</title>
     <link href="https://cdn.jsdelivr.net/npm/remixicon@4.3.0/fonts/remixicon.css" rel="stylesheet">
     <link rel="stylesheet" href="style/index.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
 </head>
 <body>
 
-    <!-- Lockscreen Full Screen -->
-    <div id="lockscreenFull" class="lockscreen-full hidden">
-        <div class="lockscreen-content">
-            <h3>Enter PIN</h3>
-            <div class="pin-display">
-                <span id="pinDigit1"></span>
-                <span id="pinDigit2"></span>
-                <span id="pinDigit3"></span>
-                <span id="pinDigit4"></span>
-            </div>
-            <div class="pin-pad">
-                <button class="pin-btn" onclick="enterPinDigit('1')">1</button>
-                <button class="pin-btn" onclick="enterPinDigit('2')">2</button>
-                <button class="pin-btn" onclick="enterPinDigit('3')">3</button>
-                <button class="pin-btn" onclick="enterPinDigit('4')">4</button>
-                <button class="pin-btn" onclick="enterPinDigit('5')">5</button>
-                <button class="pin-btn" onclick="enterPinDigit('6')">6</button>
-                <button class="pin-btn" onclick="enterPinDigit('7')">7</button>
-                <button class="pin-btn" onclick="enterPinDigit('8')">8</button>
-                <button class="pin-btn" onclick="enterPinDigit('9')">9</button>
-                <button class="pin-btn clear-btn" onclick="clearPin()">C</button>
-                <button class="pin-btn" onclick="enterPinDigit('0')">0</button>
-                <button class="pin-btn submit-btn" onclick="submitPin()">✓</button>
-            </div>
-            <div class="remember-me">
-                <input type="checkbox" id="rememberMe" />
-                <label for="rememberMe">Remember me</label>
-            </div>
-            <div id="pinError" class="pin-error hidden">Incorrect PIN</div>
-        </div>
-    </div>
-
-    <div id="mainContainer" class="container" style="display: none;">
+    <div id="mainContainer" class="container">
         <!-- Header -->
         <header class="header">
             <h1>Syllabus Pulse</h1>
             <p>Track time left vs chapters done</p>
-            <p style="font-size: 0.875rem; color: #6b7280;">15 Sep 2025 — 30 Sep 2026</p>
+            <p style="font-size: 0.875rem; color: #6b7280;" id="dateRange">15 Sep 2025 — 30 Sep 2026</p>
             
             <!-- Sync Status -->
             <div class="sync-status">
@@ -84,7 +50,7 @@
         </section>
 
         <!-- Hero Tasks Section -->
-        <section class="hero-tasks-section">
+        <section class="hero-tasks-section" id="heroTasksSection">
             <div class="hero-tasks" id="heroTasks"></div>
         </section>
 
@@ -94,11 +60,11 @@
                 <i class="ri-edit-line"></i>
                 Edit Syllabus
             </button>
-            <button class="btn" onclick="openScheduleModal()">
+            <button class="btn" onclick="openScheduleModal()" id="scheduleBtn">
                 <i class="ri-calendar-line"></i>
                 View Schedule
             </button>
-            <button class="btn" onclick="openHistoryModal()">
+            <button class="btn" onclick="openHistoryModal()" id="historyBtn">
                 <i class="ri-history-line"></i>
                 View History
             </button>
@@ -123,10 +89,6 @@
             </div>
             <div class="modal-content">
                 <p id="confirmationMessage"></p>
-                <div id="pinConfirmation" class="hidden">
-                    <input type="password" id="confirmPin" class="form-input" placeholder="Enter PIN to confirm">
-                    <div id="pinConfirmError" class="pin-error hidden">Incorrect PIN</div>
-                </div>
                 <div class="btn-group">
                     <button class="btn btn-flex" onclick="closeConfirmationModal()">Cancel</button>
                     <button id="confirmActionBtn" class="btn btn-red btn-flex" onclick="executeConfirmationAction()">Confirm</button>
@@ -153,7 +115,7 @@
                         <i class="ri-download-line"></i>
                         Export
                     </button>
-                    <button class="btn" onclick="openConfirmationModal('resetChapters', 'Reset all progress? This cannot be undone.', false)">
+                    <button class="btn" onclick="openConfirmationModal('resetChapters', 'Reset all progress? This cannot be undone.')">
                         <i class="ri-refresh-line"></i>
                         Reset
                     </button>

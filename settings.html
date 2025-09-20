@@ -19,6 +19,45 @@
         </header>
 
         <div class="settings-sections">
+            <!-- Study Configuration -->
+            <div class="settings-card">
+                <h2>Study Configuration</h2>
+                <div class="form-group">
+                    <label class="form-label">Study Period</label>
+                    <div class="date-inputs">
+                        <div class="date-input-group">
+                            <label class="date-label">Start Date</label>
+                            <input type="date" id="startDate" class="form-input">
+                        </div>
+                        <div class="date-input-group">
+                            <label class="date-label">End Date</label>
+                            <input type="date" id="endDate" class="form-input">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Syllabus</label>
+                    <select id="syllabusSelect" class="form-input">
+                        <option value="syllabus.json">Default HSC Syllabus</option>
+                        <option value="alternative-syllabus.json">Alternative Syllabus</option>
+                        <option value="custom-syllabus.json">Custom Syllabus</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="checkbox-group">
+                        <input type="checkbox" id="showTasksToggle">
+                        <span class="checkmark"></span>
+                        Show Tasks & Schedule
+                    </label>
+                    <div class="form-help">
+                        Disable to hide the task tracking and schedule features
+                    </div>
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="saveStudyConfig()">Save Configuration</button>
+                </div>
+            </div>
+
             <!-- Account & Sync -->
             <div class="settings-card">
                 <div class="loading-overlay hidden" id="settingsLoading">
@@ -46,39 +85,27 @@
                 </div>
             </div>
 
-            <!-- Security -->
-            <div class="settings-card">
-                <h2>Security</h2>
-                <div class="form-group security-group">
-                    <label class="form-label">Change PIN</label>
-                    <div class="pin-input-group">
-                        <input type="password" id="newPin" class="form-input" placeholder="New 4-digit PIN" maxlength="4">
-                        <button class="btn" onclick="changePin()">Update</button>
-                    </div>
-                </div>
-            </div>
-
             <!-- Data Management -->
             <div class="settings-card">
                 <h2>Data Management</h2>
                 <div class="form-group">
-                    <h3 class="subheading">Gist Management</h3>
+                    <h3 class="subheading">Backup & Restore</h3>
                     <div class="btn-group">
-                        <button class="btn" onclick="exportGistQR()">Export Gist QR</button>
-                        <button class="btn" onclick="openImportModal()">Import Gist QR</button>
+                        <button class="btn" onclick="exportGistQR()">Export Backup QR</button>
+                        <button class="btn" onclick="openImportModal()">Import Backup QR</button>
                         <input type="file" id="qrUpload" accept="image/*" style="display: none;" onchange="importGistQR(event)">
                     </div>
                 </div>
                 <div class="form-group">
                     <h3 class="subheading">Data Deletion</h3>
                     <div class="btn-group">
-                        <button class="btn btn-danger" onclick="openConfirmationModal('clearGistData', 'Clear Gist data? This removes Gist ID and sync info.', false)">Clear Gist Data</button>
-                        <button class="btn btn-danger" onclick="openConfirmationModal('clearSyllabusCompletion', 'Clear all syllabus progress? This resets all chapters.', false)">Clear Syllabus</button>
-                        <button class="btn btn-danger" onclick="openConfirmationModal('clearLocalDatabase', 'Clear local database? This resets all data.', true)">Clear Database</button>
+                        <button class="btn btn-danger" onclick="openConfirmationModal('clearGistData', 'Clear cloud sync data? This removes Gist ID and sync info.')">Clear Sync Data</button>
+                        <button class="btn btn-danger" onclick="openConfirmationModal('clearSyllabusCompletion', 'Clear all syllabus progress? This resets all chapters.')">Clear Progress</button>
+                        <button class="btn btn-danger" onclick="openConfirmationModal('clearLocalDatabase', 'Clear all local data? This resets everything.')">Clear All Data</button>
                     </div>
                 </div>
                 <div class="info-text">
-                    <p>These actions are permanent.</p>
+                    <p>These actions are permanent and cannot be undone.</p>
                 </div>
             </div>
 
@@ -89,6 +116,7 @@
                     <p>Token stored locally, never shared.</p>
                     <p>Data syncs via private GitHub Gists.</p>
                     <p>All sync operations are free.</p>
+                    <p>Tasks and schedule are optional features.</p>
                 </div>
             </div>
         </div>
@@ -107,10 +135,6 @@
                 </div>
                 <div class="modal-content">
                     <p id="confirmationMessage"></p>
-                    <div id="pinConfirmation" class="hidden">
-                        <input type="password" id="confirmPin" class="form-input" placeholder="Enter PIN" maxlength="4">
-                        <div id="pinConfirmError" class="pin-error hidden">Incorrect PIN</div>
-                    </div>
                     <div class="btn-group">
                         <button class="btn btn-flex" onclick="closeConfirmationModal()">Cancel</button>
                         <button id="confirmActionBtn" class="btn btn-flex btn-danger" onclick="executeConfirmationAction()">Confirm</button>
@@ -123,13 +147,13 @@
         <div id="qrExportModal" class="modal-overlay hidden">
             <div class="modal">
                 <div class="modal-header">
-                    <h3>Gist QR Code</h3>
+                    <h3>Backup QR Code</h3>
                     <button class="btn-close" onclick="closeQRModal()">
                         <i class="ri-close-line"></i>
                     </button>
                 </div>
                 <div class="modal-content">
-                    <p class="warning-text">Do not share this QR code with others.</p>
+                    <p class="warning-text">Keep this QR code secure and private.</p>
                     <div id="qrCodeContainer" class="qr-container"></div>
                     <div class="btn-group">
                         <button class="btn btn-flex" onclick="downloadQRCode()">Download</button>
@@ -143,7 +167,7 @@
         <div id="qrImportModal" class="modal-overlay hidden">
             <div class="modal">
                 <div class="modal-header">
-                    <h3>Import Gist QR</h3>
+                    <h3>Import Backup QR</h3>
                     <button class="btn-close" onclick="closeImportModal()">
                         <i class="ri-close-line"></i>
                     </button>

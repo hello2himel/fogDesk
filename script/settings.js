@@ -2,10 +2,8 @@
 let githubToken = localStorage.getItem('github-token') || '';
 let gistId = localStorage.getItem('gist-id') || '';
 let lastSync = localStorage.getItem('last-sync') || '';
-let pin = localStorage.getItem('app-pin') || '';
 let syncStatus = 'idle';
 let pendingConfirmationAction = null;
-let hasPinConfirmation = false;
 let qrCanvas = null;
 let videoStream = null;
 
@@ -13,8 +11,49 @@ let videoStream = null;
 function initSettings() {
     document.getElementById('githubToken').value = githubToken;
     document.getElementById('gistId').value = gistId;
-    document.getElementById('newPin').value = '';
+    
+    // Initialize study configuration
+    const startDate = localStorage.getItem('start-date') || '2025-09-15';
+    const endDate = localStorage.getItem('end-date') || '2026-09-30';
+    const selectedSyllabus = localStorage.getItem('selected-syllabus') || 'syllabus.json';
+    const showTasks = localStorage.getItem('show-tasks') !== 'false';
+    
+    document.getElementById('startDate').value = startDate;
+    document.getElementById('endDate').value = endDate;
+    document.getElementById('syllabusSelect').value = selectedSyllabus;
+    document.getElementById('showTasksToggle').checked = showTasks;
+    
     updateSyncButtons();
+}
+
+// Save study configuration
+function saveStudyConfig() {
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
+    const selectedSyllabus = document.getElementById('syllabusSelect').value;
+    const showTasks = document.getElementById('showTasksToggle').checked;
+    
+    // Validate dates
+    if (!startDate || !endDate) {
+        showToast('Please set both start and end dates');
+        return;
+    }
+    
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    
+    if (start >= end) {
+        showToast('Start date must be before end date');
+        return;
+    }
+    
+    // Save to localStorage
+    localStorage.setItem('start-date', startDate);
+    localStorage.setItem('end-date', endDate);
+    localStorage.setItem('selected-syllabus', selectedSyllabus);
+    localStorage.setItem('show-tasks', showTasks.toString());
+    
+    showToast('Study configuration saved successfully');
 }
 
 // Update sync buttons based on Gist ID
@@ -42,37 +81,22 @@ function showToast(message) {
 }
 
 // Open confirmation modal
-function openConfirmationModal(action, message, hasPin = false) {
+function openConfirmationModal(action, message) {
     pendingConfirmationAction = action;
-    hasPinConfirmation = hasPin;
     const messageContainer = document.getElementById('confirmationMessage');
     messageContainer.textContent = message;
-    const pinConfirmation = document.getElementById('pinConfirmation');
-    pinConfirmation.classList.toggle('hidden', !hasPin);
-    if (hasPin) {
-        document.getElementById('confirmPin').value = '';
-        document.getElementById('pinConfirmError').classList.add('hidden');
-    }
     document.getElementById('confirmationModal').classList.remove('hidden');
 }
 
 // Close confirmation modal
 function closeConfirmationModal() {
     pendingConfirmationAction = null;
-    hasPinConfirmation = false;
     document.getElementById('confirmationModal').classList.add('hidden');
 }
 
 // Execute confirmation action
 function executeConfirmationAction() {
     if (pendingConfirmationAction) {
-        if (hasPinConfirmation) {
-            const confirmPin = document.getElementById('confirmPin').value;
-            if (confirmPin !== pin) {
-                document.getElementById('pinConfirmError').classList.remove('hidden');
-                return;
-            }
-        }
         switch (pendingConfirmationAction) {
             case 'clearGistData':
                 clearGistData();
@@ -88,19 +112,6 @@ function executeConfirmationAction() {
     }
 }
 
-// Change PIN
-function changePin() {
-    const newPin = document.getElementById('newPin').value;
-    if (newPin.length === 4 && /^\d+$/.test(newPin)) {
-        pin = newPin;
-        localStorage.setItem('app-pin', newPin);
-        showToast('PIN updated successfully');
-        document.getElementById('newPin').value = '';
-    } else {
-        showToast('PIN must be a 4-digit number');
-    }
-}
-
 // Open QR import modal
 function openImportModal() {
     document.getElementById('qrImportModal').classList.remove('hidden');
@@ -112,44 +123,43 @@ function closeImportModal() {
     document.getElementById('qrImportModal').classList.add('hidden');
 }
 
-// Export Gist QR code and show in modal
+// Export backup QR code and show in modal
 function exportGistQR() {
-    // Check if QRCode library is loaded
     if (typeof QRCode === 'undefined') {
         console.error('QRCode library not loaded');
         showToast('QR code library not loaded');
         return;
     }
 
-    // Get current values from the form inputs to ensure we have the latest data
     const currentGithubToken = document.getElementById('githubToken').value.trim();
     const currentGistId = document.getElementById('gistId').value.trim();
+    const startDate = localStorage.getItem('start-date') || '2025-09-15';
+    const endDate = localStorage.getItem('end-date') || '2026-09-30';
+    const selectedSyllabus = localStorage.getItem('selected-syllabus') || 'syllabus.json';
+    const showTasks = localStorage.getItem('show-tasks') !== 'false';
 
-    // Create the data object with all three components
-    const qrData = {
+    const backupData = {
         githubToken: currentGithubToken,
         gistId: currentGistId,
-        pin: pin
+        startDate: startDate,
+        endDate: endDate,
+        selectedSyllabus: selectedSyllabus,
+        showTasks: showTasks,
+        exportDate: new Date().toISOString()
     };
 
-    // Validate that we have at least some data to encode
-    if (!currentGithubToken && !currentGistId && !pin) {
-        showToast('No data to encode in QR code. Please set up GitHub token, Gist ID, or PIN first.');
+    if (!currentGithubToken && !currentGistId) {
+        showToast('No sync data to export. Set up GitHub token and Gist ID first.');
         return;
     }
 
-    const dataString = JSON.stringify(qrData);
-    console.log('Generating QR code for data:', { 
-        hasToken: !!currentGithubToken, 
-        hasGistId: !!currentGistId, 
-        hasPin: !!pin 
-    });
+    const dataString = JSON.stringify(backupData);
+    console.log('Generating backup QR code');
 
     const qrContainer = document.getElementById('qrCodeContainer');
-    qrContainer.innerHTML = ''; // Clear previous QR code
+    qrContainer.innerHTML = '';
     
     try {
-        // Use QRCode constructor to generate QR code
         new QRCode(qrContainer, {
             text: dataString,
             width: 256,
@@ -159,7 +169,6 @@ function exportGistQR() {
             correctLevel: QRCode.CorrectLevel.H
         });
         
-        // Find the generated canvas (qrcodejs appends it to the container)
         qrCanvas = qrContainer.querySelector('canvas');
         if (!qrCanvas) {
             console.error('No canvas generated by QRCode');
@@ -167,9 +176,9 @@ function exportGistQR() {
             return;
         }
         
-        console.log('QR code generated successfully');
+        console.log('Backup QR code generated successfully');
         document.getElementById('qrExportModal').classList.remove('hidden');
-        showToast('QR code generated with GitHub token, Gist ID, and PIN');
+        showToast('Backup QR code generated');
     } catch (err) {
         console.error('Error in QR code generation:', err);
         showToast(`Error generating QR code: ${err.message}`);
@@ -183,7 +192,7 @@ function downloadQRCode() {
         link.download = 'syllabus-pulse-backup.png';
         link.href = qrCanvas.toDataURL('image/png');
         link.click();
-        showToast('QR code downloaded');
+        showToast('Backup QR code downloaded');
     } else {
         showToast('No QR code to download');
     }
@@ -240,7 +249,7 @@ function stopQRScan() {
     document.getElementById('qrScanContainer').classList.add('hidden');
 }
 
-// Import Gist QR from gallery
+// Import backup QR from gallery
 function importGistQR(event) {
     const file = event.target.files[0];
     if (file) {
@@ -265,7 +274,6 @@ function importGistQR(event) {
         };
         reader.readAsDataURL(file);
     }
-    // Clear the file input so the same file can be selected again
     event.target.value = '';
 }
 
@@ -274,48 +282,61 @@ function processQRData(qrDataString) {
     try {
         const data = JSON.parse(qrDataString);
         
-        // Extract data with fallbacks
-        const importedToken = data.githubToken || '';
-        const importedGistId = data.gistId || '';
-        const importedPin = data.pin || '';
+        const imported = [];
         
-        // Update global variables and localStorage
-        if (importedToken) {
-            githubToken = importedToken;
-            localStorage.setItem('github-token', importedToken);
-            document.getElementById('githubToken').value = importedToken;
+        // Import GitHub token and Gist ID
+        if (data.githubToken) {
+            githubToken = data.githubToken;
+            localStorage.setItem('github-token', data.githubToken);
+            document.getElementById('githubToken').value = data.githubToken;
+            imported.push('GitHub token');
         }
         
-        if (importedGistId) {
-            gistId = importedGistId;
-            localStorage.setItem('gist-id', importedGistId);
-            document.getElementById('gistId').value = importedGistId;
+        if (data.gistId) {
+            gistId = data.gistId;
+            localStorage.setItem('gist-id', data.gistId);
+            document.getElementById('gistId').value = data.gistId;
+            imported.push('Gist ID');
         }
         
-        if (importedPin) {
-            pin = importedPin;
-            localStorage.setItem('app-pin', importedPin);
+        // Import study configuration
+        if (data.startDate) {
+            localStorage.setItem('start-date', data.startDate);
+            document.getElementById('startDate').value = data.startDate;
+            imported.push('start date');
+        }
+        
+        if (data.endDate) {
+            localStorage.setItem('end-date', data.endDate);
+            document.getElementById('endDate').value = data.endDate;
+            imported.push('end date');
+        }
+        
+        if (data.selectedSyllabus) {
+            localStorage.setItem('selected-syllabus', data.selectedSyllabus);
+            document.getElementById('syllabusSelect').value = data.selectedSyllabus;
+            imported.push('syllabus selection');
+        }
+        
+        if (data.hasOwnProperty('showTasks')) {
+            localStorage.setItem('show-tasks', data.showTasks.toString());
+            document.getElementById('showTasksToggle').checked = data.showTasks;
+            imported.push('task settings');
         }
         
         updateSyncButtons();
-        
-        // Show success message with what was imported
-        const imported = [];
-        if (importedToken) imported.push('GitHub token');
-        if (importedGistId) imported.push('Gist ID');
-        if (importedPin) imported.push('PIN');
         
         if (imported.length > 0) {
             showToast(`Successfully imported: ${imported.join(', ')}`);
             stopQRScan();
             closeImportModal();
         } else {
-            showToast('QR code contains no valid data');
+            showToast('QR code contains no valid backup data');
         }
         
     } catch (err) {
         console.error('Error parsing QR data:', err);
-        showToast('Invalid QR code format');
+        showToast('Invalid backup QR code format');
     }
 }
 
@@ -327,7 +348,7 @@ function clearGistData() {
     localStorage.removeItem('last-sync');
     document.getElementById('gistId').value = '';
     updateSyncButtons();
-    showToast('Gist data cleared');
+    showToast('Cloud sync data cleared');
 }
 
 // Clear syllabus completion
@@ -343,7 +364,7 @@ function clearSyllabusCompletion() {
         });
     });
     localStorage.setItem('hsc-study-tracker-v2', JSON.stringify(chapters));
-    showToast('Syllabus cleared');
+    showToast('All progress cleared');
 }
 
 // Clear local database
@@ -352,15 +373,17 @@ function clearLocalDatabase() {
     githubToken = '';
     gistId = '';
     lastSync = '';
-    pin = '';
     document.getElementById('githubToken').value = '';
     document.getElementById('gistId').value = '';
-    document.getElementById('newPin').value = '';
+    document.getElementById('startDate').value = '2025-09-15';
+    document.getElementById('endDate').value = '2026-09-30';
+    document.getElementById('syllabusSelect').value = 'syllabus.json';
+    document.getElementById('showTasksToggle').checked = true;
     updateSyncButtons();
-    showToast('Database cleared');
+    showToast('All local data cleared');
     setTimeout(() => {
         window.location.href = 'index.html';
-    }, 1000);
+    }, 1500);
 }
 
 // Sync to cloud
@@ -382,6 +405,12 @@ async function syncToCloud() {
         const data = {
             chapters,
             dailyTasks,
+            settings: {
+                startDate: localStorage.getItem('start-date'),
+                endDate: localStorage.getItem('end-date'),
+                selectedSyllabus: localStorage.getItem('selected-syllabus'),
+                showTasks: localStorage.getItem('show-tasks')
+            },
             lastUpdated: new Date().toISOString(),
             device: navigator.userAgent.includes('Mobile') ? 'mobile' : 'desktop'
         };
@@ -460,6 +489,27 @@ async function syncFromCloud() {
                     if (data.dailyTasks) {
                         localStorage.setItem('daily-tasks', JSON.stringify(data.dailyTasks));
                     }
+                    
+                    // Import settings if available
+                    if (data.settings) {
+                        if (data.settings.startDate) {
+                            localStorage.setItem('start-date', data.settings.startDate);
+                            document.getElementById('startDate').value = data.settings.startDate;
+                        }
+                        if (data.settings.endDate) {
+                            localStorage.setItem('end-date', data.settings.endDate);
+                            document.getElementById('endDate').value = data.settings.endDate;
+                        }
+                        if (data.settings.selectedSyllabus) {
+                            localStorage.setItem('selected-syllabus', data.settings.selectedSyllabus);
+                            document.getElementById('syllabusSelect').value = data.settings.selectedSyllabus;
+                        }
+                        if (data.settings.showTasks !== undefined) {
+                            localStorage.setItem('show-tasks', data.settings.showTasks);
+                            document.getElementById('showTasksToggle').checked = data.settings.showTasks === 'true';
+                        }
+                    }
+                    
                     syncStatus = 'success';
                     showToast('Sync from cloud successful');
                     const syncTime = new Date().toLocaleString();
@@ -481,6 +531,12 @@ async function syncFromCloud() {
             const data = {
                 chapters,
                 dailyTasks,
+                settings: {
+                    startDate: localStorage.getItem('start-date'),
+                    endDate: localStorage.getItem('end-date'),
+                    selectedSyllabus: localStorage.getItem('selected-syllabus'),
+                    showTasks: localStorage.getItem('show-tasks')
+                },
                 lastUpdated: new Date().toISOString(),
                 device: 'initial'
             };
