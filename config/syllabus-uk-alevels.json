@@ -1,0 +1,132 @@
+{
+  "Physics": {
+    "AS Level": [
+      {"id": "phy-as-01", "title": "Topic 1: Measurements and their errors", "done": false, "note": ""},
+      {"id": "phy-as-02", "title": "Topic 2: Particles and radiation", "done": false, "note": ""},
+      {"id": "phy-as-03", "title": "Topic 3: Waves", "done": false, "note": ""},
+      {"id": "phy-as-04", "title": "Topic 4: Mechanics and materials", "done": false, "note": ""},
+      {"id": "phy-as-05", "title": "Topic 5: Electricity", "done": false, "note": ""}
+    ],
+    "A2 Level": [
+      {"id": "phy-a2-01", "title": "Topic 6: Further mechanics and thermal physics", "done": false, "note": ""},
+      {"id": "phy-a2-02", "title": "Topic 7: Fields and their consequences", "done": false, "note": ""},
+      {"id": "phy-a2-03", "title": "Topic 8: Nuclear physics", "done": false, "note": ""},
+      {"id": "phy-a2-04", "title": "Topic 9: Option A - Astrophysics", "done": false, "note": ""},
+      {"id": "phy-a2-05", "title": "Topic 9: Option B - Medical physics", "done": false, "note": ""},
+      {"id": "phy-a2-06", "title": "Topic 9: Option C - Engineering physics", "done": false, "note": ""},
+      {"id": "phy-a2-07", "title": "Topic 9: Option D - Turning points in physics", "done": false, "note": ""},
+      {"id": "phy-a2-08", "title": "Topic 9: Option E - Electronics", "done": false, "note": ""}
+    ]
+  },
+  "Chemistry": {
+    "AS Level": [
+      {"id": "chem-as-01", "title": "Topic 1: Atomic structure", "done": false, "note": ""},
+      {"id": "chem-as-02", "title": "Topic 2: Amount of substance", "done": false, "note": ""},
+      {"id": "chem-as-03", "title": "Topic 3: Bonding", "done": false, "note": ""},
+      {"id": "chem-as-04", "title": "Topic 4: Energetics", "done": false, "note": ""},
+      {"id": "chem-as-05", "title": "Topic 5: Kinetics", "done": false, "note": ""},
+      {"id": "chem-as-06", "title": "Topic 6: Chemical equilibria and Le Chatelier's principle", "done": false, "note": ""},
+      {"id": "chem-as-07", "title": "Topic 7: Oxidation, reduction and redox equations", "done": false, "note": ""},
+      {"id": "chem-as-08", "title": "Topic 8: Thermodynamics", "done": false, "note": ""},
+      {"id": "chem-as-09", "title": "Topic 9: Rate equations", "done": false, "note": ""},
+      {"id": "chem-as-10", "title": "Topic 10: Equilibrium constant Kp for homogeneous systems", "done": false, "note": ""},
+      {"id": "chem-as-11", "title": "Topic 11: Electrode potentials and electrochemical cells", "done": false, "note": ""},
+      {"id": "chem-as-12", "title": "Topic 12: Acids and bases", "done": false, "note": ""}
+    ],
+    "A2 Level": [
+      {"id": "chem-a2-01", "title": "Topic 13: Properties of Period 3 elements and their compounds", "done": false, "note": ""},
+      {"id": "chem-a2-02", "title": "Topic 14: Transition metals", "done": false, "note": ""},
+      {"id": "chem-a2-03", "title": "Topic 15: Reactions of ions in aqueous solution", "done": false, "note": ""},
+      {"id": "chem-a2-04", "title": "Topic 16: Introduction to organic chemistry", "done": false, "note": ""},
+      {"id": "chem-a2-05", "title": "Topic 17: Alkanes", "done": false, "note": ""},
+      {"id": "chem-a2-06", "title": "Topic 18: Halogenoalkanes", "done": false, "note": ""},
+      {"id": "chem-a2-07", "title": "Topic 19: Alkenes", "done": false, "note": ""},
+      {"id": "chem-a2-08", "title": "Topic 20: Alcohols", "done": false, "note": ""},
+      {"id": "chem-a2-09", "title": "Topic 21: Organic analysis", "done": false, "note": ""},
+      {"id": "chem-a2-10", "title": "Topic 22: Aldehydes and ketones", "done": false, "note": ""},
+      {"id": "chem-a2-11", "title": "Topic 23: Carboxylic acids and derivatives", "done": false, "note": ""},
+      {"id": "chem-a2-12", "title": "Topic 24: Aromatic chemistry", "done": false, "note": ""},
+      {"id": "chem-a2-13", "title": "Topic 25: Amines", "done": false, "note": ""},
+      {"id": "chem-a2-14", "title": "Topic 26: Polymers", "done": false, "note": ""},
+      {"id": "chem-a2-15", "title": "Topic 27: Amino acids, proteins and DNA", "done": false, "note": ""},
+      {"id": "chem-a2-16", "title": "Topic 28: Organic synthesis", "done": false, "note": ""},
+      {"id": "chem-a2-17", "title": "Topic 29: Nuclear magnetic resonance spectroscopy", "done": false, "note": ""},
+      {"id": "chem-a2-18", "title": "Topic 30: Chromatography and spectroscopy", "done": false, "note": ""}
+    ]
+  },
+  "Mathematics": {
+    "Pure Mathematics": [
+      {"id": "math-pure-01", "title": "Chapter 1: Proof", "done": false, "note": ""},
+      {"id": "math-pure-02", "title": "Chapter 2: Algebra and functions", "done": false, "note": ""},
+      {"id": "math-pure-03", "title": "Chapter 3: Coordinate geometry in the (x, y) plane", "done": false, "note": ""},
+      {"id": "math-pure-04", "title": "Chapter 4: Sequences and series", "done": false, "note": ""},
+      {"id": "math-pure-05", "title": "Chapter 5: Trigonometry", "done": false, "note": ""},
+      {"id": "math-pure-06", "title": "Chapter 6: Exponentials and logarithms", "done": false, "note": ""},
+      {"id": "math-pure-07", "title": "Chapter 7: Differentiation", "done": false, "note": ""},
+      {"id": "math-pure-08", "title": "Chapter 8: Integration", "done": false, "note": ""},
+      {"id": "math-pure-09", "title": "Chapter 9: Numerical methods", "done": false, "note": ""},
+      {"id": "math-pure-10", "title": "Chapter 10: Vectors", "done": false, "note": ""}
+    ],
+    "Applied Mathematics": [
+      {"id": "math-app-01", "title": "Statistics 1: Statistical sampling", "done": false, "note": ""},
+      {"id": "math-app-02", "title": "Statistics 2: Data presentation and interpretation", "done": false, "note": ""},
+      {"id": "math-app-03", "title": "Statistics 3: Probability", "done": false, "note": ""},
+      {"id": "math-app-04", "title": "Statistics 4: Statistical distributions", "done": false, "note": ""},
+      {"id": "math-app-05", "title": "Statistics 5: Statistical hypothesis testing", "done": false, "note": ""},
+      {"id": "math-app-06", "title": "Mechanics 1: Kinematics", "done": false, "note": ""},
+      {"id": "math-app-07", "title": "Mechanics 2: Forces and Newton's laws", "done": false, "note": ""},
+      {"id": "math-app-08", "title": "Mechanics 3: Moments", "done": false, "note": ""}
+    ]
+  },
+  "Biology": {
+    "AS Level": [
+      {"id": "bio-as-01", "title": "Topic 1: Biological molecules", "done": false, "note": ""},
+      {"id": "bio-as-02", "title": "Topic 2: Cells", "done": false, "note": ""},
+      {"id": "bio-as-03", "title": "Topic 3: Organisms exchange substances with their environment", "done": false, "note": ""},
+      {"id": "bio-as-04", "title": "Topic 4: Genetic information, variation and relationships between organisms", "done": false, "note": ""}
+    ],
+    "A2 Level": [
+      {"id": "bio-a2-01", "title": "Topic 5: Energy transfers in and between organisms", "done": false, "note": ""},
+      {"id": "bio-a2-02", "title": "Topic 6: Organisms respond to changes in their internal and external environments", "done": false, "note": ""},
+      {"id": "bio-a2-03", "title": "Topic 7: Genetics, populations, evolution and ecosystems", "done": false, "note": ""},
+      {"id": "bio-a2-04", "title": "Topic 8: The control of gene expression", "done": false, "note": ""}
+    ]
+  },
+  "Computer Science": {
+    "Programming": [
+      {"id": "cs-prog-01", "title": "Chapter 1: Fundamentals of programming", "done": false, "note": ""},
+      {"id": "cs-prog-02", "title": "Chapter 2: Fundamentals of data structures", "done": false, "note": ""},
+      {"id": "cs-prog-03", "title": "Chapter 3: Fundamentals of algorithms", "done": false, "note": ""},
+      {"id": "cs-prog-04", "title": "Chapter 4: Theory of computation", "done": false, "note": ""}
+    ],
+    "Theory": [
+      {"id": "cs-theory-01", "title": "Chapter 5: Fundamentals of data representation", "done": false, "note": ""},
+      {"id": "cs-theory-02", "title": "Chapter 6: Fundamentals of computer systems", "done": false, "note": ""},
+      {"id": "cs-theory-03", "title": "Chapter 7: Fundamentals of computer organisation and architecture", "done": false, "note": ""},
+      {"id": "cs-theory-04", "title": "Chapter 8: Consequences of uses of computing", "done": false, "note": ""},
+      {"id": "cs-theory-05", "title": "Chapter 9: Fundamentals of communication and networking", "done": false, "note": ""},
+      {"id": "cs-theory-06", "title": "Chapter 10: Fundamentals of databases", "done": false, "note": ""},
+      {"id": "cs-theory-07", "title": "Chapter 11: Big Data", "done": false, "note": ""},
+      {"id": "cs-theory-08", "title": "Chapter 12: Fundamentals of functional programming", "done": false, "note": ""}
+    ]
+  },
+  "Psychology": {
+    "AS Level": [
+      {"id": "psy-as-01", "title": "Topic 1: Approaches in Psychology", "done": false, "note": ""},
+      {"id": "psy-as-02", "title": "Topic 2: Biopsychology", "done": false, "note": ""},
+      {"id": "psy-as-03", "title": "Topic 3: Research Methods", "done": false, "note": ""}
+    ],
+    "A2 Level": [
+      {"id": "psy-a2-01", "title": "Topic 4: Issues and Debates in Psychology", "done": false, "note": ""},
+      {"id": "psy-a2-02", "title": "Topic 5: Relationships", "done": false, "note": ""},
+      {"id": "psy-a2-03", "title": "Topic 6: Gender", "done": false, "note": ""},
+      {"id": "psy-a2-04", "title": "Topic 7: Cognition and Development", "done": false, "note": ""},
+      {"id": "psy-a2-05", "title": "Topic 8: Schizophrenia", "done": false, "note": ""},
+      {"id": "psy-a2-06", "title": "Topic 9: Eating Behaviour", "done": false, "note": ""},
+      {"id": "psy-a2-07", "title": "Topic 10: Stress", "done": false, "note": ""},
+      {"id": "psy-a2-08", "title": "Topic 11: Aggression", "done": false, "note": ""},
+      {"id": "psy-a2-09", "title": "Topic 12: Forensic Psychology", "done": false, "note": ""},
+      {"id": "psy-a2-10", "title": "Topic 13: Addiction", "done": false, "note": ""}
+    ]
+  }
+}

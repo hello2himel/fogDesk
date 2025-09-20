@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Study Buddy - Settings</title>
+    <title>Syllabus Pulse - Settings</title>
     <link href="https://cdn.jsdelivr.net/npm/remixicon@4.3.0/fonts/remixicon.css" rel="stylesheet">
     <link rel="stylesheet" href="style/settings.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -38,10 +38,20 @@
                 <div class="form-group">
                     <label class="form-label">Syllabus</label>
                     <select id="syllabusSelect" class="form-input">
-                        <option value="syllabus.json">Default HSC Syllabus</option>
-                        <option value="alternative-syllabus.json">Alternative Syllabus</option>
-                        <option value="custom-syllabus.json">Custom Syllabus</option>
+                        <option value="syllabus-bangladesh-hsc.json">Bangladesh HSC (Science)</option>
+                        <option value="syllabus-bangladesh-hsc-commerce.json">Bangladesh HSC (Commerce)</option>
+                        <option value="syllabus-bangladesh-hsc-arts.json">Bangladesh HSC (Arts/Humanities)</option>
+                        <option value="syllabus-india-cbse.json">India CBSE (Science)</option>
+                        <option value="syllabus-india-cbse-commerce.json">India CBSE (Commerce)</option>
+                        <option value="syllabus-india-icse.json">India ICSE (Science)</option>
+                        <option value="syllabus-uk-alevels.json">UK A-Levels (Science)</option>
+                        <option value="syllabus-ib-diploma.json">IB Diploma Programme</option>
+                        <option value="syllabus-ap.json">Advanced Placement (AP)</option>
+                        <option value="syllabus-custom.json">Custom Syllabus</option>
                     </select>
+                    <div class="form-help">
+                        Choose the curriculum that matches your academic system
+                    </div>
                 </div>
                 <div class="form-group">
                     <label class="checkbox-group">
@@ -179,9 +189,20 @@
                         <button class="btn btn-flex" onclick="document.getElementById('qrUpload').click()">Load from Gallery</button>
                     </div>
                     <div id="qrScanContainer" class="qr-scan-container hidden">
-                        <video id="qrVideo" autoplay playsinline></video>
+                        <div class="qr-scan-status">
+                            <p>Point your camera at the QR code</p>
+                            <p class="qr-scan-help">Make sure the QR code is well-lit and centered</p>
+                        </div>
+                        <div class="qr-video-container">
+                            <video id="qrVideo" autoplay playsinline muted></video>
+                            <div class="qr-scan-overlay">
+                                <div class="qr-scan-frame"></div>
+                            </div>
+                        </div>
                         <canvas id="qrCanvas" style="display: none;"></canvas>
-                        <button class="btn btn-flex" onclick="stopQRScan()">Stop Scanning</button>
+                        <div class="qr-scan-controls">
+                            <button class="btn btn-flex btn-danger" onclick="stopQRScan()">Stop Scanning</button>
+                        </div>
                     </div>
                 </div>
             </div>

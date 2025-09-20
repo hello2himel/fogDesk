@@ -212,30 +212,73 @@ async function startQRScan() {
     const qrScanContainer = document.getElementById('qrScanContainer');
     
     try {
-        videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+        // Try different camera constraints for better compatibility
+        let constraints = { video: { facingMode: 'environment' } };
+        
+        try {
+            videoStream = await navigator.mediaDevices.getUserMedia(constraints);
+        } catch (envError) {
+            // Fallback to any available camera
+            constraints = { video: true };
+            videoStream = await navigator.mediaDevices.getUserMedia(constraints);
+        }
+        
         video.srcObject = videoStream;
         qrScanContainer.classList.remove('hidden');
         
+        // Wait for video to be ready
+        video.onloadedmetadata = () => {
+            video.play();
+        };
+        
         const ctx = canvas.getContext('2d');
+        let isScanning = true;
+        
         const scanQR = () => {
-            if (video.readyState === video.HAVE_ENOUGH_DATA) {
+            if (!isScanning || qrScanContainer.classList.contains('hidden')) {
+                return;
+            }
+            
+            if (video.readyState === video.HAVE_ENOUGH_DATA && video.videoWidth > 0 && video.videoHeight > 0) {
                 canvas.width = video.videoWidth;
                 canvas.height = video.videoHeight;
                 ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                const code = jsQR(imageData.data, canvas.width, canvas.height);
-                if (code) {
-                    processQRData(code.data);
+                
+                try {
+                    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    const code = jsQR(imageData.data, canvas.width, canvas.height);
+                    if (code && code.data) {
+                        isScanning = false;
+                        processQRData(code.data);
+                        return;
+                    }
+                } catch (scanError) {
+                    console.warn('QR scanning error:', scanError);
                 }
             }
-            if (!qrScanContainer.classList.contains('hidden')) {
-                requestAnimationFrame(scanQR);
-            }
+            
+            requestAnimationFrame(scanQR);
         };
-        requestAnimationFrame(scanQR);
+        
+        // Start scanning after a short delay to ensure video is ready
+        setTimeout(() => {
+            if (isScanning) {
+                scanQR();
+            }
+        }, 500);
+        
     } catch (err) {
-        showToast('Failed to access camera');
-        console.error(err);
+        console.error('Camera access error:', err);
+        if (err.name === 'NotAllowedError') {
+            showToast('Camera access denied. Please allow camera access and try again.');
+        } else if (err.name === 'NotFoundError') {
+            showToast('No camera found. Please use the gallery option instead.');
+        } else if (err.name === 'NotSupportedError') {
+            showToast('Camera not supported in this browser. Please use the gallery option.');
+        } else {
+            showToast('Failed to access camera. Please try the gallery option.');
+        }
+        qrScanContainer.classList.add('hidden');
     }
 }
 

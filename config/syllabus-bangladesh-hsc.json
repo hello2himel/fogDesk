@@ -1,0 +1,195 @@
+{
+  "Physics": {
+    "Paper 1": [
+      {"id": "phy-1-01", "title": "Chapter 1: Physical World", "done": false, "note": ""},
+      {"id": "phy-1-02", "title": "Chapter 2: Units and Measurements", "done": false, "note": ""},
+      {"id": "phy-1-03", "title": "Chapter 3: Motion in a Straight Line", "done": false, "note": ""},
+      {"id": "phy-1-04", "title": "Chapter 4: Motion in a Plane", "done": false, "note": ""},
+      {"id": "phy-1-05", "title": "Chapter 5: Laws of Motion", "done": false, "note": ""},
+      {"id": "phy-1-06", "title": "Chapter 6: Work, Energy and Power", "done": false, "note": ""},
+      {"id": "phy-1-07", "title": "Chapter 7: System of Particles and Rotational Motion", "done": false, "note": ""},
+      {"id": "phy-1-08", "title": "Chapter 8: Gravitation", "done": false, "note": ""}
+    ],
+    "Paper 2": [
+      {"id": "phy-2-01", "title": "Chapter 9: Mechanical Properties of Solids", "done": false, "note": ""},
+      {"id": "phy-2-02", "title": "Chapter 10: Mechanical Properties of Fluids", "done": false, "note": ""},
+      {"id": "phy-2-03", "title": "Chapter 11: Thermal Properties of Matter", "done": false, "note": ""},
+      {"id": "phy-2-04", "title": "Chapter 12: Thermodynamics", "done": false, "note": ""},
+      {"id": "phy-2-05", "title": "Chapter 13: Kinetic Theory", "done": false, "note": ""},
+      {"id": "phy-2-06", "title": "Chapter 14: Oscillations", "done": false, "note": ""},
+      {"id": "phy-2-07", "title": "Chapter 15: Waves", "done": false, "note": ""},
+      {"id": "phy-2-08", "title": "Chapter 16: Electric Charges and Fields", "done": false, "note": ""},
+      {"id": "phy-2-09", "title": "Chapter 17: Electrostatic Potential and Capacitance", "done": false, "note": ""},
+      {"id": "phy-2-10", "title": "Chapter 18: Current Electricity", "done": false, "note": ""},
+      {"id": "phy-2-11", "title": "Chapter 19: Moving Charges and Magnetism", "done": false, "note": ""},
+      {"id": "phy-2-12", "title": "Chapter 20: Magnetism and Matter", "done": false, "note": ""},
+      {"id": "phy-2-13", "title": "Chapter 21: Electromagnetic Induction", "done": false, "note": ""},
+      {"id": "phy-2-14", "title": "Chapter 22: Alternating Current", "done": false, "note": ""},
+      {"id": "phy-2-15", "title": "Chapter 23: Electromagnetic Waves", "done": false, "note": ""},
+      {"id": "phy-2-16", "title": "Chapter 24: Ray Optics and Optical Instruments", "done": false, "note": ""},
+      {"id": "phy-2-17", "title": "Chapter 25: Wave Optics", "done": false, "note": ""},
+      {"id": "phy-2-18", "title": "Chapter 26: Dual Nature of Radiation and Matter", "done": false, "note": ""},
+      {"id": "phy-2-19", "title": "Chapter 27: Atoms", "done": false, "note": ""},
+      {"id": "phy-2-20", "title": "Chapter 28: Nuclei", "done": false, "note": ""},
+      {"id": "phy-2-21", "title": "Chapter 29: Semiconductor Electronics", "done": false, "note": ""}
+    ]
+  },
+  "Chemistry": {
+    "Paper 1": [
+      {"id": "chem-1-01", "title": "Chapter 1: Some Basic Concepts of Chemistry", "done": false, "note": ""},
+      {"id": "chem-1-02", "title": "Chapter 2: Structure of Atom", "done": false, "note": ""},
+      {"id": "chem-1-03", "title": "Chapter 3: Classification of Elements and Periodicity", "done": false, "note": ""},
+      {"id": "chem-1-04", "title": "Chapter 4: Chemical Bonding and Molecular Structure", "done": false, "note": ""},
+      {"id": "chem-1-05", "title": "Chapter 5: States of Matter", "done": false, "note": ""},
+      {"id": "chem-1-06", "title": "Chapter 6: Thermodynamics", "done": false, "note": ""},
+      {"id": "chem-1-07", "title": "Chapter 7: Equilibrium", "done": false, "note": ""},
+      {"id": "chem-1-08", "title": "Chapter 8: Redox Reactions", "done": false, "note": ""},
+      {"id": "chem-1-09", "title": "Chapter 9: Hydrogen", "done": false, "note": ""},
+      {"id": "chem-1-10", "title": "Chapter 10: The s-Block Elements", "done": false, "note": ""},
+      {"id": "chem-1-11", "title": "Chapter 11: The p-Block Elements", "done": false, "note": ""},
+      {"id": "chem-1-12", "title": "Chapter 12: Organic Chemistry - Basic Principles", "done": false, "note": ""},
+      {"id": "chem-1-13", "title": "Chapter 13: Hydrocarbons", "done": false, "note": ""},
+      {"id": "chem-1-14", "title": "Chapter 14: Environmental Chemistry", "done": false, "note": ""}
+    ],
+    "Paper 2": [
+      {"id": "chem-2-01", "title": "Chapter 1: Solid State", "done": false, "note": ""},
+      {"id": "chem-2-02", "title": "Chapter 2: Solutions", "done": false, "note": ""},
+      {"id": "chem-2-03", "title": "Chapter 3: Electrochemistry", "done": false, "note": ""},
+      {"id": "chem-2-04", "title": "Chapter 4: Chemical Kinetics", "done": false, "note": ""},
+      {"id": "chem-2-05", "title": "Chapter 5: Surface Chemistry", "done": false, "note": ""},
+      {"id": "chem-2-06", "title": "Chapter 6: General Principles and Processes of Isolation of Elements", "done": false, "note": ""},
+      {"id": "chem-2-07", "title": "Chapter 7: The p-Block Elements", "done": false, "note": ""},
+      {"id": "chem-2-08", "title": "Chapter 8: The d- and f-Block Elements", "done": false, "note": ""},
+      {"id": "chem-2-09", "title": "Chapter 9: Coordination Compounds", "done": false, "note": ""},
+      {"id": "chem-2-10", "title": "Chapter 10: Haloalkanes and Haloarenes", "done": false, "note": ""},
+      {"id": "chem-2-11", "title": "Chapter 11: Alcohols, Phenols and Ethers", "done": false, "note": ""},
+      {"id": "chem-2-12", "title": "Chapter 12: Aldehydes, Ketones and Carboxylic Acids", "done": false, "note": ""},
+      {"id": "chem-2-13", "title": "Chapter 13: Amines", "done": false, "note": ""},
+      {"id": "chem-2-14", "title": "Chapter 14: Biomolecules", "done": false, "note": ""},
+      {"id": "chem-2-15", "title": "Chapter 15: Polymers", "done": false, "note": ""},
+      {"id": "chem-2-16", "title": "Chapter 16: Chemistry in Everyday Life", "done": false, "note": ""}
+    ]
+  },
+  "Mathematics": {
+    "Paper 1": [
+      {"id": "math-1-01", "title": "Chapter 1: Sets", "done": false, "note": ""},
+      {"id": "math-1-02", "title": "Chapter 2: Relations and Functions", "done": false, "note": ""},
+      {"id": "math-1-03", "title": "Chapter 3: Trigonometric Functions", "done": false, "note": ""},
+      {"id": "math-1-04", "title": "Chapter 4: Principle of Mathematical Induction", "done": false, "note": ""},
+      {"id": "math-1-05", "title": "Chapter 5: Complex Numbers and Quadratic Equations", "done": false, "note": ""},
+      {"id": "math-1-06", "title": "Chapter 6: Linear Inequalities", "done": false, "note": ""},
+      {"id": "math-1-07", "title": "Chapter 7: Permutations and Combinations", "done": false, "note": ""},
+      {"id": "math-1-08", "title": "Chapter 8: Binomial Theorem", "done": false, "note": ""},
+      {"id": "math-1-09", "title": "Chapter 9: Sequences and Series", "done": false, "note": ""},
+      {"id": "math-1-10", "title": "Chapter 10: Straight Lines", "done": false, "note": ""},
+      {"id": "math-1-11", "title": "Chapter 11: Conic Sections", "done": false, "note": ""},
+      {"id": "math-1-12", "title": "Chapter 12: Introduction to Three Dimensional Geometry", "done": false, "note": ""},
+      {"id": "math-1-13", "title": "Chapter 13: Limits and Derivatives", "done": false, "note": ""},
+      {"id": "math-1-14", "title": "Chapter 14: Mathematical Reasoning", "done": false, "note": ""},
+      {"id": "math-1-15", "title": "Chapter 15: Statistics", "done": false, "note": ""},
+      {"id": "math-1-16", "title": "Chapter 16: Probability", "done": false, "note": ""}
+    ],
+    "Paper 2": [
+      {"id": "math-2-01", "title": "Chapter 1: Relations and Functions", "done": false, "note": ""},
+      {"id": "math-2-02", "title": "Chapter 2: Inverse Trigonometric Functions", "done": false, "note": ""},
+      {"id": "math-2-03", "title": "Chapter 3: Matrices", "done": false, "note": ""},
+      {"id": "math-2-04", "title": "Chapter 4: Determinants", "done": false, "note": ""},
+      {"id": "math-2-05", "title": "Chapter 5: Continuity and Differentiability", "done": false, "note": ""},
+      {"id": "math-2-06", "title": "Chapter 6: Application of Derivatives", "done": false, "note": ""},
+      {"id": "math-2-07", "title": "Chapter 7: Integrals", "done": false, "note": ""},
+      {"id": "math-2-08", "title": "Chapter 8: Application of Integrals", "done": false, "note": ""},
+      {"id": "math-2-09", "title": "Chapter 9: Differential Equations", "done": false, "note": ""},
+      {"id": "math-2-10", "title": "Chapter 10: Vector Algebra", "done": false, "note": ""},
+      {"id": "math-2-11", "title": "Chapter 11: Three Dimensional Geometry", "done": false, "note": ""},
+      {"id": "math-2-12", "title": "Chapter 12: Linear Programming", "done": false, "note": ""},
+      {"id": "math-2-13", "title": "Chapter 13: Probability", "done": false, "note": ""}
+    ]
+  },
+  "Biology": {
+    "Paper 1": [
+      {"id": "bio-1-01", "title": "Chapter 1: The Living World", "done": false, "note": ""},
+      {"id": "bio-1-02", "title": "Chapter 2: Biological Classification", "done": false, "note": ""},
+      {"id": "bio-1-03", "title": "Chapter 3: Plant Kingdom", "done": false, "note": ""},
+      {"id": "bio-1-04", "title": "Chapter 4: Animal Kingdom", "done": false, "note": ""},
+      {"id": "bio-1-05", "title": "Chapter 5: Morphology of Flowering Plants", "done": false, "note": ""},
+      {"id": "bio-1-06", "title": "Chapter 6: Anatomy of Flowering Plants", "done": false, "note": ""},
+      {"id": "bio-1-07", "title": "Chapter 7: Structural Organisation in Animals", "done": false, "note": ""},
+      {"id": "bio-1-08", "title": "Chapter 8: Cell: The Unit of Life", "done": false, "note": ""},
+      {"id": "bio-1-09", "title": "Chapter 9: Biomolecules", "done": false, "note": ""},
+      {"id": "bio-1-10", "title": "Chapter 10: Cell Cycle and Cell Division", "done": false, "note": ""},
+      {"id": "bio-1-11", "title": "Chapter 11: Transport in Plants", "done": false, "note": ""},
+      {"id": "bio-1-12", "title": "Chapter 12: Mineral Nutrition", "done": false, "note": ""},
+      {"id": "bio-1-13", "title": "Chapter 13: Photosynthesis in Higher Plants", "done": false, "note": ""},
+      {"id": "bio-1-14", "title": "Chapter 14: Respiration in Plants", "done": false, "note": ""},
+      {"id": "bio-1-15", "title": "Chapter 15: Plant Growth and Development", "done": false, "note": ""},
+      {"id": "bio-1-16", "title": "Chapter 16: Digestion and Absorption", "done": false, "note": ""},
+      {"id": "bio-1-17", "title": "Chapter 17: Breathing and Exchange of Gases", "done": false, "note": ""},
+      {"id": "bio-1-18", "title": "Chapter 18: Body Fluids and Circulation", "done": false, "note": ""},
+      {"id": "bio-1-19", "title": "Chapter 19: Excretory Products and their Elimination", "done": false, "note": ""},
+      {"id": "bio-1-20", "title": "Chapter 20: Locomotion and Movement", "done": false, "note": ""},
+      {"id": "bio-1-21", "title": "Chapter 21: Neural Control and Coordination", "done": false, "note": ""},
+      {"id": "bio-1-22", "title": "Chapter 22: Chemical Coordination and Integration", "done": false, "note": ""}
+    ],
+    "Paper 2": [
+      {"id": "bio-2-01", "title": "Chapter 1: Reproduction in Organisms", "done": false, "note": ""},
+      {"id": "bio-2-02", "title": "Chapter 2: Sexual Reproduction in Flowering Plants", "done": false, "note": ""},
+      {"id": "bio-2-03", "title": "Chapter 3: Human Reproduction", "done": false, "note": ""},
+      {"id": "bio-2-04", "title": "Chapter 4: Reproductive Health", "done": false, "note": ""},
+      {"id": "bio-2-05", "title": "Chapter 5: Principles of Inheritance and Variation", "done": false, "note": ""},
+      {"id": "bio-2-06", "title": "Chapter 6: Molecular Basis of Inheritance", "done": false, "note": ""},
+      {"id": "bio-2-07", "title": "Chapter 7: Evolution", "done": false, "note": ""},
+      {"id": "bio-2-08", "title": "Chapter 8: Human Health and Disease", "done": false, "note": ""},
+      {"id": "bio-2-09", "title": "Chapter 9: Strategies for Enhancement in Food Production", "done": false, "note": ""},
+      {"id": "bio-2-10", "title": "Chapter 10: Microbes in Human Welfare", "done": false, "note": ""},
+      {"id": "bio-2-11", "title": "Chapter 11: Biotechnology: Principles and Processes", "done": false, "note": ""},
+      {"id": "bio-2-12", "title": "Chapter 12: Biotechnology and its Applications", "done": false, "note": ""},
+      {"id": "bio-2-13", "title": "Chapter 13: Organisms and Populations", "done": false, "note": ""},
+      {"id": "bio-2-14", "title": "Chapter 14: Ecosystem", "done": false, "note": ""},
+      {"id": "bio-2-15", "title": "Chapter 15: Biodiversity and Conservation", "done": false, "note": ""},
+      {"id": "bio-2-16", "title": "Chapter 16: Environmental Issues", "done": false, "note": ""}
+    ]
+  },
+  "ICT": {
+    "Theory": [
+      {"id": "ict-1-01", "title": "Chapter 1: Information and Communication Technology", "done": false, "note": ""},
+      {"id": "ict-1-02", "title": "Chapter 2: Communication Systems and Networks", "done": false, "note": ""},
+      {"id": "ict-1-03", "title": "Chapter 3: Number Systems and Digital Logic", "done": false, "note": ""},
+      {"id": "ict-1-04", "title": "Chapter 4: Web Design Introduction and HTML", "done": false, "note": ""},
+      {"id": "ict-1-05", "title": "Chapter 5: Programming Language", "done": false, "note": ""},
+      {"id": "ict-1-06", "title": "Chapter 6: Database Management System", "done": false, "note": ""}
+    ],
+    "Practical": [
+      {"id": "ict-2-01", "title": "HTML and CSS Practice", "done": false, "note": ""},
+      {"id": "ict-2-02", "title": "C Programming Exercises", "done": false, "note": ""},
+      {"id": "ict-2-03", "title": "Database Design Projects", "done": false, "note": ""},
+      {"id": "ict-2-04", "title": "Web Development Projects", "done": false, "note": ""},
+      {"id": "ict-2-05", "title": "Network Configuration", "done": false, "note": ""}
+    ]
+  },
+  "English": {
+    "Paper 1": [
+      {"id": "eng-1-01", "title": "Unit 1: Introducing Oneself", "done": false, "note": ""},
+      {"id": "eng-1-02", "title": "Unit 2: Pastimes", "done": false, "note": ""},
+      {"id": "eng-1-03", "title": "Unit 3: Time and Seasons", "done": false, "note": ""},
+      {"id": "eng-1-04", "title": "Unit 4: Asking for and Giving Directions", "done": false, "note": ""},
+      {"id": "eng-1-05", "title": "Unit 5: Festivals and Celebrations", "done": false, "note": ""},
+      {"id": "eng-1-06", "title": "Unit 6: Food and Nutrition", "done": false, "note": ""},
+      {"id": "eng-1-07", "title": "Unit 7: Ethnic Food", "done": false, "note": ""},
+      {"id": "eng-1-08", "title": "Unit 8: Shopping", "done": false, "note": ""},
+      {"id": "eng-1-09", "title": "Unit 9: Games and Sports", "done": false, "note": ""},
+      {"id": "eng-1-10", "title": "Unit 10: People and Places", "done": false, "note": ""}
+    ],
+    "Paper 2": [
+      {"id": "eng-2-01", "title": "Unit 1: Career Path", "done": false, "note": ""},
+      {"id": "eng-2-02", "title": "Unit 2: Education", "done": false, "note": ""},
+      {"id": "eng-2-03", "title": "Unit 3: Human Relationships", "done": false, "note": ""},
+      {"id": "eng-2-04", "title": "Unit 4: Telecommunication", "done": false, "note": ""},
+      {"id": "eng-2-05", "title": "Unit 5: Media and Advertising", "done": false, "note": ""},
+      {"id": "eng-2-06", "title": "Unit 6: Travel and Tourism", "done": false, "note": ""},
+      {"id": "eng-2-07", "title": "Unit 7: Environment", "done": false, "note": ""},
+      {"id": "eng-2-08", "title": "Unit 8: Globalization and Trade", "done": false, "note": ""},
+      {"id": "eng-2-09", "title": "Unit 9: Peace and Conflict", "done": false, "note": ""},
+      {"id": "eng-2-10", "title": "Unit 10: Science and Technology", "done": false, "note": ""}
+    ]
+  }
+}

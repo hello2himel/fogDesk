@@ -1,0 +1,125 @@
+{
+  "Physics": {
+    "Paper 1": [
+      {"id": "phy-1-01", "title": "Chapter 1: Electric Charges and Fields", "done": false, "note": ""},
+      {"id": "phy-1-02", "title": "Chapter 2: Electrostatic Potential and Capacitance", "done": false, "note": ""},
+      {"id": "phy-1-03", "title": "Chapter 3: Current Electricity", "done": false, "note": ""},
+      {"id": "phy-1-04", "title": "Chapter 4: Moving Charges and Magnetism", "done": false, "note": ""},
+      {"id": "phy-1-05", "title": "Chapter 5: Magnetism and Matter", "done": false, "note": ""},
+      {"id": "phy-1-06", "title": "Chapter 6: Electromagnetic Induction", "done": false, "note": ""},
+      {"id": "phy-1-07", "title": "Chapter 7: Alternating Current", "done": false, "note": ""},
+      {"id": "phy-1-08", "title": "Chapter 8: Electromagnetic Waves", "done": false, "note": ""},
+      {"id": "phy-1-09", "title": "Chapter 9: Ray Optics and Optical Instruments", "done": false, "note": ""},
+      {"id": "phy-1-10", "title": "Chapter 10: Wave Optics", "done": false, "note": ""},
+      {"id": "phy-1-11", "title": "Chapter 11: Dual Nature of Radiation and Matter", "done": false, "note": ""},
+      {"id": "phy-1-12", "title": "Chapter 12: Atoms", "done": false, "note": ""},
+      {"id": "phy-1-13", "title": "Chapter 13: Nuclei", "done": false, "note": ""},
+      {"id": "phy-1-14", "title": "Chapter 14: Semiconductor Electronics", "done": false, "note": ""},
+      {"id": "phy-1-15", "title": "Chapter 15: Communication Systems", "done": false, "note": ""}
+    ]
+  },
+  "Chemistry": {
+    "Paper 1": [
+      {"id": "chem-1-01", "title": "Chapter 1: Solid State", "done": false, "note": ""},
+      {"id": "chem-1-02", "title": "Chapter 2: Solutions", "done": false, "note": ""},
+      {"id": "chem-1-03", "title": "Chapter 3: Electrochemistry", "done": false, "note": ""},
+      {"id": "chem-1-04", "title": "Chapter 4: Chemical Kinetics", "done": false, "note": ""},
+      {"id": "chem-1-05", "title": "Chapter 5: Surface Chemistry", "done": false, "note": ""},
+      {"id": "chem-1-06", "title": "Chapter 6: General Principles and Processes of Isolation of Elements", "done": false, "note": ""},
+      {"id": "chem-1-07", "title": "Chapter 7: The p-Block Elements", "done": false, "note": ""},
+      {"id": "chem-1-08", "title": "Chapter 8: The d and f Block Elements", "done": false, "note": ""},
+      {"id": "chem-1-09", "title": "Chapter 9: Coordination Compounds", "done": false, "note": ""},
+      {"id": "chem-1-10", "title": "Chapter 10: Haloalkanes and Haloarenes", "done": false, "note": ""},
+      {"id": "chem-1-11", "title": "Chapter 11: Alcohols, Phenols and Ethers", "done": false, "note": ""},
+      {"id": "chem-1-12", "title": "Chapter 12: Aldehydes, Ketones and Carboxylic Acids", "done": false, "note": ""},
+      {"id": "chem-1-13", "title": "Chapter 13: Amines", "done": false, "note": ""},
+      {"id": "chem-1-14", "title": "Chapter 14: Biomolecules", "done": false, "note": ""},
+      {"id": "chem-1-15", "title": "Chapter 15: Polymers", "done": false, "note": ""},
+      {"id": "chem-1-16", "title": "Chapter 16: Chemistry in Everyday Life", "done": false, "note": ""}
+    ]
+  },
+  "Mathematics": {
+    "Paper 1": [
+      {"id": "math-1-01", "title": "Chapter 1: Relations and Functions", "done": false, "note": ""},
+      {"id": "math-1-02", "title": "Chapter 2: Inverse Trigonometric Functions", "done": false, "note": ""},
+      {"id": "math-1-03", "title": "Chapter 3: Matrices", "done": false, "note": ""},
+      {"id": "math-1-04", "title": "Chapter 4: Determinants", "done": false, "note": ""},
+      {"id": "math-1-05", "title": "Chapter 5: Continuity and Differentiability", "done": false, "note": ""},
+      {"id": "math-1-06", "title": "Chapter 6: Application of Derivatives", "done": false, "note": ""},
+      {"id": "math-1-07", "title": "Chapter 7: Integrals", "done": false, "note": ""},
+      {"id": "math-1-08", "title": "Chapter 8: Application of Integrals", "done": false, "note": ""},
+      {"id": "math-1-09", "title": "Chapter 9: Differential Equations", "done": false, "note": ""},
+      {"id": "math-1-10", "title": "Chapter 10: Vector Algebra", "done": false, "note": ""},
+      {"id": "math-1-11", "title": "Chapter 11: Three Dimensional Geometry", "done": false, "note": ""},
+      {"id": "math-1-12", "title": "Chapter 12: Linear Programming", "done": false, "note": ""},
+      {"id": "math-1-13", "title": "Chapter 13: Probability", "done": false, "note": ""}
+    ]
+  },
+  "Biology": {
+    "Paper 1": [
+      {"id": "bio-1-01", "title": "Chapter 1: Reproduction in Organisms", "done": false, "note": ""},
+      {"id": "bio-1-02", "title": "Chapter 2: Sexual Reproduction in Flowering Plants", "done": false, "note": ""},
+      {"id": "bio-1-03", "title": "Chapter 3: Human Reproduction", "done": false, "note": ""},
+      {"id": "bio-1-04", "title": "Chapter 4: Reproductive Health", "done": false, "note": ""},
+      {"id": "bio-1-05", "title": "Chapter 5: Principles of Inheritance and Variation", "done": false, "note": ""},
+      {"id": "bio-1-06", "title": "Chapter 6: Molecular Basis of Inheritance", "done": false, "note": ""},
+      {"id": "bio-1-07", "title": "Chapter 7: Evolution", "done": false, "note": ""},
+      {"id": "bio-1-08", "title": "Chapter 8: Human Health and Disease", "done": false, "note": ""},
+      {"id": "bio-1-09", "title": "Chapter 9: Strategies for Enhancement in Food Production", "done": false, "note": ""},
+      {"id": "bio-1-10", "title": "Chapter 10: Microbes in Human Welfare", "done": false, "note": ""},
+      {"id": "bio-1-11", "title": "Chapter 11: Biotechnology: Principles and Processes", "done": false, "note": ""},
+      {"id": "bio-1-12", "title": "Chapter 12: Biotechnology and its Applications", "done": false, "note": ""},
+      {"id": "bio-1-13", "title": "Chapter 13: Organisms and Populations", "done": false, "note": ""},
+      {"id": "bio-1-14", "title": "Chapter 14: Ecosystem", "done": false, "note": ""},
+      {"id": "bio-1-15", "title": "Chapter 15: Biodiversity and Conservation", "done": false, "note": ""},
+      {"id": "bio-1-16", "title": "Chapter 16: Environmental Issues", "done": false, "note": ""}
+    ]
+  },
+  "English": {
+    "Core": [
+      {"id": "eng-1-01", "title": "Reading Comprehension", "done": false, "note": ""},
+      {"id": "eng-1-02", "title": "Note Making", "done": false, "note": ""},
+      {"id": "eng-1-03", "title": "Summary Writing", "done": false, "note": ""},
+      {"id": "eng-1-04", "title": "Letter Writing", "done": false, "note": ""},
+      {"id": "eng-1-05", "title": "Article Writing", "done": false, "note": ""},
+      {"id": "eng-1-06", "title": "Report Writing", "done": false, "note": ""},
+      {"id": "eng-1-07", "title": "Debate Writing", "done": false, "note": ""},
+      {"id": "eng-1-08", "title": "Speech Writing", "done": false, "note": ""}
+    ],
+    "Literature": [
+      {"id": "eng-2-01", "title": "Flamingo: The Last Lesson", "done": false, "note": ""},
+      {"id": "eng-2-02", "title": "Flamingo: Lost Spring", "done": false, "note": ""},
+      {"id": "eng-2-03", "title": "Flamingo: Deep Water", "done": false, "note": ""},
+      {"id": "eng-2-04", "title": "Flamingo: The Rattrap", "done": false, "note": ""},
+      {"id": "eng-2-05", "title": "Flamingo: Indigo", "done": false, "note": ""},
+      {"id": "eng-2-06", "title": "Flamingo: Poets and Pancakes", "done": false, "note": ""},
+      {"id": "eng-2-07", "title": "Flamingo: The Interview", "done": false, "note": ""},
+      {"id": "eng-2-08", "title": "Flamingo: Going Places", "done": false, "note": ""},
+      {"id": "eng-2-09", "title": "Vistas: The Tiger King", "done": false, "note": ""},
+      {"id": "eng-2-10", "title": "Vistas: Journey to the End of the Earth", "done": false, "note": ""},
+      {"id": "eng-2-11", "title": "Vistas: The Enemy", "done": false, "note": ""},
+      {"id": "eng-2-12", "title": "Vistas: Should Wizard Hit Mommy?", "done": false, "note": ""},
+      {"id": "eng-2-13", "title": "Vistas: On the Face of It", "done": false, "note": ""},
+      {"id": "eng-2-14", "title": "Vistas: Evans Tries an O-Level", "done": false, "note": ""},
+      {"id": "eng-2-15", "title": "Vistas: Memories of Childhood", "done": false, "note": ""}
+    ]
+  },
+  "Computer Science": {
+    "Theory": [
+      {"id": "cs-1-01", "title": "Chapter 1: Computational Thinking and Programming", "done": false, "note": ""},
+      {"id": "cs-1-02", "title": "Chapter 2: Computer Networks", "done": false, "note": ""},
+      {"id": "cs-1-03", "title": "Chapter 3: Database Management", "done": false, "note": ""},
+      {"id": "cs-1-04", "title": "Chapter 4: Boolean Algebra", "done": false, "note": ""},
+      {"id": "cs-1-05", "title": "Chapter 5: Computer System Architecture", "done": false, "note": ""}
+    ],
+    "Practical": [
+      {"id": "cs-2-01", "title": "Python Programming Basics", "done": false, "note": ""},
+      {"id": "cs-2-02", "title": "Data Structures in Python", "done": false, "note": ""},
+      {"id": "cs-2-03", "title": "File Handling", "done": false, "note": ""},
+      {"id": "cs-2-04", "title": "Data Management using SQL", "done": false, "note": ""},
+      {"id": "cs-2-05", "title": "Interface Python with SQL", "done": false, "note": ""},
+      {"id": "cs-2-06", "title": "Data Visualization using Python", "done": false, "note": ""},
+      {"id": "cs-2-07", "title": "Computer Networks Practical", "done": false, "note": ""}
+    ]
+  }
+}
