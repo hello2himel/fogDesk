@@ -1,296 +1,189 @@
+/* =============================================
+   Setup Wizard
+   Step 4 = account login / sign-up (email only).
+   No cloud tech branding visible to the user.
+   ============================================= */
+
+if (DB.isLoggedIn()) window.location.replace('index.html');
+
+/* ---- Step navigation ---- */
 let currentStep = 1;
-let pinInput1 = ''; // Initial PIN
-let pinInput2 = ''; // Confirmation PIN
-let githubToken = '';
-let gistId = '';
 
-// Initialize setup
-window.initSetup = function() {
-    if (localStorage.getItem('setupCompleted') === 'true') {
-        window.location.href = '/index.html';
-        return;
-    }
-    window.showStep(1);
-}
-
-// Show specific step
-window.showStep = function(step) {
-    console.log(`Showing step ${step}`);
-    document.querySelectorAll('.wizard-panel').forEach(panel => {
-        panel.classList.add('hidden');
+function goStep(n) {
+    document.querySelectorAll('.setup-step').forEach(el => el.classList.remove('active'));
+    const target = document.getElementById('step' + n);
+    if (target) target.classList.add('active');
+    document.querySelectorAll('.brand-step').forEach(el => {
+        const s = parseInt(el.dataset.step);
+        el.classList.remove('active', 'completed');
+        if (s < n) el.classList.add('completed');
+        else if (s === n) el.classList.add('active');
     });
-    const panel = document.getElementById(`wizardStep${step}`);
-    if (panel) {
-        panel.classList.remove('hidden');
-    } else {
-        console.error(`Panel wizardStep${step} not found`);
-        window.showToast(`Error: Step ${step} not found`, 'error');
-        return;
-    }
-    window.updateProgress(step);
-    currentStep = step;
-    if (step === 3 || step === 4) {
-        if (step === 3) pinInput1 = '';
-        if (step === 4) pinInput2 = '';
-        window.updatePinDisplay();
-        document.getElementById(`pinError${step - 2}`).classList.add('hidden');
-    }
+    currentStep = n;
 }
 
-// Update progress indicators
-window.updateProgress = function(step) {
-    document.querySelectorAll('.progress-step').forEach((indicator, index) => {
-        const stepNum = index + 1;
-        indicator.classList.remove('active', 'completed');
-        if (stepNum < step) {
-            indicator.classList.add('completed');
-        } else if (stepNum === step) {
-            indicator.classList.add('active');
-        }
+/* ---- Curriculum ---- */
+document.querySelectorAll('.curriculum-card').forEach(card => {
+    card.addEventListener('click', () => {
+        document.querySelectorAll('.curriculum-card').forEach(c => c.classList.remove('selected'));
+        card.classList.add('selected');
+        card.querySelector('input').checked = true;
+    });
+});
+
+/* ---- Date step ---- */
+function setDefaultDates() {
+    const start = new Date();
+    const end   = new Date();
+    end.setFullYear(end.getFullYear() + 1);
+
+    document.getElementById('startDate').value = start.toISOString().split('T')[0];
+    document.getElementById('endDate').value   = end.toISOString().split('T')[0];
+
+    // Show locale-aware format hint
+    const hint = document.getElementById('dateFormatHint');
+    if (hint) {
+        const sample = new Date('2024-03-15');
+        hint.textContent = 'e.g. ' + sample.toLocaleDateString(navigator.language, {
+            day: '2-digit', month: 'short', year: 'numeric'
+        });
+    }
+
+    updateDatePreview();
+}
+
+function formatFriendly(iso) {
+    if (!iso) return '';
+    return new Date(iso).toLocaleDateString(navigator.language, {
+        day: '2-digit', month: 'short', year: 'numeric'
     });
 }
 
-// Navigation functions
-window.nextStep = function(step) {
-    console.log(`Next step triggered: ${step}`);
-    if (step === 4 && (pinInput1.length !== 4 || !/^\d{4}$/.test(pinInput1))) {
-        window.showToast('Initial PIN must be exactly 4 digits', 'error');
-        document.getElementById('pinError1').textContent = 'Initial PIN must be exactly 4 digits';
-        document.getElementById('pinError1').classList.remove('hidden');
+function updateDatePreview() {
+    const s = document.getElementById('startDate').value;
+    const e = document.getElementById('endDate').value;
+    if (!s || !e) return;
+    const start = new Date(s), end = new Date(e), now = new Date();
+    if (start >= end) return;
+    const total   = Math.ceil((end - start) / 86400000);
+    const elapsed = Math.max(0, Math.ceil((now - start) / 86400000));
+    const left    = Math.max(0, total - elapsed);
+
+    document.getElementById('previewDays').textContent    = total;
+    document.getElementById('previewElapsed').textContent = elapsed;
+    document.getElementById('previewLeft').textContent    = left;
+
+    const sf = document.getElementById('previewStartFmt');
+    const ef = document.getElementById('previewEndFmt');
+    if (sf) sf.textContent = formatFriendly(s);
+    if (ef) ef.textContent = formatFriendly(e);
+
+    document.getElementById('datePreview').classList.remove('hidden');
+    const fd = document.getElementById('dateFriendly');
+    if (fd) fd.style.display = 'block';
+}
+
+document.getElementById('startDate').addEventListener('change', updateDatePreview);
+document.getElementById('endDate').addEventListener('change', updateDatePreview);
+
+function validateDatesAndContinue() {
+    const s = document.getElementById('startDate').value;
+    const e = document.getElementById('endDate').value;
+    if (!s || !e) { toast('Please set both dates', 'error'); return; }
+    if (new Date(s) >= new Date(e)) { toast('Start date must be before end date', 'error'); return; }
+    goStep(4);
+}
+
+/* ---- Step 4: Account (login / sign-up) ---- */
+function setAuthMode(mode) {
+    // mode: 'login' | 'signup'
+    document.querySelectorAll('.auth-tab').forEach(t => t.classList.toggle('active', t.dataset.mode === mode));
+    document.getElementById('authLoginFields').classList.toggle('hidden', mode !== 'login');
+    document.getElementById('authSignupFields').classList.toggle('hidden', mode !== 'signup');
+    document.getElementById('authSubmitBtn').textContent = mode === 'login' ? 'Sign in & Finish' : 'Create account & Finish';
+    document.getElementById('authSubmitBtn').dataset.mode = mode;
+}
+
+async function submitAuth() {
+    const btn  = document.getElementById('authSubmitBtn');
+    const mode = btn.dataset.mode || 'login';
+
+    const email = document.getElementById('authEmail').value.trim();
+    if (!email || !email.includes('@')) { toast('Enter a valid email address', 'error'); return; }
+
+    // Check app is configured
+    const cfg = DB._cfg();
+    if (!cfg.url || !cfg.key) {
+        toast('This app is not configured yet. Please contact the developer.', 'error');
         return;
     }
-    window.showStep(step);
-}
 
-window.prevStep = function(step) {
-    console.log(`Previous step triggered: ${step}`);
-    window.showStep(step);
-}
-
-// PIN entry functions
-window.enterPinDigit = function(digit) {
-    if (currentStep === 3 && pinInput1.length < 4) {
-        pinInput1 += digit;
-    } else if (currentStep === 4 && pinInput2.length < 4) {
-        pinInput2 += digit;
+    if (mode === 'signup') {
+        const name = document.getElementById('authName').value.trim();
+        if (!name) { toast('Enter your name', 'error'); return; }
     }
-    window.updatePinDisplay();
-}
 
-window.clearPin = function() {
-    if (currentStep === 3) {
-        pinInput1 = '';
-        document.getElementById('pinError1').classList.add('hidden');
-    } else if (currentStep === 4) {
-        pinInput2 = '';
-        document.getElementById('pinError2').classList.add('hidden');
+    btn.disabled = true;
+    btn.textContent = 'Please wait…';
+
+    try {
+        // Init cloud with env credentials
+        SB.init(cfg.url, cfg.key);
+        await new Promise(r => setTimeout(r, 500)); // allow SDK to load
+        SB.init(cfg.url, cfg.key);
+
+        // Verify connectivity (a missing row is fine)
+        await SB.ping(email);
+
+        // Save email as session credential
+        DB.saveEmail(email);
+        SB.setEmail(email);
+
+        toast('All set! Loading your dashboard…', 'success');
+        await new Promise(r => setTimeout(r, 700));
+
+        await finishSetup(email);
+    } catch (e) {
+        toast('Could not connect. Please try again.', 'error');
+        btn.disabled = false;
+        setAuthMode(mode);
     }
-    window.updatePinDisplay();
 }
 
-window.updatePinDisplay = function() {
-    if (currentStep === 3) {
-        for (let i = 1; i <= 4; i++) {
-            const digit = document.getElementById(`pinDigit${i}`);
-            digit.classList.toggle('filled', i <= pinInput1.length);
+async function finishSetup(email) {
+    const syllabus   = document.querySelector('input[name="syllabus"]:checked')?.value || 'syllabus-bangladesh-hsc.json';
+    const startDate  = document.getElementById('startDate').value;
+    const endDate    = document.getElementById('endDate').value;
+
+    try {
+        // Check if this user already has data (returning user)
+        const existing = await DB.pull();
+        if (!existing) {
+            // New user — write initial data
+            const chapters = await DB.loadSyllabus(syllabus);
+            const enabled  = {};
+            Object.keys(chapters).forEach(s => { enabled[s] = true; });
+            await DB.push(chapters, { syllabus, startDate, endDate }, enabled);
         }
-    } else if (currentStep === 4) {
-        for (let i = 5; i <= 8; i++) {
-            const digit = document.getElementById(`pinDigit${i}`);
-            digit.classList.toggle('filled', i - 4 <= pinInput2.length);
-        }
+        window.location.replace('index.html');
+    } catch (e) {
+        toast('Setup failed: ' + e.message, 'error');
     }
 }
 
-// Hash PIN for secure storage
-window.hashPin = async function(pin) {
-    try {
-        const encoder = new TextEncoder();
-        const data = encoder.encode(pin);
-        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-        const hashArray = Array.from(new Uint8Array(hashBuffer));
-        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-    } catch (error) {
-        window.showToast('Failed to hash PIN: ' + error.message, 'error');
-        throw error;
-    }
+/* ---- Toast ---- */
+function toast(msg, type = 'success') {
+    const el   = document.getElementById('toast');
+    const icon = document.getElementById('toastIcon');
+    const txt  = document.getElementById('toastMsg');
+    el.className   = 'toast ' + type;
+    icon.className = type === 'success' ? 'ri-check-line' : 'ri-error-warning-line';
+    txt.textContent = msg;
+    clearTimeout(el._t);
+    el._t = setTimeout(() => el.classList.add('hidden'), 3500);
 }
 
-// Complete setup
-window.completeSetup = async function() {
-    if (pinInput2.length !== 4 || !/^\d{4}$/.test(pinInput2)) {
-        window.showToast('Confirmation PIN must be exactly 4 digits', 'error');
-        document.getElementById('pinError2').textContent = 'Confirmation PIN must be exactly 4 digits';
-        document.getElementById('pinError2').classList.remove('hidden');
-        return;
-    }
-    if (pinInput1 !== pinInput2) {
-        window.showToast('PINs do not match', 'error');
-        document.getElementById('pinError2').textContent = 'PINs do not match';
-        document.getElementById('pinError2').classList.remove('hidden');
-        return;
-    }
-    try {
-        const hashedPin = await window.hashPin(pinInput1);
-        localStorage.setItem('pinHash', hashedPin);
-        localStorage.setItem('setupCompleted', 'true');
-        window.showToast('Setup completed successfully!', 'success');
-        setTimeout(() => {
-            window.location.href = '/index.html';
-        }, 1500);
-    } catch (error) {
-        window.showToast('Failed to complete setup: ' + error.message, 'error');
-        document.getElementById('pinError2').textContent = 'Failed to complete setup';
-        document.getElementById('pinError2').classList.remove('hidden');
-        console.error('Setup error:', error);
-    }
-}
-
-// Sync modal functions
-window.openSyncModal = function() {
-    const modal = document.getElementById('syncModal');
-    modal.classList.remove('hidden');
-}
-
-window.closeSyncModal = function() {
-    const modal = document.getElementById('syncModal');
-    modal.classList.add('hidden');
-    document.getElementById('githubToken').value = '';
-    document.getElementById('gistId').value = '';
-    document.getElementById('loadingOverlay').classList.add('hidden');
-}
-
-// Save sync settings
-window.saveSyncSettings = function() {
-    try {
-        githubToken = document.getElementById('githubToken').value.trim();
-        gistId = document.getElementById('gistId').value.trim();
-        if (githubToken) localStorage.setItem('github-token', githubToken);
-        if (gistId) localStorage.setItem('gist-id', gistId);
-        localStorage.setItem('setupCompleted', 'true');
-        window.showToast('Sync settings saved', 'success');
-        setTimeout(() => {
-            window.location.href = '/index.html';
-        }, 1500);
-    } catch (error) {
-        window.showToast('Failed to save sync settings: ' + error.message, 'error');
-        console.error('Save sync error:', error);
-    }
-}
-
-// Validate QR data
-window.validateSyllabusPulseData = function(data) {
-    if (!data.githubToken && !data.gistId && !data.pin) {
-        throw new Error('Not a valid Syllabus Pulse QR code');
-    }
-    if (data.githubToken && !data.githubToken.startsWith('ghp_')) {
-        console.warn('GitHub token format may be invalid');
-    }
-    if (data.pin && (data.pin.length !== 4 || !/^\d+$/.test(data.pin))) {
-        throw new Error('PIN must be 4 digits');
-    }
-    if (data.gistId && !/^[a-f0-9]+$/i.test(data.gistId)) {
-        console.warn('Gist ID format may be invalid');
-    }
-    return true;
-}
-
-// Import QR code
-window.importQRCode = async function(event) {
-    const file = event.target.files[0];
-    if (!file) {
-        window.showToast('No file selected', 'error');
-        return;
-    }
-
-    const loadingOverlay = document.getElementById('loadingOverlay');
-    const loadingText = document.getElementById('loadingText');
-    loadingText.textContent = 'Loading... Uploading QR code';
-    loadingOverlay.classList.remove('hidden');
-
-    try {
-        const reader = new FileReader();
-        reader.onload = async function(e) {
-            try {
-                const img = new Image();
-                img.onload = async function() {
-                    try {
-                        loadingText.textContent = 'Loading... Retrieving data';
-                        const canvas = document.createElement('canvas');
-                        canvas.width = img.width;
-                        canvas.height = img.height;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0);
-                        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                        const qrCode = jsQR(imageData.data, canvas.width, canvas.height);
-                        if (!qrCode) {
-                            throw new Error('No QR code found in image');
-                        }
-
-                        const data = JSON.parse(qrCode.data);
-                        window.validateSyllabusPulseData(data);
-                        githubToken = data.githubToken || '';
-                        gistId = data.gistId || '';
-                        const pin = data.pin || '';
-                        if (!pin) throw new Error('Missing PIN in QR data');
-
-                        // Autofill form inputs
-                        document.getElementById('githubToken').value = githubToken;
-                        document.getElementById('gistId').value = gistId;
-
-                        // Save PIN to localStorage
-                        const pinHash = await window.hashPin(pin);
-                        localStorage.setItem('pinHash', pinHash);
-                        localStorage.setItem('github-token', githubToken);
-                        localStorage.setItem('gist-id', gistId);
-
-                        loadingOverlay.classList.add('hidden');
-                        window.showToast('QR code imported successfully', 'success');
-                    } catch (err) {
-                        loadingOverlay.classList.add('hidden');
-                        window.showToast(`Failed to import QR code: ${err.message}`, 'error');
-                        console.error('QR import error:', err);
-                    }
-                };
-                img.onerror = function() {
-                    loadingOverlay.classList.add('hidden');
-                    window.showToast('Failed to load QR image', 'error');
-                    console.error('QR image load error');
-                };
-                img.src = e.target.result;
-            } catch (err) {
-                loadingOverlay.classList.add('hidden');
-                window.showToast(`Failed to read QR file: ${err.message}`, 'error');
-                console.error('QR file read error:', err);
-            }
-        };
-        reader.onerror = function() {
-            loadingOverlay.classList.add('hidden');
-            window.showToast('Failed to read QR file', 'error');
-            console.error('QR file read error');
-        };
-        reader.readAsDataURL(file);
-    } catch (err) {
-        loadingOverlay.classList.add('hidden');
-        window.showToast(`Failed to process QR code: ${err.message}`, 'error');
-        console.error('QR process error:', err);
-    }
-}
-
-// Show toast notification
-window.showToast = function(message, type) {
-    const toast = document.getElementById('toast');
-    const toastIcon = document.getElementById('toastIcon');
-    const toastMessage = document.getElementById('toastMessage');
-    toastMessage.textContent = message;
-    toast.classList.remove('success', 'error');
-    toast.classList.add(type);
-    toastIcon.className = type === 'success' ? 'ri-check-line' : 'ri-error-warning-line';
-    toast.classList.remove('hidden');
-    setTimeout(() => {
-        toast.classList.add('hidden');
-    }, 3000);
-}
-
-// Initialize setup
-window.initSetup();
+/* ---- Init ---- */
+setDefaultDates();
+goStep(1);
+setAuthMode('login');

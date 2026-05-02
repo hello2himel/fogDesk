@@ -1,0 +1,8 @@
+[build]
+  command = "node build-env.js"
+  publish = "."
+
+[[headers]]
+  for = "/_env.js"
+  [headers.values]
+    Cache-Control = "no-store, no-cache"

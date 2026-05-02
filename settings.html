@@ -3,212 +3,165 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Syllabus Pulse - Settings</title>
+    <title>Study Buddy — Settings</title>
     <link href="https://cdn.jsdelivr.net/npm/remixicon@4.3.0/fonts/remixicon.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style/main.css">
     <link rel="stylesheet" href="style/settings.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
+    <script src="_env.js" onerror="window.SB_CONFIG={url:'',key:''};"></script>
 </head>
 <body>
-    <div class="container">
-        <header class="header">
-            <button class="btn btn-back" onclick="window.location.href='index.html'" title="Back to Home">
-                <i class="ri-arrow-left-line"></i>
+
+<div class="settings-shell">
+
+    <header class="settings-header">
+        <a href="index.html" class="back-link">
+            <i class="ri-arrow-left-line"></i> Dashboard
+        </a>
+        <h1>Settings</h1>
+        <button class="btn btn-ghost btn-sm" onclick="openDanger('logout','Sign out? Your progress stays safely in the cloud.')">
+            <i class="ri-logout-box-r-line"></i> Sign out
+        </button>
+    </header>
+
+    <main class="settings-main">
+
+        <!-- Account -->
+        <section class="settings-section">
+            <div class="section-heading">
+                <i class="ri-user-line"></i>
+                <h2>Account</h2>
+                <span id="statusBadge" class="sync-badge offline">Offline</span>
+            </div>
+            <div class="account-info">
+                <div class="account-avatar" id="accountAvatar">?</div>
+                <div>
+                    <div class="account-email" id="accountEmail">—</div>
+                    <div class="account-label">Signed in · progress synced to cloud</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Study Period -->
+        <section class="settings-section">
+            <div class="section-heading">
+                <i class="ri-calendar-line"></i>
+                <h2>Study Period</h2>
+            </div>
+            <p id="dateFormatHint" style="font-size:.82rem;color:var(--text-3);"></p>
+            <div class="form-group">
+                <label for="startDate">Study Start Date</label>
+                <input type="date" id="startDate" class="form-input">
+            </div>
+            <div class="form-group">
+                <label for="endDate">Exam / Target Date</label>
+                <input type="date" id="endDate" class="form-input">
+            </div>
+            <button class="btn btn-primary" onclick="saveStudyPeriod()">
+                <i class="ri-save-line"></i> Save dates
             </button>
-            <h1>Settings</h1>
-        </header>
+        </section>
 
-        <div class="settings-sections">
-            <!-- Study Configuration -->
-            <div class="settings-card">
-                <h2>Study Configuration</h2>
-                <div class="form-group">
-                    <label class="form-label">Study Period</label>
-                    <div class="date-inputs">
-                        <div class="date-input-group">
-                            <label class="date-label">Start Date</label>
-                            <input type="date" id="startDate" class="form-input">
-                        </div>
-                        <div class="date-input-group">
-                            <label class="date-label">End Date</label>
-                            <input type="date" id="endDate" class="form-input">
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Syllabus</label>
-                    <select id="syllabusSelect" class="form-input">
-                        <option value="syllabus-bangladesh-hsc.json">Bangladesh HSC (Science)</option>
-                        <option value="syllabus-bangladesh-hsc-commerce.json">Bangladesh HSC (Commerce)</option>
-                        <option value="syllabus-bangladesh-hsc-arts.json">Bangladesh HSC (Arts/Humanities)</option>
-                        <option value="syllabus-india-cbse.json">India CBSE (Science)</option>
-                        <option value="syllabus-india-cbse-commerce.json">India CBSE (Commerce)</option>
-                        <option value="syllabus-india-icse.json">India ICSE (Science)</option>
-                        <option value="syllabus-uk-alevels.json">UK A-Levels (Science)</option>
-                        <option value="syllabus-ib-diploma.json">IB Diploma Programme</option>
-                        <option value="syllabus-ap.json">Advanced Placement (AP)</option>
-                        <option value="syllabus-custom.json">Custom Syllabus</option>
-                    </select>
-                    <div class="form-help">
-                        Choose the curriculum that matches your academic system
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="checkbox-group">
-                        <input type="checkbox" id="showTasksToggle">
-                        <span class="checkmark"></span>
-                        Show Tasks & Schedule
-                    </label>
-                    <div class="form-help">
-                        Disable to hide the task tracking and schedule features
-                    </div>
-                </div>
-                <div class="btn-group">
-                    <button class="btn btn-primary" onclick="saveStudyConfig()">Save Configuration</button>
-                </div>
+        <!-- Curriculum -->
+        <section class="settings-section">
+            <div class="section-heading">
+                <i class="ri-book-open-line"></i>
+                <h2>Curriculum</h2>
             </div>
+            <div class="form-group">
+                <label for="syllabusSelect">Active Syllabus</label>
+                <select id="syllabusSelect" class="form-input form-select">
+                    <option value="syllabus-bangladesh-hsc.json">Bangladesh HSC — Science</option>
+                    <option value="syllabus-bangladesh-hsc-commerce.json">Bangladesh HSC — Commerce</option>
+                    <option value="syllabus-india-cbse.json">India CBSE Class 12</option>
+                    <option value="syllabus-uk-alevels.json">UK A-Levels</option>
+                    <option value="syllabus-ib-diploma.json">IB Diploma Programme</option>
+                </select>
+            </div>
+            <p class="warning-text">
+                <i class="ri-alert-line"></i>
+                Changing curriculum resets your chapter list. Your dates are kept.
+            </p>
+            <button class="btn btn-primary" onclick="changeCurriculum()">
+                <i class="ri-refresh-line"></i> Apply curriculum
+            </button>
+        </section>
 
-            <!-- Account & Sync -->
-            <div class="settings-card">
-                <div class="loading-overlay hidden" id="settingsLoading">
-                    <div class="loading-spinner"></div>
-                </div>
-                <h2>Account & Sync</h2>
-                <div class="form-group">
-                    <label class="form-label">GitHub Personal Access Token</label>
-                    <input type="password" id="githubToken" class="form-input" placeholder="ghp_xxxxxxxxxxxx">
-                    <div class="form-help">
-                        <a href="https://github.com/settings/tokens" target="_blank">Create token with 'gist' scope</a>
+        <!-- Data -->
+        <section class="settings-section">
+            <div class="section-heading">
+                <i class="ri-database-line"></i>
+                <h2>Data</h2>
+            </div>
+            <div class="data-actions">
+                <div class="data-action-row">
+                    <div>
+                        <strong>Export progress</strong>
+                        <p>Download your chapter completion as a CSV file.</p>
                     </div>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Gist ID</label>
-                    <input type="text" id="gistId" class="form-input" placeholder="Leave empty to create new">
-                </div>
-                <div class="btn-group">
-                    <button id="syncFromCloudBtn" class="btn btn-flex" onclick="syncFromCloud()">
-                        <i class="ri-download-cloud-2-line"></i> Sync From Cloud
+                    <button class="btn btn-ghost btn-sm" onclick="exportCSV()">
+                        <i class="ri-download-line"></i> Export
                     </button>
-                    <button id="syncToCloudBtn" class="btn btn-flex" onclick="syncToCloud()">
-                        <i class="ri-upload-cloud-2-line"></i> Save to Cloud
+                </div>
+                <div class="data-action-row">
+                    <div>
+                        <strong>Reset chapter progress</strong>
+                        <p>Mark all chapters as incomplete. Your dates and settings are kept.</p>
+                    </div>
+                    <button class="btn btn-danger btn-sm"
+                        onclick="openDanger('resetChapters','Reset all chapter progress? This cannot be undone.')">
+                        <i class="ri-refresh-line"></i> Reset
+                    </button>
+                </div>
+                <div class="data-action-row">
+                    <div>
+                        <strong>Sign out</strong>
+                        <p>Clears this device's session. Your progress stays in the cloud.</p>
+                    </div>
+                    <button class="btn btn-danger btn-sm"
+                        onclick="openDanger('logout','Sign out? Your progress stays safely in the cloud.')">
+                        <i class="ri-logout-box-r-line"></i> Sign out
                     </button>
                 </div>
             </div>
+        </section>
 
-            <!-- Data Management -->
-            <div class="settings-card">
-                <h2>Data Management</h2>
-                <div class="form-group">
-                    <h3 class="subheading">Backup & Restore</h3>
-                    <div class="btn-group">
-                        <button class="btn" onclick="exportGistQR()">Export Backup QR</button>
-                        <button class="btn" onclick="openImportModal()">Import Backup QR</button>
-                        <input type="file" id="qrUpload" accept="image/*" style="display: none;" onchange="importGistQR(event)">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <h3 class="subheading">Data Deletion</h3>
-                    <div class="btn-group">
-                        <button class="btn btn-danger" onclick="openConfirmationModal('clearGistData', 'Clear cloud sync data? This removes Gist ID and sync info.')">Clear Sync Data</button>
-                        <button class="btn btn-danger" onclick="openConfirmationModal('clearSyllabusCompletion', 'Clear all syllabus progress? This resets all chapters.')">Clear Progress</button>
-                        <button class="btn btn-danger" onclick="openConfirmationModal('clearLocalDatabase', 'Clear all local data? This resets everything.')">Clear All Data</button>
-                    </div>
-                </div>
-                <div class="info-text">
-                    <p>These actions are permanent and cannot be undone.</p>
-                </div>
-            </div>
+    </main>
 
-            <!-- Info -->
-            <div class="settings-card">
-                <h2>Info</h2>
-                <div class="info-text">
-                    <p>Token stored locally, never shared.</p>
-                    <p>Data syncs via private GitHub Gists.</p>
-                    <p>All sync operations are free.</p>
-                    <p>Tasks and schedule are optional features.</p>
-                </div>
-            </div>
+    <footer class="settings-footer">
+        Made with ❤️ by <a href="https://github.com/hello2himel" target="_blank">@hello2himel</a> from 🇧🇩
+        <span class="footer-sep">·</span>
+        Open source software.
+        <a href="https://github.com/hello2himel/study-buddy" target="_blank">View Source Code</a>
+    </footer>
+
+</div>
+
+<!-- Confirm Modal -->
+<div id="confirmModal" class="modal-overlay hidden">
+    <div class="modal modal-sm">
+        <div class="modal-header">
+            <h3>Are you sure?</h3>
+            <button class="icon-btn" onclick="closeConfirm()"><i class="ri-close-line"></i></button>
         </div>
-
-        <!-- Toast Notification -->
-        <div id="toast" class="toast hidden"></div>
-
-        <!-- Confirmation Modal -->
-        <div id="confirmationModal" class="modal-overlay hidden">
-            <div class="modal">
-                <div class="modal-header">
-                    <h3>Confirm Action</h3>
-                    <button class="btn-close" onclick="closeConfirmationModal()">
-                        <i class="ri-close-line"></i>
-                    </button>
-                </div>
-                <div class="modal-content">
-                    <p id="confirmationMessage"></p>
-                    <div class="btn-group">
-                        <button class="btn btn-flex" onclick="closeConfirmationModal()">Cancel</button>
-                        <button id="confirmActionBtn" class="btn btn-flex btn-danger" onclick="executeConfirmationAction()">Confirm</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- QR Export Modal -->
-        <div id="qrExportModal" class="modal-overlay hidden">
-            <div class="modal">
-                <div class="modal-header">
-                    <h3>Backup QR Code</h3>
-                    <button class="btn-close" onclick="closeQRModal()">
-                        <i class="ri-close-line"></i>
-                    </button>
-                </div>
-                <div class="modal-content">
-                    <p class="warning-text">Keep this QR code secure and private.</p>
-                    <div id="qrCodeContainer" class="qr-container"></div>
-                    <div class="btn-group">
-                        <button class="btn btn-flex" onclick="downloadQRCode()">Download</button>
-                        <button class="btn btn-flex" onclick="closeQRModal()">Close</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- QR Import Modal -->
-        <div id="qrImportModal" class="modal-overlay hidden">
-            <div class="modal">
-                <div class="modal-header">
-                    <h3>Import Backup QR</h3>
-                    <button class="btn-close" onclick="closeImportModal()">
-                        <i class="ri-close-line"></i>
-                    </button>
-                </div>
-                <div class="modal-content">
-                    <p>Choose an import method:</p>
-                    <div class="btn-group">
-                        <button class="btn btn-flex" onclick="startQRScan()">Scan QR Code</button>
-                        <button class="btn btn-flex" onclick="document.getElementById('qrUpload').click()">Load from Gallery</button>
-                    </div>
-                    <div id="qrScanContainer" class="qr-scan-container hidden">
-                        <div class="qr-scan-status">
-                            <p>Point your camera at the QR code</p>
-                            <p class="qr-scan-help">Make sure the QR code is well-lit and centered</p>
-                        </div>
-                        <div class="qr-video-container">
-                            <video id="qrVideo" autoplay playsinline muted></video>
-                            <div class="qr-scan-overlay">
-                                <div class="qr-scan-frame"></div>
-                            </div>
-                        </div>
-                        <canvas id="qrCanvas" style="display: none;"></canvas>
-                        <div class="qr-scan-controls">
-                            <button class="btn btn-flex btn-danger" onclick="stopQRScan()">Stop Scanning</button>
-                        </div>
-                    </div>
-                </div>
+        <div class="modal-body">
+            <p id="confirmMsg" style="color:var(--text-2);margin-bottom:1.5rem;font-size:.9rem;"></p>
+            <div class="btn-row">
+                <button class="btn btn-ghost" onclick="closeConfirm()">Cancel</button>
+                <button class="btn btn-danger" id="confirmOkBtn">Confirm</button>
             </div>
         </div>
     </div>
+</div>
 
-    <script src="script/settings.js"></script>
+<!-- Toast -->
+<div id="toast" class="toast hidden">
+    <i id="toastIcon" class="ri-check-line"></i>
+    <span id="toastMsg"></span>
+</div>
+
+<script src="script/supabase.js"></script>
+<script src="script/db.js"></script>
+<script src="script/settings.js"></script>
 </body>
 </html>

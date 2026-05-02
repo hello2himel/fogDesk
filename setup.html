@@ -3,155 +3,291 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Study Buddy - Setup</title>
+    <title>Study Buddy — Get Started</title>
     <link href="https://cdn.jsdelivr.net/npm/remixicon@4.3.0/fonts/remixicon.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style/main.css">
     <link rel="stylesheet" href="style/setup.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
+    <script src="_env.js" onerror="window.SB_CONFIG={url:'',key:''};"></script>
 </head>
-<body>
-    <div class="setup-container">
-        <!-- Progress Bar -->
-        <div class="progress-bar">
-            <div class="progress-step active" id="step1"></div>
-            <div class="progress-step" id="step2"></div>
-            <div class="progress-step" id="step3"></div>
-            <div class="progress-step" id="step4"></div>
-        </div>
+<body class="setup-body">
 
-        <!-- Step 1: Welcome -->
-        <div id="wizardStep1" class="wizard-panel">
-            <h2>Welcome to Study Buddy</h2>
-            <p>Your personal study progress tracker. Let's get started with a quick setup process.</p>
-            <div class="wizard-buttons">
-                <button class="btn btn-primary" onclick="nextStep(2)">Get Started</button>
-            </div>
-        </div>
+<div class="setup-shell">
 
-        <!-- Step 2: Data Storage -->
-        <div id="wizardStep2" class="wizard-panel hidden">
-            <h2>Data Storage</h2>
-            <p>Your data is saved locally on your device. Optionally enable cross-device sync.</p>
-            <div class="wizard-buttons">
-                <button class="btn" onclick="prevStep(1)">Back</button>
-                <button class="btn btn-primary" onclick="nextStep(3)">Continue</button>
-            </div>
-            <div class="advanced-options">
-                <span onclick="openSyncModal()">Advanced options</span>
-            </div>
-        </div>
+    <!-- Left: Branding & Steps -->
+    <div class="setup-brand">
+        <div class="setup-brand-content">
+            <div class="brand-logo">SB</div>
+            <h1 class="brand-title">Study<br><em>Buddy</em></h1>
+            <p class="brand-tagline">Track time left vs chapters done.</p>
 
-        <!-- Step 3: Enter PIN -->
-        <div id="wizardStep3" class="wizard-panel hidden">
-            <h2>Security PIN</h2>
-            <p>Enter a 4-digit PIN to secure your app and data.</p>
-            <div class="pin-section">
-                <label class="pin-label">Enter PIN</label>
-                <div class="pin-display" id="pinDisplay1">
-                    <span id="pinDigit1"></span>
-                    <span id="pinDigit2"></span>
-                    <span id="pinDigit3"></span>
-                    <span id="pinDigit4"></span>
+            <div class="brand-steps">
+                <div class="brand-step active" data-step="1">
+                    <div class="step-dot"></div>
+                    <span>Welcome</span>
+                </div>
+                <div class="brand-step" data-step="2">
+                    <div class="step-dot"></div>
+                    <span>Curriculum</span>
+                </div>
+                <div class="brand-step" data-step="3">
+                    <div class="step-dot"></div>
+                    <span>Study Period</span>
+                </div>
+                <div class="brand-step" data-step="4">
+                    <div class="step-dot"></div>
+                    <span>Your Account</span>
                 </div>
             </div>
-            <div class="pin-pad">
-                <button class="pin-btn" onclick="enterPinDigit('1')">1</button>
-                <button class="pin-btn" onclick="enterPinDigit('2')">2</button>
-                <button class="pin-btn" onclick="enterPinDigit('3')">3</button>
-                <button class="pin-btn" onclick="enterPinDigit('4')">4</button>
-                <button class="pin-btn" onclick="enterPinDigit('5')">5</button>
-                <button class="pin-btn" onclick="enterPinDigit('6')">6</button>
-                <button class="pin-btn" onclick="enterPinDigit('7')">7</button>
-                <button class="pin-btn" onclick="enterPinDigit('8')">8</button>
-                <button class="pin-btn" onclick="enterPinDigit('9')">9</button>
-                <button class="pin-btn clear-btn" onclick="clearPin()">C</button>
-                <button class="pin-btn" onclick="enterPinDigit('0')">0</button>
-                <button class="pin-btn submit-btn" onclick="nextStep(4)">✓</button>
-            </div>
-            <div class="wizard-buttons">
-                <button class="btn" onclick="prevStep(2)">Back</button>
-            </div>
-            <p id="pinError1" class="pin-error hidden"></p>
-        </div>
-
-        <!-- Step 4: Confirm PIN -->
-        <div id="wizardStep4" class="wizard-panel hidden">
-            <h2>Confirm PIN</h2>
-            <p>Re-enter your 4-digit PIN to confirm.</p>
-            <div class="pin-section">
-                <label class="pin-label">Confirm PIN</label>
-                <div class="pin-display" id="pinDisplay2">
-                    <span id="pinDigit5"></span>
-                    <span id="pinDigit6"></span>
-                    <span id="pinDigit7"></span>
-                    <span id="pinDigit8"></span>
-                </div>
-            </div>
-            <div class="pin-pad">
-                <button class="pin-btn" onclick="enterPinDigit('1')">1</button>
-                <button class="pin-btn" onclick="enterPinDigit('2')">2</button>
-                <button class="pin-btn" onclick="enterPinDigit('3')">3</button>
-                <button class="pin-btn" onclick="enterPinDigit('4')">4</button>
-                <button class="pin-btn" onclick="enterPinDigit('5')">5</button>
-                <button class="pin-btn" onclick="enterPinDigit('6')">6</button>
-                <button class="pin-btn" onclick="enterPinDigit('7')">7</button>
-                <button class="pin-btn" onclick="enterPinDigit('8')">8</button>
-                <button class="pin-btn" onclick="enterPinDigit('9')">9</button>
-                <button class="pin-btn clear-btn" onclick="clearPin()">C</button>
-                <button class="pin-btn" onclick="enterPinDigit('0')">0</button>
-                <button class="pin-btn submit-btn" onclick="completeSetup()">✓</button>
-            </div>
-            <div class="wizard-buttons">
-                <button class="btn" onclick="prevStep(3)">Back</button>
-            </div>
-            <p id="pinError2" class="pin-error hidden"></p>
-        </div>
-
-        <!-- Sync Modal -->
-        <div id="syncModal" class="modal-overlay hidden">
-            <div class="modal">
-                <div class="modal-header">
-                    <h3>Advanced Sync Setup</h3>
-                    <button class="btn-close" onclick="closeSyncModal()"><i class="ri-close-line"></i></button>
-                </div>
-                <div class="modal-content">
-                    <div id="loadingOverlay" class="loading-overlay hidden">
-                        <div class="loading-spinner"></div>
-                        <span id="loadingText" class="loading-text">Loading...</span>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">GitHub Personal Access Token</label>
-                        <input type="password" id="githubToken" class="form-input" placeholder="ghp_xxxxxxxxxxxx">
-                        <div class="form-help">
-                            <a href="https://github.com/settings/tokens" target="_blank">Create token</a> with 'gist' scope
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Gist ID (optional)</label>
-                        <input type="text" id="gistId" class="form-input" placeholder="Leave empty to create new">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Import Configuration</label>
-                        <input type="file" id="qrUpload" accept="image/*" class="hidden" onchange="importQRCode(event)">
-                        <button class="btn btn-primary qr-upload-btn" onclick="document.getElementById('qrUpload').click()">
-                            Import via QR Code
-                        </button>
-                    </div>
-                    <div class="wizard-buttons">
-                        <button class="btn" onclick="closeSyncModal()">Cancel</button>
-                        <button class="btn btn-primary" onclick="saveSyncSettings()">Save</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Toast -->
-        <div id="toast" class="toast hidden">
-            <i id="toastIcon" class="ri-check-line"></i>
-            <span id="toastMessage"></span>
         </div>
     </div>
 
-    <script src="script/setup.js" defer></script>
+    <!-- Right: Step content -->
+    <div class="setup-content">
+
+        <!-- Step 1: Welcome -->
+        <div class="setup-step active" id="step1">
+            <div class="step-header">
+                <span class="step-label">Step 1 of 4</span>
+                <h2>Welcome to Study Buddy 👋</h2>
+                <p>A focused tracker that compares how much time has passed against how much of your syllabus you've covered. Let's get you set up.</p>
+            </div>
+
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <i class="ri-bar-chart-2-line"></i>
+                    <h4>Dual Progress</h4>
+                    <p>Time vs chapters — know if you're on track at a glance.</p>
+                </div>
+                <div class="feature-card">
+                    <i class="ri-book-open-line"></i>
+                    <h4>Full Syllabus</h4>
+                    <p>Pre-loaded for HSC, CBSE, A-Levels & IB Diploma.</p>
+                </div>
+                <div class="feature-card">
+                    <i class="ri-cloud-line"></i>
+                    <h4>Sync Everywhere</h4>
+                    <p>Your progress stays in sync across all your devices.</p>
+                </div>
+                <div class="feature-card">
+                    <i class="ri-file-text-line"></i>
+                    <h4>Chapter Notes</h4>
+                    <p>Attach quick notes to any chapter as you study.</p>
+                </div>
+            </div>
+
+            <div class="step-nav">
+                <div></div>
+                <button class="btn btn-primary btn-lg" onclick="goStep(2)">
+                    Get Started <i class="ri-arrow-right-line"></i>
+                </button>
+            </div>
+
+            <div class="setup-footer">
+                Made with ❤️ by <a href="https://github.com/hello2himel" target="_blank">@hello2himel</a> from 🇧🇩
+                <span class="footer-sep">·</span>
+                <a href="https://github.com/hello2himel/study-buddy" target="_blank">View Source Code</a>
+            </div>
+        </div>
+
+        <!-- Step 2: Curriculum -->
+        <div class="setup-step" id="step2">
+            <div class="step-header">
+                <span class="step-label">Step 2 of 4</span>
+                <h2>Choose your curriculum</h2>
+                <p>Select the syllabus that matches your exam board. You can change this later in Settings.</p>
+            </div>
+
+            <div class="curriculum-list">
+                <label class="curriculum-card selected">
+                    <input type="radio" name="syllabus" value="syllabus-bangladesh-hsc.json" checked>
+                    <div class="curriculum-info">
+                        <div class="curriculum-flag">🇧🇩</div>
+                        <div>
+                            <h4>Bangladesh HSC — Science</h4>
+                            <p>Higher Secondary Certificate, Science stream</p>
+                        </div>
+                    </div>
+                    <i class="ri-check-circle-fill curriculum-check"></i>
+                </label>
+                <label class="curriculum-card">
+                    <input type="radio" name="syllabus" value="syllabus-bangladesh-hsc-commerce.json">
+                    <div class="curriculum-info">
+                        <div class="curriculum-flag">🇧🇩</div>
+                        <div>
+                            <h4>Bangladesh HSC — Commerce</h4>
+                            <p>Higher Secondary Certificate, Commerce stream</p>
+                        </div>
+                    </div>
+                    <i class="ri-check-circle-fill curriculum-check"></i>
+                </label>
+                <label class="curriculum-card">
+                    <input type="radio" name="syllabus" value="syllabus-india-cbse.json">
+                    <div class="curriculum-info">
+                        <div class="curriculum-flag">🇮🇳</div>
+                        <div>
+                            <h4>India CBSE Class 12</h4>
+                            <p>Central Board of Secondary Education</p>
+                        </div>
+                    </div>
+                    <i class="ri-check-circle-fill curriculum-check"></i>
+                </label>
+                <label class="curriculum-card">
+                    <input type="radio" name="syllabus" value="syllabus-uk-alevels.json">
+                    <div class="curriculum-info">
+                        <div class="curriculum-flag">🇬🇧</div>
+                        <div>
+                            <h4>UK A-Levels</h4>
+                            <p>Cambridge / Edexcel A-Level subjects</p>
+                        </div>
+                    </div>
+                    <i class="ri-check-circle-fill curriculum-check"></i>
+                </label>
+                <label class="curriculum-card">
+                    <input type="radio" name="syllabus" value="syllabus-ib-diploma.json">
+                    <div class="curriculum-info">
+                        <div class="curriculum-flag">🌍</div>
+                        <div>
+                            <h4>IB Diploma Programme</h4>
+                            <p>International Baccalaureate — Diploma</p>
+                        </div>
+                    </div>
+                    <i class="ri-check-circle-fill curriculum-check"></i>
+                </label>
+            </div>
+
+            <div class="step-nav">
+                <button class="btn btn-ghost" onclick="goStep(1)"><i class="ri-arrow-left-line"></i> Back</button>
+                <button class="btn btn-primary btn-lg" onclick="goStep(3)">
+                    Continue <i class="ri-arrow-right-line"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Step 3: Study Period -->
+        <div class="setup-step" id="step3">
+            <div class="step-header">
+                <span class="step-label">Step 3 of 4</span>
+                <h2>Set your study period</h2>
+                <p>When does your preparation start, and when is your exam? This powers the time progress bar.</p>
+            </div>
+
+            <div class="date-form">
+                <p id="dateFormatHint" style="font-size:.82rem;color:var(--text-3);"></p>
+
+                <div class="form-group">
+                    <label for="startDate">Study Start Date</label>
+                    <div class="input-icon-wrap">
+                        <i class="ri-calendar-line"></i>
+                        <input type="date" id="startDate" class="form-input">
+                    </div>
+                    <small>The day you began or plan to begin preparation.</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="endDate">Exam / Target Date</label>
+                    <div class="input-icon-wrap">
+                        <i class="ri-flag-line"></i>
+                        <input type="date" id="endDate" class="form-input">
+                    </div>
+                    <small>Your exam date or last day of preparation.</small>
+                </div>
+
+                <div class="date-preview hidden" id="datePreview">
+                    <div class="date-preview-stat">
+                        <span id="previewDays" class="preview-number">—</span>
+                        <span>total days</span>
+                    </div>
+                    <div class="date-preview-divider"></div>
+                    <div class="date-preview-stat">
+                        <span id="previewElapsed" class="preview-number">—</span>
+                        <span>elapsed</span>
+                    </div>
+                    <div class="date-preview-divider"></div>
+                    <div class="date-preview-stat">
+                        <span id="previewLeft" class="preview-number">—</span>
+                        <span>remaining</span>
+                    </div>
+                </div>
+
+                <p id="dateFriendly" style="font-size:.82rem;color:var(--text-3);display:none;">
+                    <span id="previewStartFmt"></span> → <span id="previewEndFmt"></span>
+                </p>
+            </div>
+
+            <div class="step-nav">
+                <button class="btn btn-ghost" onclick="goStep(2)"><i class="ri-arrow-left-line"></i> Back</button>
+                <button class="btn btn-primary btn-lg" onclick="validateDatesAndContinue()">
+                    Continue <i class="ri-arrow-right-line"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Step 4: Account (login / sign-up) -->
+        <div class="setup-step" id="step4">
+            <div class="step-header">
+                <span class="step-label">Step 4 of 4</span>
+                <h2>Your account</h2>
+                <p>Sign in to sync your progress across devices, or create a new account to get started.</p>
+            </div>
+
+            <!-- Login / Sign-up tabs -->
+            <div class="auth-tabs" role="tablist">
+                <button class="auth-tab active" data-mode="login"
+                    onclick="setAuthMode('login')" role="tab">Sign in</button>
+                <button class="auth-tab" data-mode="signup"
+                    onclick="setAuthMode('signup')" role="tab">Create account</button>
+            </div>
+
+            <div class="auth-form" id="authForm">
+                <!-- Sign-up only: name -->
+                <div class="form-group hidden" id="authSignupFields">
+                    <label for="authName">Your name</label>
+                    <div class="input-icon-wrap">
+                        <i class="ri-user-line"></i>
+                        <input type="text" id="authName" class="form-input" placeholder="Ada Lovelace" autocomplete="name">
+                    </div>
+                </div>
+
+                <!-- Shared: email -->
+                <div class="form-group" id="authLoginFields">
+                    <label for="authEmail">Email address</label>
+                    <div class="input-icon-wrap">
+                        <i class="ri-mail-line"></i>
+                        <input type="email" id="authEmail" class="form-input"
+                            placeholder="you@example.com"
+                            autocomplete="email"
+                            onkeydown="if(event.key==='Enter')submitAuth()">
+                    </div>
+                    <small>Your progress is tied to this email — use the same one on any device.</small>
+                </div>
+
+                <div class="connection-status hidden" id="connectionStatus">
+                    <i class="ri-check-circle-fill"></i>
+                    <span>Connected! Loading your dashboard…</span>
+                </div>
+
+                <button class="btn btn-primary btn-lg" id="authSubmitBtn" data-mode="login" onclick="submitAuth()">
+                    <i class="ri-login-circle-line"></i> Sign in &amp; Finish
+                </button>
+            </div>
+
+            <div class="step-nav">
+                <button class="btn btn-ghost" onclick="goStep(3)"><i class="ri-arrow-left-line"></i> Back</button>
+            </div>
+        </div>
+
+    </div><!-- /.setup-content -->
+</div><!-- /.setup-shell -->
+
+<!-- Toast -->
+<div id="toast" class="toast hidden">
+    <i id="toastIcon" class="ri-check-line"></i>
+    <span id="toastMsg"></span>
+</div>
+
+<script src="script/supabase.js"></script>
+<script src="script/db.js"></script>
+<script src="script/setup.js"></script>
 </body>
 </html>

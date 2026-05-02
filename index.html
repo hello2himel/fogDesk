@@ -3,201 +3,77 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Study Buddy - HSC Study Tracker</title>
+    <title>Study Buddy</title>
     <link href="https://cdn.jsdelivr.net/npm/remixicon@4.3.0/fonts/remixicon.css" rel="stylesheet">
-    <link rel="stylesheet" href="style/index.css">
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style/main.css">
+    <script src="_env.js" onerror="window.SB_CONFIG={url:'',key:''};"></script>
 </head>
 <body>
 
-    <div id="mainContainer" class="container">
-        <!-- Header -->
-        <header class="header">
-            <h1>Study Buddy</h1>
-            <p>Track time left vs chapters done</p>
-            <p style="font-size: 0.875rem; color: #6b7280;" id="dateRange">15 Sep 2025 — 30 Sep 2026</p>
-            
-            <!-- Sync Status -->
-            <div class="sync-status">
-                <i id="syncIcon" class="ri-cloud-line text-gray-400"></i>
-                <span id="syncText">Offline mode</span>
-            </div>
-        </header>
-
-        <!-- Progress Section -->
-        <section class="progress-section">
-            <!-- Time Progress -->
-            <div class="progress-card">
-                <div class="progress-number" id="timePercentage">0%</div>
-                <div class="progress-bar">
-                    <div class="progress-fill" id="timeProgressBar"></div>
-                </div>
-                <div class="progress-label">
-                    <div class="progress-stats">Time elapsed</div>
-                    <div id="timeStats">0 / 0 days</div>
-                </div>
-            </div>
-            <!-- Syllabus Progress -->
-            <div class="progress-card">
-                <div class="progress-number" id="syllabusPercentage">0%</div>
-                <div class="progress-bar">
-                    <div class="progress-fill" id="syllabusProgressBar"></div>
-                </div>
-                <div class="progress-label">
-                    <div class="progress-stats">Syllabus complete</div>
-                    <div id="syllabusStats">0 / 0 chapters</div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Hero Tasks Section -->
-        <section class="hero-tasks-section" id="heroTasksSection">
-            <div class="hero-tasks" id="heroTasks"></div>
-        </section>
-
-        <!-- Action Buttons -->
-        <div class="action-buttons">
-            <button class="btn btn-primary" onclick="openSyllabusEditor()">
-                <i class="ri-edit-line"></i>
-                Edit Syllabus
-            </button>
-            <button class="btn" onclick="openScheduleModal()" id="scheduleBtn">
-                <i class="ri-calendar-line"></i>
-                View Schedule
-            </button>
-            <button class="btn" onclick="openHistoryModal()" id="historyBtn">
-                <i class="ri-history-line"></i>
-                View History
-            </button>
-            <button class="btn" onclick="window.location.href='settings.html'">
-                <i class="ri-settings-line"></i>
-                Settings
-            </button>
-        </div>
+<div id="app">
+    <div id="loadingScreen" class="fullscreen-center">
+        <div class="loader-ring"></div>
     </div>
+</div>
 
-    <!-- Toast Notification -->
-    <div id="toast" class="toast hidden"></div>
-
-    <!-- Confirmation Modal -->
-    <div id="confirmationModal" class="modal-overlay hidden">
-        <div class="modal">
-            <div class="modal-header">
-                <h3>Confirm Action</h3>
-                <button class="btn-close" onclick="closeConfirmationModal()">
+<!-- Edit Progress Modal -->
+<div id="syllabusModal" class="modal-overlay hidden">
+    <div class="modal modal-xl">
+        <div class="modal-header">
+            <h3>Edit Progress</h3>
+            <div class="modal-actions">
+                <button class="btn btn-sm btn-ghost" onclick="exportCSV()">
+                    <i class="ri-download-line"></i> Export
+                </button>
+                <button class="btn btn-sm btn-danger" onclick="openConfirm('resetAll', 'Reset all chapter progress? This cannot be undone.')">
+                    <i class="ri-refresh-line"></i> Reset
+                </button>
+                <button class="icon-btn" onclick="closeSyllabus()" aria-label="Close">
                     <i class="ri-close-line"></i>
                 </button>
             </div>
-            <div class="modal-content">
-                <p id="confirmationMessage"></p>
-                <div class="btn-group">
-                    <button class="btn btn-flex" onclick="closeConfirmationModal()">Cancel</button>
-                    <button id="confirmActionBtn" class="btn btn-red btn-flex" onclick="executeConfirmationAction()">Confirm</button>
-                </div>
+        </div>
+
+        <!-- Subject panel: tick/untick subjects -->
+        <div class="subject-panel">
+            <div class="subject-panel-header">
+                <span><i class="ri-checkbox-circle-line"></i> Subjects</span>
+                <small>Tick to include in syllabus %</small>
+            </div>
+            <div id="subjectList" class="subject-list"></div>
+        </div>
+
+        <div class="subject-tabs" id="subjectTabs"></div>
+        <div class="modal-body" id="chaptersGrid"></div>
+    </div>
+</div>
+
+<!-- Confirm Modal -->
+<div id="confirmModal" class="modal-overlay hidden">
+    <div class="modal modal-sm">
+        <div class="modal-header">
+            <h3>Are you sure?</h3>
+            <button class="icon-btn" onclick="closeConfirm()"><i class="ri-close-line"></i></button>
+        </div>
+        <div class="modal-body">
+            <p id="confirmMsg" style="color:var(--text-2);margin-bottom:1.5rem;font-size:.9rem;"></p>
+            <div class="btn-row">
+                <button class="btn btn-ghost" onclick="closeConfirm()">Cancel</button>
+                <button class="btn btn-danger" id="confirmOkBtn">Confirm</button>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Syllabus Editor Modal -->
-    <div id="syllabusModal" class="modal-overlay hidden">
-        <div class="modal modal-large">
-            <div class="loading-overlay hidden" id="syllabusLoading">
-                <div class="loading-spinner"></div>
-            </div>
-            <!-- Modal Header -->
-            <div class="modal-header">
-                <h3>Edit Your Progress</h3>
-                <div class="modal-actions">
-                    <button id="syncButton" class="btn btn-blue" onclick="syncToCloud()" style="display: none;">
-                        <i class="ri-cloud-line"></i>
-                        Sync
-                    </button>
-                    <button class="btn" onclick="exportData('csv')">
-                        <i class="ri-download-line"></i>
-                        Export
-                    </button>
-                    <button class="btn" onclick="openConfirmationModal('resetChapters', 'Reset all progress? This cannot be undone.')">
-                        <i class="ri-refresh-line"></i>
-                        Reset
-                    </button>
-                    <button class="btn" onclick="toggleHelp()">
-                        <i class="ri-question-line"></i>
-                        Help
-                    </button>
-                    <button class="btn-close" onclick="closeSyllabusEditor()">
-                        <i class="ri-close-line"></i>
-                    </button>
-                </div>
-            </div>
+<!-- Toast -->
+<div id="toast" class="toast hidden">
+    <i id="toastIcon" class="ri-check-line"></i>
+    <span id="toastMsg"></span>
+</div>
 
-            <!-- Help Section -->
-            <div id="helpSection" class="help-section hidden">
-                <div class="help-title">Keyboard Shortcuts:</div>
-                <ul class="help-list">
-                    <li>• Space: Toggle chapter when focused</li>
-                    <li>• Ctrl+S: Sync to cloud</li>
-                    <li>• Ctrl+E: Export CSV</li>
-                    <li>• Ctrl+R: Reset all progress</li>
-                    <li>• Escape: Close editor</li>
-                </ul>
-            </div>
-
-            <!-- Subject Tabs -->
-            <div class="tabs">
-                <nav class="tabs-nav" id="subjectTabs"></nav>
-            </div>
-
-            <!-- Modal Content -->
-            <div class="modal-content">
-                <div class="chapters-grid" id="chaptersGrid"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Schedule Modal -->
-    <div id="scheduleModal" class="modal-overlay hidden">
-        <div class="modal modal-large">
-            <div class="modal-header">
-                <h3>Today's Schedule</h3>
-                <button class="btn-close" onclick="closeScheduleModal()">
-                    <i class="ri-close-line"></i>
-                </button>
-            </div>
-            <div class="modal-content">
-                <div class="schedule-grid" id="modalScheduleGrid">
-                    <div id="modalMorningSchedule">
-                        <h4>Classes & Coaching</h4>
-                        <div class="task-list" id="modalMorningTasks"></div>
-                    </div>
-                    
-                    <div>
-                        <h4>Self Study</h4>
-                        <div class="task-list" id="modalSelfStudyTasks"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- History Modal -->
-    <div id="historyModal" class="modal-overlay hidden">
-        <div class="modal modal-large">
-            <div class="modal-header">
-                <h3>Task History</h3>
-                <button class="btn-close" onclick="closeHistoryModal()">
-                    <i class="ri-close-line"></i>
-                </button>
-            </div>
-            <div class="modal-content">
-                <div class="history-table">
-                    <table>
-                        <thead id="modalHistoryTableHead"></thead>
-                        <tbody id="modalHistoryTableBody"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script src="script/index.js"></script>
+<script src="script/supabase.js"></script>
+<script src="script/db.js"></script>
+<script src="script/app.js"></script>
 </body>
 </html>

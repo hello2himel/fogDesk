@@ -1,0 +1,10 @@
+# Never commit real env credentials
+_env.js
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node
+node_modules/
+npm-debug.log

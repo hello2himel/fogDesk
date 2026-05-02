@@ -1,652 +1,153 @@
-// Global state
-let githubToken = localStorage.getItem('github-token') || '';
-let gistId = localStorage.getItem('gist-id') || '';
-let lastSync = localStorage.getItem('last-sync') || '';
-let syncStatus = 'idle';
-let pendingConfirmationAction = null;
-let qrCanvas = null;
-let videoStream = null;
+/* =============================================
+   Settings Page
+   ============================================= */
 
-// Initialize settings page
-function initSettings() {
-    document.getElementById('githubToken').value = githubToken;
-    document.getElementById('gistId').value = gistId;
-    
-    // Initialize study configuration
-    const startDate = localStorage.getItem('start-date') || '2025-09-15';
-    const endDate = localStorage.getItem('end-date') || '2026-09-30';
-    const selectedSyllabus = localStorage.getItem('selected-syllabus') || 'syllabus.json';
-    const showTasks = localStorage.getItem('show-tasks') !== 'false';
-    
-    document.getElementById('startDate').value = startDate;
-    document.getElementById('endDate').value = endDate;
-    document.getElementById('syllabusSelect').value = selectedSyllabus;
-    document.getElementById('showTasksToggle').checked = showTasks;
-    
-    updateSyncButtons();
-}
+let pendingAction = null;
 
-// Save study configuration
-function saveStudyConfig() {
-    const startDate = document.getElementById('startDate').value;
-    const endDate = document.getElementById('endDate').value;
-    const selectedSyllabus = document.getElementById('syllabusSelect').value;
-    const showTasks = document.getElementById('showTasksToggle').checked;
-    
-    // Validate dates
-    if (!startDate || !endDate) {
-        showToast('Please set both start and end dates');
-        return;
-    }
-    
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    
-    if (start >= end) {
-        showToast('Start date must be before end date');
-        return;
-    }
-    
-    // Save to localStorage
-    localStorage.setItem('start-date', startDate);
-    localStorage.setItem('end-date', endDate);
-    localStorage.setItem('selected-syllabus', selectedSyllabus);
-    localStorage.setItem('show-tasks', showTasks.toString());
-    
-    showToast('Study configuration saved successfully');
-}
+async function init() {
+    if (!DB.isLoggedIn()) { window.location.replace('setup.html'); return; }
+    DB.initCloud();
 
-// Update sync buttons based on Gist ID
-function updateSyncButtons() {
-    const syncFromBtn = document.getElementById('syncFromCloudBtn');
-    const syncToBtn = document.getElementById('syncToCloudBtn');
-    
-    if (gistId) {
-        syncFromBtn.innerHTML = '<i class="ri-download-cloud-2-line"></i> Sync From Cloud';
-        syncToBtn.style.display = 'block';
-    } else {
-        syncFromBtn.innerHTML = '<i class="ri-download-cloud-2-line"></i> Create New Gist';
-        syncToBtn.style.display = 'none';
-    }
-}
+    // Show signed-in email
+    const em = DB.getEmail() || '';
+    document.getElementById('accountEmail').textContent = em || '—';
+    const av = document.getElementById('accountAvatar');
+    if (av && em) av.textContent = em[0].toUpperCase();
 
-// Show toast notification
-function showToast(message) {
-    const toast = document.getElementById('toast');
-    toast.textContent = message;
-    toast.classList.remove('hidden');
-    setTimeout(() => {
-        toast.classList.add('hidden');
-    }, 3000);
-}
-
-// Open confirmation modal
-function openConfirmationModal(action, message) {
-    pendingConfirmationAction = action;
-    const messageContainer = document.getElementById('confirmationMessage');
-    messageContainer.textContent = message;
-    document.getElementById('confirmationModal').classList.remove('hidden');
-}
-
-// Close confirmation modal
-function closeConfirmationModal() {
-    pendingConfirmationAction = null;
-    document.getElementById('confirmationModal').classList.add('hidden');
-}
-
-// Execute confirmation action
-function executeConfirmationAction() {
-    if (pendingConfirmationAction) {
-        switch (pendingConfirmationAction) {
-            case 'clearGistData':
-                clearGistData();
-                break;
-            case 'clearSyllabusCompletion':
-                clearSyllabusCompletion();
-                break;
-            case 'clearLocalDatabase':
-                clearLocalDatabase();
-                break;
-        }
-        closeConfirmationModal();
-    }
-}
-
-// Open QR import modal
-function openImportModal() {
-    document.getElementById('qrImportModal').classList.remove('hidden');
-}
-
-// Close QR import modal
-function closeImportModal() {
-    stopQRScan();
-    document.getElementById('qrImportModal').classList.add('hidden');
-}
-
-// Export backup QR code and show in modal
-function exportGistQR() {
-    if (typeof QRCode === 'undefined') {
-        console.error('QRCode library not loaded');
-        showToast('QR code library not loaded');
-        return;
-    }
-
-    const currentGithubToken = document.getElementById('githubToken').value.trim();
-    const currentGistId = document.getElementById('gistId').value.trim();
-    const startDate = localStorage.getItem('start-date') || '2025-09-15';
-    const endDate = localStorage.getItem('end-date') || '2026-09-30';
-    const selectedSyllabus = localStorage.getItem('selected-syllabus') || 'syllabus.json';
-    const showTasks = localStorage.getItem('show-tasks') !== 'false';
-
-    const backupData = {
-        githubToken: currentGithubToken,
-        gistId: currentGistId,
-        startDate: startDate,
-        endDate: endDate,
-        selectedSyllabus: selectedSyllabus,
-        showTasks: showTasks,
-        exportDate: new Date().toISOString()
-    };
-
-    if (!currentGithubToken && !currentGistId) {
-        showToast('No sync data to export. Set up GitHub token and Gist ID first.');
-        return;
-    }
-
-    const dataString = JSON.stringify(backupData);
-    console.log('Generating backup QR code');
-
-    const qrContainer = document.getElementById('qrCodeContainer');
-    qrContainer.innerHTML = '';
-    
-    try {
-        new QRCode(qrContainer, {
-            text: dataString,
-            width: 256,
-            height: 256,
-            colorDark: '#000000',
-            colorLight: '#FFFFFF',
-            correctLevel: QRCode.CorrectLevel.H
-        });
-        
-        qrCanvas = qrContainer.querySelector('canvas');
-        if (!qrCanvas) {
-            console.error('No canvas generated by QRCode');
-            showToast('Failed to generate QR code: No canvas created');
-            return;
-        }
-        
-        console.log('Backup QR code generated successfully');
-        document.getElementById('qrExportModal').classList.remove('hidden');
-        showToast('Backup QR code generated');
-    } catch (err) {
-        console.error('Error in QR code generation:', err);
-        showToast(`Error generating QR code: ${err.message}`);
-    }
-}
-
-// Download QR code
-function downloadQRCode() {
-    if (qrCanvas) {
-        const link = document.createElement('a');
-        link.download = 'syllabus-pulse-backup.png';
-        link.href = qrCanvas.toDataURL('image/png');
-        link.click();
-        showToast('Backup QR code downloaded');
-    } else {
-        showToast('No QR code to download');
-    }
-}
-
-// Close QR export modal
-function closeQRModal() {
-    document.getElementById('qrExportModal').classList.add('hidden');
-    document.getElementById('qrCodeContainer').innerHTML = '';
-    qrCanvas = null;
-}
-
-// Start QR code scanning with webcam
-async function startQRScan() {
-    const video = document.getElementById('qrVideo');
-    const canvas = document.getElementById('qrCanvas');
-    const qrScanContainer = document.getElementById('qrScanContainer');
-    
-    try {
-        // Try different camera constraints for better compatibility
-        let constraints = { video: { facingMode: 'environment' } };
-        
-        try {
-            videoStream = await navigator.mediaDevices.getUserMedia(constraints);
-        } catch (envError) {
-            // Fallback to any available camera
-            constraints = { video: true };
-            videoStream = await navigator.mediaDevices.getUserMedia(constraints);
-        }
-        
-        video.srcObject = videoStream;
-        qrScanContainer.classList.remove('hidden');
-        
-        // Wait for video to be ready
-        video.onloadedmetadata = () => {
-            video.play();
-        };
-        
-        const ctx = canvas.getContext('2d');
-        let isScanning = true;
-        
-        const scanQR = () => {
-            if (!isScanning || qrScanContainer.classList.contains('hidden')) {
-                return;
-            }
-            
-            if (video.readyState === video.HAVE_ENOUGH_DATA && video.videoWidth > 0 && video.videoHeight > 0) {
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
-                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                
-                try {
-                    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                    const code = jsQR(imageData.data, canvas.width, canvas.height);
-                    if (code && code.data) {
-                        isScanning = false;
-                        processQRData(code.data);
-                        return;
-                    }
-                } catch (scanError) {
-                    console.warn('QR scanning error:', scanError);
-                }
-            }
-            
-            requestAnimationFrame(scanQR);
-        };
-        
-        // Start scanning after a short delay to ensure video is ready
-        setTimeout(() => {
-            if (isScanning) {
-                scanQR();
-            }
-        }, 500);
-        
-    } catch (err) {
-        console.error('Camera access error:', err);
-        if (err.name === 'NotAllowedError') {
-            showToast('Camera access denied. Please allow camera access and try again.');
-        } else if (err.name === 'NotFoundError') {
-            showToast('No camera found. Please use the gallery option instead.');
-        } else if (err.name === 'NotSupportedError') {
-            showToast('Camera not supported in this browser. Please use the gallery option.');
-        } else {
-            showToast('Failed to access camera. Please try the gallery option.');
-        }
-        qrScanContainer.classList.add('hidden');
-    }
-}
-
-// Stop QR code scanning
-function stopQRScan() {
-    if (videoStream) {
-        videoStream.getTracks().forEach(track => track.stop());
-        videoStream = null;
-    }
-    document.getElementById('qrVideo').srcObject = null;
-    document.getElementById('qrScanContainer').classList.add('hidden');
-}
-
-// Import backup QR from gallery
-function importGistQR(event) {
-    const file = event.target.files[0];
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const img = new Image();
-            img.onload = function() {
-                const canvas = document.createElement('canvas');
-                canvas.width = img.width;
-                canvas.height = img.height;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0);
-                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                const code = jsQR(imageData.data, canvas.width, canvas.height);
-                if (code) {
-                    processQRData(code.data);
-                } else {
-                    showToast('No QR code found in image');
-                }
-            };
-            img.src = e.target.result;
-        };
-        reader.readAsDataURL(file);
-    }
-    event.target.value = '';
-}
-
-// Process QR data (common function for both scan and import)
-function processQRData(qrDataString) {
-    try {
-        const data = JSON.parse(qrDataString);
-        
-        const imported = [];
-        
-        // Import GitHub token and Gist ID
-        if (data.githubToken) {
-            githubToken = data.githubToken;
-            localStorage.setItem('github-token', data.githubToken);
-            document.getElementById('githubToken').value = data.githubToken;
-            imported.push('GitHub token');
-        }
-        
-        if (data.gistId) {
-            gistId = data.gistId;
-            localStorage.setItem('gist-id', data.gistId);
-            document.getElementById('gistId').value = data.gistId;
-            imported.push('Gist ID');
-        }
-        
-        // Import study configuration
-        if (data.startDate) {
-            localStorage.setItem('start-date', data.startDate);
-            document.getElementById('startDate').value = data.startDate;
-            imported.push('start date');
-        }
-        
-        if (data.endDate) {
-            localStorage.setItem('end-date', data.endDate);
-            document.getElementById('endDate').value = data.endDate;
-            imported.push('end date');
-        }
-        
-        if (data.selectedSyllabus) {
-            localStorage.setItem('selected-syllabus', data.selectedSyllabus);
-            document.getElementById('syllabusSelect').value = data.selectedSyllabus;
-            imported.push('syllabus selection');
-        }
-        
-        if (data.hasOwnProperty('showTasks')) {
-            localStorage.setItem('show-tasks', data.showTasks.toString());
-            document.getElementById('showTasksToggle').checked = data.showTasks;
-            imported.push('task settings');
-        }
-        
-        updateSyncButtons();
-        
-        if (imported.length > 0) {
-            showToast(`Successfully imported: ${imported.join(', ')}`);
-            stopQRScan();
-            closeImportModal();
-        } else {
-            showToast('QR code contains no valid backup data');
-        }
-        
-    } catch (err) {
-        console.error('Error parsing QR data:', err);
-        showToast('Invalid backup QR code format');
-    }
-}
-
-// Clear Gist data
-function clearGistData() {
-    gistId = '';
-    lastSync = '';
-    localStorage.removeItem('gist-id');
-    localStorage.removeItem('last-sync');
-    document.getElementById('gistId').value = '';
-    updateSyncButtons();
-    showToast('Cloud sync data cleared');
-}
-
-// Clear syllabus completion
-function clearSyllabusCompletion() {
-    const chapters = JSON.parse(localStorage.getItem('hsc-study-tracker-v2') || '{}');
-    Object.keys(chapters).forEach(subject => {
-        Object.keys(chapters[subject]).forEach(paper => {
-            chapters[subject][paper] = chapters[subject][paper].map(ch => ({
-                ...ch,
-                done: false,
-                note: ''
-            }));
-        });
+    // Date format hint
+    const hint = document.getElementById('dateFormatHint');
+    if (hint) hint.textContent = 'e.g. ' + new Date('2024-03-15').toLocaleDateString(navigator.language, {
+        day: '2-digit', month: 'short', year: 'numeric',
     });
-    localStorage.setItem('hsc-study-tracker-v2', JSON.stringify(chapters));
-    showToast('All progress cleared');
-}
 
-// Clear local database
-function clearLocalDatabase() {
-    localStorage.clear();
-    githubToken = '';
-    gistId = '';
-    lastSync = '';
-    document.getElementById('githubToken').value = '';
-    document.getElementById('gistId').value = '';
-    document.getElementById('startDate').value = '2025-09-15';
-    document.getElementById('endDate').value = '2026-09-30';
-    document.getElementById('syllabusSelect').value = 'syllabus.json';
-    document.getElementById('showTasksToggle').checked = true;
-    updateSyncButtons();
-    showToast('All local data cleared');
-    setTimeout(() => {
-        window.location.href = 'index.html';
-    }, 1500);
-}
-
-// Sync to cloud
-async function syncToCloud() {
-    githubToken = document.getElementById('githubToken').value.trim();
-    gistId = document.getElementById('gistId').value.trim();
-
-    if (!githubToken || !gistId) {
-        showToast('Missing GitHub token or Gist ID');
-        return;
+    // Load settings from cloud
+    if (DB.cloudReady()) {
+        try {
+            const data = await DB.pull();
+            if (data?.settings) {
+                const s = data.settings;
+                document.getElementById('startDate').value = s.startDate || '';
+                document.getElementById('endDate').value   = s.endDate   || '';
+                if (s.syllabus) document.getElementById('syllabusSelect').value = s.syllabus;
+            }
+            updateStatus('connected');
+        } catch (e) {
+            updateStatus('error');
+            showToast('Could not load settings: ' + e.message, 'error');
+        }
+    } else {
+        updateStatus('offline');
     }
-    
-    syncStatus = 'syncing';
-    document.getElementById('settingsLoading').classList.remove('hidden');
-    
-    try {
-        const chapters = JSON.parse(localStorage.getItem('hsc-study-tracker-v2') || '{}');
-        const dailyTasks = JSON.parse(localStorage.getItem('daily-tasks') || '{}');
-        const data = {
-            chapters,
-            dailyTasks,
-            settings: {
-                startDate: localStorage.getItem('start-date'),
-                endDate: localStorage.getItem('end-date'),
-                selectedSyllabus: localStorage.getItem('selected-syllabus'),
-                showTasks: localStorage.getItem('show-tasks')
-            },
-            lastUpdated: new Date().toISOString(),
-            device: navigator.userAgent.includes('Mobile') ? 'mobile' : 'desktop'
-        };
+}
 
-        const response = await fetch(`https://api.github.com/gists/${gistId}`, {
-            method: 'PATCH',
-            headers: {
-                'Authorization': `Bearer ${githubToken}`,
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                files: {
-                    'hsc-study-tracker.json': {
-                        content: JSON.stringify(data, null, 2)
-                    }
-                }
-            })
+function updateStatus(state) {
+    const badge = document.getElementById('statusBadge');
+    if (!badge) return;
+    const map = {
+        connected: ['Connected', 'sync-badge online'],
+        offline:   ['Offline',   'sync-badge offline'],
+        error:     ['Error',     'sync-badge error'],
+    };
+    const [text, cls] = map[state] || map.offline;
+    badge.textContent = text;
+    badge.className   = cls;
+}
+
+/* ---- Study Period ---- */
+async function saveStudyPeriod() {
+    const start = document.getElementById('startDate').value;
+    const end   = document.getElementById('endDate').value;
+    if (!start || !end) { showToast('Set both dates', 'error'); return; }
+    if (new Date(start) >= new Date(end)) { showToast('Start must be before end', 'error'); return; }
+    try {
+        const data     = await DB.pull() || {};
+        const settings = { ...(data.settings || {}), startDate: start, endDate: end };
+        await DB.push(data.chapters || {}, settings, settings.enabledSubjects || {});
+        showToast('Dates saved ✓', 'success');
+    } catch (e) { showToast('Save failed: ' + e.message, 'error'); }
+}
+
+/* ---- Curriculum ---- */
+async function changeCurriculum() {
+    const val = document.getElementById('syllabusSelect').value;
+    if (!confirm('Changing curriculum resets your chapter list. Current progress will be replaced. Continue?')) return;
+    try {
+        const chapters = await DB.loadSyllabus(val);
+        const data     = await DB.pull() || {};
+        const settings = { ...(data.settings || {}), syllabus: val };
+        const enabled  = {};
+        Object.keys(chapters).forEach(s => { enabled[s] = true; });
+        await DB.push(chapters, settings, enabled);
+        showToast('Curriculum updated ✓', 'success');
+    } catch (e) { showToast('Failed: ' + e.message, 'error'); }
+}
+
+/* ---- Export ---- */
+async function exportCSV() {
+    try {
+        const data     = await DB.pull();
+        const chapters = data?.chapters || {};
+        const enabled  = data?.settings?.enabledSubjects || {};
+        const rows = ['Subject,Paper,Chapter,Done,Included in %,Note'];
+        Object.entries(chapters).forEach(([sub, papers]) => {
+            const inc = enabled[sub] !== false ? 'Yes' : 'No';
+            Object.entries(papers).forEach(([paper, chs]) => {
+                chs.forEach(ch => {
+                    rows.push(`"${sub}","${paper}","${ch.title.replace(/"/g,'""')}",${ch.done?'Yes':'No'},${inc},"${(ch.note||'').replace(/"/g,'""')}"`);
+                });
+            });
         });
-
-        if (response.ok) {
-            syncStatus = 'success';
-            showToast('Sync to cloud successful');
-            const syncTime = new Date().toLocaleString();
-            lastSync = syncTime;
-            localStorage.setItem('last-sync', syncTime);
-            localStorage.setItem('github-token', githubToken);
-            localStorage.setItem('gist-id', gistId);
-            setTimeout(() => {
-                syncStatus = 'idle';
-            }, 2000);
-        } else {
-            const errorText = await response.text();
-            throw new Error(`${response.status} ${response.statusText}: ${errorText}`);
-        }
-    } catch (error) {
-        syncStatus = 'error';
-        showToast(`Sync failed: ${error.message}`);
-        console.error('Sync error:', error);
-        setTimeout(() => {
-            syncStatus = 'idle';
-        }, 3000);
-    }
-    
-    document.getElementById('settingsLoading').classList.add('hidden');
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob([rows.join('\n')], { type: 'text/csv' }));
+        a.download = 'study-progress.csv';
+        a.click();
+        URL.revokeObjectURL(a.href);
+        showToast('CSV exported', 'success');
+    } catch (e) { showToast('Export failed: ' + e.message, 'error'); }
 }
 
-// Sync from cloud
-async function syncFromCloud() {
-    githubToken = document.getElementById('githubToken').value.trim();
-    gistId = document.getElementById('gistId').value.trim();
+/* ---- Danger zone ---- */
+function openDanger(action, msg) {
+    pendingAction = action;
+    document.getElementById('confirmMsg').textContent = msg;
+    document.getElementById('confirmOkBtn').onclick   = execAction;
+    document.getElementById('confirmModal').classList.remove('hidden');
+}
+function closeConfirm() {
+    pendingAction = null;
+    document.getElementById('confirmModal').classList.add('hidden');
+}
+function execAction() {
+    if (pendingAction === 'resetChapters') resetChapters();
+    if (pendingAction === 'logout')        DB.logout();
+    closeConfirm();
+}
 
-    if (!githubToken) {
-        showToast('Missing GitHub token');
-        return;
-    }
-    
-    syncStatus = 'syncing';
-    document.getElementById('settingsLoading').classList.remove('hidden');
-    
+async function resetChapters() {
     try {
-        if (gistId) {
-            // Sync from existing Gist
-            const response = await fetch(`https://api.github.com/gists/${gistId}`, {
-                headers: {
-                    'Authorization': `Bearer ${githubToken}`,
-                }
-            });
-
-            if (response.ok) {
-                const gist = await response.json();
-                const fileContent = gist.files['hsc-study-tracker.json']?.content;
-                
-                if (fileContent) {
-                    const data = JSON.parse(fileContent);
-                    localStorage.setItem('hsc-study-tracker-v2', JSON.stringify(data.chapters));
-                    if (data.dailyTasks) {
-                        localStorage.setItem('daily-tasks', JSON.stringify(data.dailyTasks));
-                    }
-                    
-                    // Import settings if available
-                    if (data.settings) {
-                        if (data.settings.startDate) {
-                            localStorage.setItem('start-date', data.settings.startDate);
-                            document.getElementById('startDate').value = data.settings.startDate;
-                        }
-                        if (data.settings.endDate) {
-                            localStorage.setItem('end-date', data.settings.endDate);
-                            document.getElementById('endDate').value = data.settings.endDate;
-                        }
-                        if (data.settings.selectedSyllabus) {
-                            localStorage.setItem('selected-syllabus', data.settings.selectedSyllabus);
-                            document.getElementById('syllabusSelect').value = data.settings.selectedSyllabus;
-                        }
-                        if (data.settings.showTasks !== undefined) {
-                            localStorage.setItem('show-tasks', data.settings.showTasks);
-                            document.getElementById('showTasksToggle').checked = data.settings.showTasks === 'true';
-                        }
-                    }
-                    
-                    syncStatus = 'success';
-                    showToast('Sync from cloud successful');
-                    const syncTime = new Date().toLocaleString();
-                    lastSync = syncTime;
-                    localStorage.setItem('last-sync', syncTime);
-                    localStorage.setItem('github-token', githubToken);
-                    localStorage.setItem('gist-id', gistId);
-                } else {
-                    throw new Error('No valid data found in Gist');
-                }
-            } else {
-                const errorText = await response.text();
-                throw new Error(`${response.status} ${response.statusText}: ${errorText}`);
-            }
-        } else {
-            // Create new Gist
-            const chapters = JSON.parse(localStorage.getItem('hsc-study-tracker-v2') || '{}');
-            const dailyTasks = JSON.parse(localStorage.getItem('daily-tasks') || '{}');
-            const data = {
-                chapters,
-                dailyTasks,
-                settings: {
-                    startDate: localStorage.getItem('start-date'),
-                    endDate: localStorage.getItem('end-date'),
-                    selectedSyllabus: localStorage.getItem('selected-syllabus'),
-                    showTasks: localStorage.getItem('show-tasks')
-                },
-                lastUpdated: new Date().toISOString(),
-                device: 'initial'
-            };
-
-            const response = await fetch('https://api.github.com/gists', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${githubToken}`,
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    description: 'HSC Study Tracker Progress - Syllabus Pulse',
-                    public: false,
-                    files: {
-                        'hsc-study-tracker.json': {
-                            content: JSON.stringify(data, null, 2)
-                        }
-                    }
-                })
-            });
-
-            if (response.ok) {
-                const gist = await response.json();
-                gistId = gist.id;
-                localStorage.setItem('gist-id', gistId);
-                document.getElementById('gistId').value = gistId;
-                updateSyncButtons();
-                syncStatus = 'success';
-                showToast('New Gist created and synced successfully');
-                localStorage.setItem('github-token', githubToken);
-                
-                const syncTime = new Date().toLocaleString();
-                lastSync = syncTime;
-                localStorage.setItem('last-sync', syncTime);
-            } else {
-                const errorText = await response.text();
-                throw new Error(`${response.status} ${response.statusText}: ${errorText}`);
-            }
-        }
-        
-        setTimeout(() => {
-            syncStatus = 'idle';
-        }, 2000);
-    } catch (error) {
-        syncStatus = 'error';
-        showToast(`Sync failed: ${error.message}`);
-        console.error('Sync error:', error);
-        setTimeout(() => {
-            syncStatus = 'idle';
-        }, 3000);
-    }
-    
-    document.getElementById('settingsLoading').classList.add('hidden');
+        const data     = await DB.pull() || {};
+        const settings = data.settings || {};
+        const chapters = await DB.loadSyllabus(settings.syllabus || 'syllabus-bangladesh-hsc.json');
+        const enabled  = {};
+        Object.keys(chapters).forEach(s => { enabled[s] = true; });
+        await DB.push(chapters, settings, enabled);
+        showToast('Progress reset ✓', 'success');
+    } catch (e) { showToast('Failed: ' + e.message, 'error'); }
 }
 
-// Keyboard shortcuts
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-        if (!document.getElementById('confirmationModal').classList.contains('hidden')) {
-            closeConfirmationModal();
-        } else if (!document.getElementById('qrExportModal').classList.contains('hidden')) {
-            closeQRModal();
-        } else if (!document.getElementById('qrImportModal').classList.contains('hidden')) {
-            closeImportModal();
-        }
-    }
+/* ---- Toast ---- */
+function showToast(msg, type = 'success') {
+    const el = document.getElementById('toast');
+    el.className   = 'toast ' + type;
+    document.getElementById('toastIcon').className = type === 'success' ? 'ri-check-line' : 'ri-error-warning-line';
+    document.getElementById('toastMsg').textContent = msg;
+    clearTimeout(el._t);
+    el._t = setTimeout(() => el.classList.add('hidden'), 3500);
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeConfirm(); });
+document.getElementById('confirmModal').addEventListener('click', e => {
+    if (e.target === document.getElementById('confirmModal')) closeConfirm();
 });
 
-// Initialize settings page
-initSettings();
+init();
