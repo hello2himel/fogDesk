@@ -1,15 +1,40 @@
 /* =============================================
-   Setup Wizard
-   Step 4 = Sign in / Sign up with:
-     - email + password (+ username for sign-up)
-     - OTP emailed by Supabase → verify inline
+   Setup Wizard — Auth-first flow
+   Step 1: Sign in / Sign up (+ OTP)
+   Step 2: Curriculum  (only if new user / missing)
+   Step 3: Study Period (only if missing)
+   Returning users with full data → straight to app
    ============================================= */
 
-/* Redirect if already signed in */
+const MONTHS = ['January','February','March','April','May','June',
+                'July','August','September','October','November','December'];
+
+/* ---- Magic-link / email-confirm callback ---- */
 (async function checkAuth() {
     DB.initCloud();
+    // detectSessionInUrl:true means the SDK exchanges any URL token automatically.
+    const session = await DB.handleEmailCallback();
+    if (session) {
+        // Came back from a magic-link click — session is now live.
+        const data = await DB.pull().catch(() => null);
+        if (data && data.settings && data.settings.syllabus && data.settings.startDate && data.settings.endDate) {
+            window.location.replace('index.html');
+        } else {
+            // New user via magic link — run setup steps 2 & 3
+            goStep(2);
+        }
+        return;
+    }
+    // Already logged in from a previous session?
     const ok = await DB.isLoggedIn();
-    if (ok) window.location.replace('index.html');
+    if (ok) {
+        const data = await DB.pull().catch(() => null);
+        if (data && data.settings && data.settings.syllabus && data.settings.startDate && data.settings.endDate) {
+            window.location.replace('index.html');
+        } else {
+            goStep(2);
+        }
+    }
 })();
 
 /* ---- Step navigation ---- */
@@ -26,6 +51,7 @@ function goStep(n) {
         else if (s === n) el.classList.add('active');
     });
     currentStep = n;
+    if (n === 3) initDateDropdowns();
 }
 
 /* ---- Curriculum ---- */
@@ -37,26 +63,83 @@ document.querySelectorAll('.curriculum-card').forEach(card => {
     });
 });
 
-/* ---- Date step ---- */
-function setDefaultDates() {
-    const start = new Date();
-    const end   = new Date();
-    end.setFullYear(end.getFullYear() + 1);
-    document.getElementById('startDate').value = start.toISOString().split('T')[0];
-    document.getElementById('endDate').value   = end.toISOString().split('T')[0];
-    const hint = document.getElementById('dateFormatHint');
-    if (hint) hint.textContent = 'e.g. ' + new Date('2024-03-15').toLocaleDateString(navigator.language, { day: '2-digit', month: 'short', year: 'numeric' });
+/* ---- Date dropdowns (native selects, spelled-out months) ---- */
+function makeDateDropdowns(containerId, defaults) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    const prefix = containerId; // unique id prefix
+
+    const daySel   = document.createElement('select');
+    const monthSel = document.createElement('select');
+    const yearSel  = document.createElement('select');
+
+    daySel.className   = 'form-input date-sel date-sel-day';
+    monthSel.className = 'form-input date-sel date-sel-month';
+    yearSel.className  = 'form-input date-sel date-sel-year';
+
+    daySel.id   = prefix + '_day';
+    monthSel.id = prefix + '_month';
+    yearSel.id  = prefix + '_year';
+
+    // Days
+    daySel.innerHTML = '<option value="">Day</option>' +
+        Array.from({length:31},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('');
+
+    // Months
+    monthSel.innerHTML = '<option value="">Month</option>' +
+        MONTHS.map((m,i)=>`<option value="${i+1}">${m}</option>`).join('');
+
+    // Years: current year -2 to +5
+    const now = new Date();
+    const y0  = now.getFullYear() - 2;
+    const y1  = now.getFullYear() + 5;
+    yearSel.innerHTML = '<option value="">Year</option>' +
+        Array.from({length: y1-y0+1},(_,i)=>`<option value="${y0+i}">${y0+i}</option>`).join('');
+
+    // Set defaults
+    if (defaults) {
+        const d = new Date(defaults);
+        if (!isNaN(d)) {
+            daySel.value   = d.getDate();
+            monthSel.value = d.getMonth() + 1;
+            yearSel.value  = d.getFullYear();
+        }
+    }
+
+    const onChange = () => updateDatePreview();
+    daySel.addEventListener('change',   onChange);
+    monthSel.addEventListener('change', onChange);
+    yearSel.addEventListener('change',  onChange);
+
+    container.innerHTML = '';
+    container.appendChild(daySel);
+    container.appendChild(monthSel);
+    container.appendChild(yearSel);
+}
+
+function getDateFromDropdowns(containerId) {
+    const prefix = containerId;
+    const day   = document.getElementById(prefix + '_day')?.value;
+    const month = document.getElementById(prefix + '_month')?.value;
+    const year  = document.getElementById(prefix + '_year')?.value;
+    if (!day || !month || !year) return null;
+    const d = new Date(+year, +month - 1, +day);
+    if (isNaN(d)) return null;
+    return d.toISOString().split('T')[0];
+}
+
+function initDateDropdowns() {
+    const now  = new Date();
+    const exam = new Date(); exam.setFullYear(exam.getFullYear() + 1);
+    makeDateDropdowns('startDateDropdowns', now.toISOString().split('T')[0]);
+    makeDateDropdowns('endDateDropdowns',   exam.toISOString().split('T')[0]);
     updateDatePreview();
 }
 
-function formatFriendly(iso) {
-    if (!iso) return '';
-    return new Date(iso).toLocaleDateString(navigator.language, { day: '2-digit', month: 'short', year: 'numeric' });
-}
-
 function updateDatePreview() {
-    const s = document.getElementById('startDate').value;
-    const e = document.getElementById('endDate').value;
+    const s = getDateFromDropdowns('startDateDropdowns');
+    const e = getDateFromDropdowns('endDateDropdowns');
     if (!s || !e) return;
     const start = new Date(s), end = new Date(e), now = new Date();
     if (start >= end) return;
@@ -66,56 +149,29 @@ function updateDatePreview() {
     document.getElementById('previewDays').textContent    = total;
     document.getElementById('previewElapsed').textContent = elapsed;
     document.getElementById('previewLeft').textContent    = left;
-    const sf = document.getElementById('previewStartFmt');
-    const ef = document.getElementById('previewEndFmt');
-    if (sf) sf.textContent = formatFriendly(s);
-    if (ef) ef.textContent = formatFriendly(e);
     document.getElementById('datePreview').classList.remove('hidden');
-    const fd = document.getElementById('dateFriendly');
-    if (fd) fd.style.display = 'block';
 }
 
-document.getElementById('startDate').addEventListener('change', updateDatePreview);
-document.getElementById('endDate').addEventListener('change', updateDatePreview);
-
-function validateDatesAndContinue() {
-    const s = document.getElementById('startDate').value;
-    const e = document.getElementById('endDate').value;
-    if (!s || !e) { toast('Please set both dates', 'error'); return; }
-    if (new Date(s) >= new Date(e)) { toast('Start date must be before end date', 'error'); return; }
-    goStep(4);
-}
-
-/* ---- Step 4: Auth ---- */
-// Tracks which sub-view is active: 'login' | 'signup' | 'otp'
-let _authMode   = 'login';
+/* ---- Step 1: Auth ---- */
+let _authMode     = 'login';
 let _pendingEmail = '';
 let _resendTimer  = null;
 
 function setAuthMode(mode) {
     _authMode = mode;
-
-    // Tabs
     document.querySelectorAll('.auth-tab').forEach(t =>
         t.classList.toggle('active', t.dataset.mode === mode)
     );
-
-    // Panels — OTP panel is toggled separately
     document.getElementById('authCredFields').classList.toggle('hidden', mode === 'otp');
     document.getElementById('authOtpPanel').classList.toggle('hidden', mode !== 'otp');
-
-    // Within cred fields: show/hide signup-only fields
     const isSignup = mode === 'signup';
     document.getElementById('authUsernameGroup').classList.toggle('hidden', !isSignup);
     document.getElementById('authPasswordConfirmGroup').classList.toggle('hidden', !isSignup);
-
-    // Submit button label
     const btn = document.getElementById('authSubmitBtn');
-    if (mode === 'login')  { btn.innerHTML = '<i class="ri-login-circle-line"></i> Sign in'; btn.dataset.mode = 'login'; }
-    if (mode === 'signup') { btn.innerHTML = '<i class="ri-user-add-line"></i> Create account'; btn.dataset.mode = 'signup'; }
+    if (mode === 'login')  { btn.innerHTML = '<i class="ri-login-circle-line"></i> Sign in';       btn.dataset.mode = 'login'; }
+    if (mode === 'signup') { btn.innerHTML = '<i class="ri-user-add-line"></i> Create account';    btn.dataset.mode = 'signup'; }
 }
 
-/* Validate fields and call Supabase Auth */
 async function submitAuth() {
     const cfg = DB._cfg();
     if (!cfg.url || !cfg.key) {
@@ -158,29 +214,46 @@ async function submitAuth() {
     try {
         await DB.signIn(email, password);
         _pendingEmail = email;
-        toast('Check your inbox for a verification code!', 'success');
-        showOtpPanel(email);
+        toast('Signed in! Loading your account…', 'success');
+        await afterLogin();
     } catch (e) {
-        toast(friendlyError(e.message), 'error');
-        setBtnReady(btn, mode);
+        // Unverified account: re-enter OTP flow
+        if (e.message && e.message.includes('Email not confirmed')) {
+            _pendingEmail = email;
+            try { await DB.resendOtp(email); } catch (_) {}
+            toast("Your email isn't verified yet — we sent a new code to your inbox.", 'success');
+            showOtpPanel(email);
+        } else {
+            toast(friendlyError(e.message), 'error');
+            setBtnReady(btn, mode);
+        }
     }
 }
 
-/* Show OTP verification panel */
+/* After successful login/OTP — decide where to send the user */
+async function afterLogin() {
+    const data = await DB.pull().catch(() => null);
+    const s    = data?.settings || {};
+    if (data && s.syllabus && s.startDate && s.endDate) {
+        // Fully configured returning user → straight to dashboard
+        window.location.replace('index.html');
+    } else {
+        // New user or incomplete setup → continue wizard
+        goStep(2);
+    }
+}
+
 function showOtpPanel(email) {
     _authMode = 'otp';
     document.getElementById('authCredFields').classList.add('hidden');
     document.getElementById('authOtpPanel').classList.remove('hidden');
-    // hide tabs during otp
     document.querySelector('.auth-tabs').classList.add('hidden');
-
     document.getElementById('otpEmailHint').textContent = email;
     document.getElementById('authOtpInput').value = '';
     document.getElementById('authOtpInput').focus();
     startResendTimer();
 }
 
-/* Verify the OTP */
 async function verifyOtp() {
     const token = document.getElementById('authOtpInput').value.trim().replace(/\s/g, '');
     if (!token || token.length < 4) { toast('Enter the code from your email', 'error'); return; }
@@ -192,7 +265,7 @@ async function verifyOtp() {
         await DB.verifyOtp(_pendingEmail, token);
         toast('Verified! Setting up your account…', 'success');
         btn.disabled = true;
-        await finishSetup();
+        await afterLogin();
     } catch (e) {
         toast(friendlyError(e.message), 'error');
         setBtnReady(btn, 'verify');
@@ -200,7 +273,6 @@ async function verifyOtp() {
     }
 }
 
-/* Resend OTP */
 async function resendOtp() {
     try {
         await DB.resendOtp(_pendingEmail);
@@ -230,27 +302,6 @@ function startResendTimer() {
     }, 1000);
 }
 
-/* After OTP verified — seed initial data for new users */
-async function finishSetup() {
-    const syllabus  = document.querySelector('input[name="syllabus"]:checked')?.value || 'syllabus-bangladesh-hsc.json';
-    const startDate = document.getElementById('startDate').value;
-    const endDate   = document.getElementById('endDate').value;
-
-    try {
-        const existing = await DB.pull();
-        if (!existing) {
-            const chapters = await DB.loadSyllabus(syllabus);
-            const enabled  = {};
-            Object.keys(chapters).forEach(s => { enabled[s] = true; });
-            await DB.push(chapters, { syllabus, startDate, endDate }, enabled);
-        }
-        window.location.replace('index.html');
-    } catch (e) {
-        toast('Setup failed: ' + e.message, 'error');
-    }
-}
-
-/* Go back from OTP panel to credentials */
 function backFromOtp() {
     clearInterval(_resendTimer);
     _authMode = 'login';
@@ -258,6 +309,38 @@ function backFromOtp() {
     document.getElementById('authOtpPanel').classList.add('hidden');
     document.querySelector('.auth-tabs').classList.remove('hidden');
     setAuthMode('login');
+}
+
+/* ---- Step 3: Date validation & finish ---- */
+function validateDatesAndFinish() {
+    const s = getDateFromDropdowns('startDateDropdowns');
+    const e = getDateFromDropdowns('endDateDropdowns');
+    if (!s) { toast('Please select a start date', 'error'); return; }
+    if (!e) { toast('Please select an exam / target date', 'error'); return; }
+    if (new Date(s) >= new Date(e)) { toast('Start date must be before exam date', 'error'); return; }
+    finishSetup(s, e);
+}
+
+async function finishSetup(startDate, endDate) {
+    const syllabus = document.querySelector('input[name="syllabus"]:checked')?.value
+                  || 'syllabus-bangladesh-hsc.json';
+
+    try {
+        const existing = await DB.pull().catch(() => null);
+        if (!existing) {
+            const chapters = await DB.loadSyllabus(syllabus);
+            const enabled  = {};
+            Object.keys(chapters).forEach(s => { enabled[s] = true; });
+            await DB.push(chapters, { syllabus, startDate, endDate }, enabled);
+        } else {
+            // Update settings only — keep existing chapter progress
+            const s = existing.settings || {};
+            await DB.push(existing.chapters || {}, { ...s, syllabus, startDate, endDate }, s.enabledSubjects || {});
+        }
+        window.location.replace('index.html');
+    } catch (e) {
+        toast('Setup failed: ' + e.message, 'error');
+    }
 }
 
 /* ---- Helpers ---- */
@@ -275,7 +358,7 @@ function setBtnReady(btn, mode) {
 function friendlyError(msg) {
     if (!msg) return 'Something went wrong. Try again.';
     if (msg.includes('Invalid login credentials')) return 'Wrong email or password.';
-    if (msg.includes('Email not confirmed'))       return 'Please verify your email first.';
+    if (msg.includes('Email not confirmed'))       return 'Your email isn\'t verified. Sign in again to get a new code.';
     if (msg.includes('already registered'))        return 'An account with this email already exists.';
     if (msg.includes('Token has expired'))         return 'Code expired. Request a new one.';
     if (msg.includes('Invalid OTP'))               return 'Incorrect code. Check your email and try again.';
@@ -283,18 +366,6 @@ function friendlyError(msg) {
     return msg;
 }
 
-/* Enter key on OTP field */
-document.getElementById('authOtpInput')?.addEventListener('keydown', e => {
-    if (e.key === 'Enter') verifyOtp();
-});
-
-/* Password field enter → submit */
-document.getElementById('authPassword')?.addEventListener('keydown', e => {
-    if (e.key === 'Enter') submitAuth();
-});
-
-
-/* ---- Toggle password visibility ---- */
 function togglePwd(inputId, iconId) {
     const inp  = document.getElementById(inputId);
     const icon = document.getElementById(iconId);
@@ -302,18 +373,25 @@ function togglePwd(inputId, iconId) {
     else                         { inp.type = 'password'; icon.className = 'ri-eye-line'; }
 }
 
-/* ---- Toast ---- */
 function toast(msg, type = 'success') {
     const el = document.getElementById('toast');
     el.className = 'toast ' + type;
     document.getElementById('toastIcon').className = type === 'success' ? 'ri-check-line' : 'ri-error-warning-line';
     document.getElementById('toastMsg').textContent = msg;
     clearTimeout(el._t);
+    el.classList.remove('hidden');
     el._t = setTimeout(() => el.classList.add('hidden'), 4000);
 }
 
+/* ---- Keyboard ---- */
+document.getElementById('authOtpInput')?.addEventListener('keydown', e => {
+    if (e.key === 'Enter') verifyOtp();
+});
+document.getElementById('authPassword')?.addEventListener('keydown', e => {
+    if (e.key === 'Enter') submitAuth();
+});
+
 /* ---- Init ---- */
 DB.initCloud();
-setDefaultDates();
 goStep(1);
 setAuthMode('login');

@@ -46,17 +46,28 @@ async function boot() {
             enabledSubjects = s.enabledSubjects || defaultEnabled(chapters);
             _settings       = { syllabus: s.syllabus || '', startDate: s.startDate || '', endDate: s.endDate || '' };
         } else {
-            chapters        = await DB.loadSyllabus('syllabus-bangladesh-hsc.json');
-            enabledSubjects = defaultEnabled(chapters);
-            _settings       = { syllabus: 'syllabus-bangladesh-hsc.json', startDate: '', endDate: '' };
+            // No data yet — redirect to finish setup
+            window.location.replace('setup.html');
+            return;
         }
         lastSyncTime = new Date().toISOString();
         setSyncState('success');
         setTimeout(() => setSyncState('idle'), 2000);
     } catch (e) {
-        setSyncState('error');
-        showToast('Could not load your data. Try refreshing.', 'error');
-        _settings = { syllabus: '', startDate: '', endDate: '' };
+        // Cloud unavailable — try local cache as fallback
+        const cached = DB._cacheRead();
+        if (cached) {
+            chapters        = cached.chapters || {};
+            const s         = cached.settings || {};
+            enabledSubjects = s.enabledSubjects || defaultEnabled(chapters);
+            _settings       = { syllabus: s.syllabus || '', startDate: s.startDate || '', endDate: s.endDate || '' };
+            setSyncState('error');
+            showToast('Loaded from local cache — sync when back online.', 'error');
+        } else {
+            setSyncState('error');
+            showToast('Could not load your data. Try refreshing.', 'error');
+            _settings = { syllabus: '', startDate: '', endDate: '' };
+        }
     }
 
     if (!activeTab || !chapters[activeTab]) activeTab = Object.keys(chapters)[0] || '';
@@ -218,16 +229,14 @@ function renderSubjectList() {
         const on    = enabledSubjects[sub] !== false;
         const total = Object.values(chapters[sub]).reduce((a, c) => a + c.length, 0);
         const done  = Object.values(chapters[sub]).reduce((a, c) => a + c.filter(x => x.done).length, 0);
+        const pct   = total > 0 ? Math.round((done/total)*100) : 0;
         return `
-        <div class="subject-row ${on ? 'enabled' : 'disabled'}">
-            <button class="subject-tick ${on ? 'ticked' : ''}"
-                onclick="toggleSubject('${sub}')"
-                title="${on ? 'Exclude from progress %' : 'Include in progress %'}">
-                ${on ? '<i class="ri-checkbox-circle-fill"></i>' : '<i class="ri-checkbox-blank-circle-line"></i>'}
-            </button>
-            <span class="subject-name" onclick="switchTab('${sub}')">${sub}</span>
-            <span class="subject-stat">${done}/${total}</span>
-        </div>`;
+        <button class="subject-pill ${on ? 'enabled' : 'disabled'}" onclick="toggleSubject('${sub}')"
+            title="${on ? 'Click to exclude from syllabus %' : 'Click to include in syllabus %'}">
+            <span class="pill-check">${on ? '<i class="ri-checkbox-circle-fill"></i>' : '<i class="ri-circle-line"></i>'}</span>
+            <span class="pill-name">${sub}</span>
+            <span class="pill-stat">${pct}%</span>
+        </button>`;
     }).join('');
 }
 
@@ -377,23 +386,15 @@ function exportCSV() {
 }
 
 /* ---- Logout / Confirm ---- */
-function triggerLogout() { openConfirm('logout', 'Sign out? Your progress stays safely in the cloud.'); }
+function triggerLogout() { if (window.confirm('Sign out? Your progress stays safely in the cloud.')) DB.logout(); }
 
 function openConfirm(action, msg) {
-    pendingAction = action;
-    document.getElementById('confirmMsg').textContent = msg;
-    document.getElementById('confirmOkBtn').onclick   = execAction;
-    document.getElementById('confirmModal').classList.remove('hidden');
+    if (!window.confirm(msg)) return;
+    if (action === 'resetAll') resetAll();
+    if (action === 'logout')   DB.logout();
 }
-function closeConfirm() {
-    pendingAction = null;
-    document.getElementById('confirmModal').classList.add('hidden');
-}
-async function execAction() {
-    if (pendingAction === 'resetAll') await resetAll();
-    if (pendingAction === 'logout')   await DB.logout();
-    closeConfirm();
-}
+// kept for keyboard Escape compat
+function closeConfirm() {}
 
 async function resetAll() {
     try {
@@ -421,15 +422,12 @@ function showToast(msg, type = 'success') {
 
 /* ---- Keyboard ---- */
 document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') { closeConfirm(); closeSyllabus(); }
+    if (e.key === 'Escape') { closeSyllabus(); }
     if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); manualSync(); }
     if ((e.ctrlKey || e.metaKey) && e.key === 'e') { e.preventDefault(); exportCSV(); }
 });
 document.getElementById('syllabusModal').addEventListener('click', e => {
     if (e.target === document.getElementById('syllabusModal')) closeSyllabus();
-});
-document.getElementById('confirmModal').addEventListener('click', e => {
-    if (e.target === document.getElementById('confirmModal')) closeConfirm();
 });
 
 boot();

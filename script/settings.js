@@ -2,7 +2,8 @@
    Settings Page
    ============================================= */
 
-let pendingAction = null;
+const MONTHS = ['January','February','March','April','May','June',
+                'July','August','September','October','November','December'];
 
 async function init() {
     DB.initCloud();
@@ -20,26 +21,77 @@ async function init() {
         if (av) av.textContent = (username || email || '?')[0].toUpperCase();
     }
 
-    // Date format hint
-    const hint = document.getElementById('dateFormatHint');
-    if (hint) hint.textContent = 'e.g. ' + new Date('2024-03-15').toLocaleDateString(navigator.language, {
-        day: '2-digit', month: 'short', year: 'numeric',
-    });
-
-    // Load settings from cloud
     try {
         const data = await DB.pull();
         if (data?.settings) {
             const s = data.settings;
-            document.getElementById('startDate').value = s.startDate || '';
-            document.getElementById('endDate').value   = s.endDate   || '';
+            initDateDropdowns('startDateDropdowns', s.startDate);
+            initDateDropdowns('endDateDropdowns',   s.endDate);
             if (s.syllabus) document.getElementById('syllabusSelect').value = s.syllabus;
+        } else {
+            initDateDropdowns('startDateDropdowns', null);
+            initDateDropdowns('endDateDropdowns',   null);
         }
         updateStatus('connected');
     } catch (e) {
         updateStatus('error');
         showToast('Could not load settings: ' + e.message, 'error');
+        initDateDropdowns('startDateDropdowns', null);
+        initDateDropdowns('endDateDropdowns',   null);
     }
+}
+
+/* ---- Native date dropdowns ---- */
+function initDateDropdowns(containerId, isoValue) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    const daySel   = document.createElement('select');
+    const monthSel = document.createElement('select');
+    const yearSel  = document.createElement('select');
+
+    daySel.className   = 'form-input date-sel date-sel-day';
+    monthSel.className = 'form-input date-sel date-sel-month';
+    yearSel.className  = 'form-input date-sel date-sel-year';
+
+    daySel.id   = containerId + '_day';
+    monthSel.id = containerId + '_month';
+    yearSel.id  = containerId + '_year';
+
+    daySel.innerHTML = '<option value="">Day</option>' +
+        Array.from({length:31},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('');
+
+    monthSel.innerHTML = '<option value="">Month</option>' +
+        MONTHS.map((m,i)=>`<option value="${i+1}">${m}</option>`).join('');
+
+    const now = new Date();
+    const y0  = now.getFullYear() - 3;
+    const y1  = now.getFullYear() + 6;
+    yearSel.innerHTML = '<option value="">Year</option>' +
+        Array.from({length: y1-y0+1},(_,i)=>`<option value="${y0+i}">${y0+i}</option>`).join('');
+
+    if (isoValue) {
+        const d = new Date(isoValue);
+        if (!isNaN(d)) {
+            daySel.value   = d.getDate();
+            monthSel.value = d.getMonth() + 1;
+            yearSel.value  = d.getFullYear();
+        }
+    }
+
+    container.innerHTML = '';
+    container.appendChild(daySel);
+    container.appendChild(monthSel);
+    container.appendChild(yearSel);
+}
+
+function getDateFromDropdowns(containerId) {
+    const day   = document.getElementById(containerId + '_day')?.value;
+    const month = document.getElementById(containerId + '_month')?.value;
+    const year  = document.getElementById(containerId + '_year')?.value;
+    if (!day || !month || !year) return null;
+    const d = new Date(+year, +month - 1, +day);
+    return isNaN(d) ? null : d.toISOString().split('T')[0];
 }
 
 function updateStatus(state) {
@@ -57,9 +109,10 @@ function updateStatus(state) {
 
 /* ---- Study Period ---- */
 async function saveStudyPeriod() {
-    const start = document.getElementById('startDate').value;
-    const end   = document.getElementById('endDate').value;
-    if (!start || !end) { showToast('Set both dates', 'error'); return; }
+    const start = getDateFromDropdowns('startDateDropdowns');
+    const end   = getDateFromDropdowns('endDateDropdowns');
+    if (!start) { showToast('Please select a start date', 'error'); return; }
+    if (!end)   { showToast('Please select an exam/target date', 'error'); return; }
     if (new Date(start) >= new Date(end)) { showToast('Start must be before end', 'error'); return; }
     try {
         const data     = await DB.pull() || {};
@@ -72,7 +125,8 @@ async function saveStudyPeriod() {
 /* ---- Curriculum ---- */
 async function changeCurriculum() {
     const val = document.getElementById('syllabusSelect').value;
-    if (!confirm('Changing curriculum resets your chapter list. Current progress will be replaced. Continue?')) return;
+    const confirmed = window.confirm('Changing curriculum resets your chapter list. Your dates are kept. Continue?');
+    if (!confirmed) return;
     try {
         const chapters = await DB.loadSyllabus(val);
         const data     = await DB.pull() || {};
@@ -108,24 +162,9 @@ async function exportCSV() {
     } catch (e) { showToast('Export failed: ' + e.message, 'error'); }
 }
 
-/* ---- Danger zone ---- */
-function openDanger(action, msg) {
-    pendingAction = action;
-    document.getElementById('confirmMsg').textContent = msg;
-    document.getElementById('confirmOkBtn').onclick   = execAction;
-    document.getElementById('confirmModal').classList.remove('hidden');
-}
-function closeConfirm() {
-    pendingAction = null;
-    document.getElementById('confirmModal').classList.add('hidden');
-}
-async function execAction() {
-    if (pendingAction === 'resetChapters') await resetChapters();
-    if (pendingAction === 'logout')        await DB.logout();
-    closeConfirm();
-}
-
-async function resetChapters() {
+/* ---- Danger actions — use native confirm ---- */
+async function confirmResetChapters() {
+    if (!window.confirm('Reset all chapter progress? This cannot be undone.')) return;
     try {
         const data     = await DB.pull() || {};
         const settings = data.settings || {};
@@ -137,6 +176,11 @@ async function resetChapters() {
     } catch (e) { showToast('Failed: ' + e.message, 'error'); }
 }
 
+async function confirmLogout() {
+    if (!window.confirm('Sign out? Your progress stays safely in the cloud.')) return;
+    await DB.logout();
+}
+
 /* ---- Toast ---- */
 function showToast(msg, type = 'success') {
     const el = document.getElementById('toast');
@@ -144,12 +188,8 @@ function showToast(msg, type = 'success') {
     document.getElementById('toastIcon').className = type === 'success' ? 'ri-check-line' : 'ri-error-warning-line';
     document.getElementById('toastMsg').textContent = msg;
     clearTimeout(el._t);
+    el.classList.remove('hidden');
     el._t = setTimeout(() => el.classList.add('hidden'), 3500);
 }
-
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeConfirm(); });
-document.getElementById('confirmModal').addEventListener('click', e => {
-    if (e.target === document.getElementById('confirmModal')) closeConfirm();
-});
 
 init();

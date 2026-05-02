@@ -2,8 +2,14 @@
    DB — cloud-first data layer
    Auth is fully handled by Supabase Auth.
    Session stored in sessionStorage by the SDK.
-   No localStorage anywhere.
+   
+   Local cache: localStorage under key 'sb_cache'
+   - Written after every successful cloud push/pull
+   - Read as fallback ONLY when cloud is unavailable
+   - Cloud always overwrites local on pull
    ============================================= */
+
+const CACHE_KEY = 'sb_progress_cache';
 
 const DB = (() => {
     function _cfg() { return window.SB_CONFIG || { url: '', key: '' }; }
@@ -12,19 +18,36 @@ const DB = (() => {
     function initCloud() {
         const { url, key } = _cfg();
         if (!url || !key) return false;
-        // Retry until SDK is loaded (it loads async)
         if (typeof window.supabase === 'undefined') return false;
         return SB.init(url, key);
     }
 
     async function ensureReady() {
         if (SB.ready()) return true;
-        // SDK may still be loading — wait up to 3s
         for (let i = 0; i < 30; i++) {
             await new Promise(r => setTimeout(r, 100));
             if (initCloud()) return true;
         }
         return false;
+    }
+
+    /* ---- Local cache helpers ---- */
+    function _cacheWrite(data) {
+        try {
+            localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), data }));
+        } catch (_) { /* storage full or unavailable — ignore */ }
+    }
+
+    function _cacheRead() {
+        try {
+            const raw = localStorage.getItem(CACHE_KEY);
+            if (!raw) return null;
+            return JSON.parse(raw).data || null;
+        } catch (_) { return null; }
+    }
+
+    function _cacheClear() {
+        try { localStorage.removeItem(CACHE_KEY); } catch (_) {}
     }
 
     /* ---- Auth ---- */
@@ -59,9 +82,15 @@ const DB = (() => {
         return SB.resendOtp(email);
     }
 
+    async function handleEmailCallback() {
+        await ensureReady();
+        return SB.handleEmailCallback();
+    }
+
     async function logout() {
         if (SB.ready()) await SB.signOut();
         sessionStorage.clear();
+        _cacheClear();
         window.location.replace('setup.html');
     }
 
@@ -72,16 +101,41 @@ const DB = (() => {
         return res.json();
     }
 
-    /* ---- Cloud R/W ---- */
+    /* ---- Cloud R/W with local cache ---- */
+
     async function pull() {
-        if (!(await ensureReady())) throw new Error('Not ready');
-        return SB.fetchProgress();
+        if (!(await ensureReady())) {
+            // Offline — return local cache as fallback
+            const cached = _cacheRead();
+            if (cached) return cached;
+            throw new Error('Not ready');
+        }
+        try {
+            const data = await SB.fetchProgress();
+            if (data) {
+                // Cloud data always wins — overwrite local cache
+                _cacheWrite(data);
+            }
+            return data;
+        } catch (e) {
+            // Cloud failed — try local cache as fallback
+            const cached = _cacheRead();
+            if (cached) return cached;
+            throw e;
+        }
     }
 
     async function push(chapters, settings, enabledSubjects) {
         if (!(await ensureReady())) throw new Error('Not ready');
         await SB.upsertProgress(chapters, { ...settings, enabledSubjects });
+        // Mirror to local cache after successful push
+        _cacheWrite({ chapters, settings: { ...settings, enabledSubjects } });
     }
 
-    return { initCloud, ensureReady, isLoggedIn, getUser, signUp, signIn, verifyOtp, resendOtp, logout, loadSyllabus, pull, push, _cfg };
+    return {
+        initCloud, ensureReady, isLoggedIn, getUser,
+        signUp, signIn, verifyOtp, resendOtp, handleEmailCallback,
+        logout, loadSyllabus, pull, push, _cfg,
+        _cacheRead, _cacheWrite, _cacheClear,
+    };
 })();

@@ -80,6 +80,16 @@ const SB = (() => {
         if (error) throw error;
     }
 
+    /* Check if the page was opened from a magic-link / email confirmation URL.
+       detectSessionInUrl:true (set in init) handles PKCE & implicit flows
+       automatically — calling getSession() after init picks it up. */
+    async function handleEmailCallback() {
+        if (!_client) return null;
+        const { data, error } = await _client.auth.getSession();
+        if (error) return null;
+        return data.session || null;
+    }
+
     async function signOut() {
         if (_client) await _client.auth.signOut();
     }
@@ -104,7 +114,7 @@ const SB = (() => {
         if (error) throw error;
     }
 
-    return { init, ready, getSession, getUser, isLoggedIn, signUp, signIn, verifyOtp, resendOtp, signOut, fetchProgress, upsertProgress };
+    return { init, ready, getSession, getUser, isLoggedIn, signUp, signIn, verifyOtp, resendOtp, handleEmailCallback, signOut, fetchProgress, upsertProgress };
 })();
 
 /* Load Supabase SDK synchronously so it's available immediately */

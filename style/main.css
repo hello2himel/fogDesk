@@ -260,37 +260,31 @@ em { font-style: italic; }
 
 .subject-list { display: flex; flex-wrap: wrap; gap: 0.4rem; }
 
-.subject-row {
+/* Unified subject pill — click to toggle include/exclude */
+.subject-pill {
     display: inline-flex;
     align-items: center;
-    gap: 0.35rem;
+    gap: 0.3rem;
     background: var(--surface);
     border: 1.5px solid var(--border);
     border-radius: 999px;
-    padding: 0.2rem 0.55rem 0.2rem 0.3rem;
+    padding: 0.25rem 0.65rem 0.25rem 0.4rem;
     font-size: 0.8rem;
-    transition: border-color 0.15s, opacity 0.15s;
-    cursor: default;
+    font-family: var(--font-body);
+    transition: border-color 0.15s, opacity 0.15s, background 0.15s;
+    cursor: pointer;
+    color: var(--text);
+    line-height: 1;
 }
-.subject-row.enabled  { border-color: var(--ink); }
-.subject-row.disabled { opacity: 0.45; border-style: dashed; }
+.subject-pill:hover { border-color: var(--border-strong); background: var(--surface-2); }
+.subject-pill.enabled  { border-color: var(--ink); }
+.subject-pill.disabled { opacity: 0.48; border-style: dashed; }
 
-.subject-tick {
-    background: none; border: none; cursor: pointer;
-    padding: 0; display: flex; align-items: center;
-    font-size: 0.95rem; color: var(--text-3);
-    transition: color 0.15s; line-height: 1;
-}
-.subject-tick.ticked { color: var(--ink); }
-.subject-tick:hover   { color: var(--ink); }
+.pill-check { font-size: 0.9rem; color: var(--text-3); display: flex; align-items: center; }
+.subject-pill.enabled .pill-check { color: var(--ink); }
 
-.subject-name {
-    cursor: pointer; color: var(--text);
-    font-weight: 500; font-size: 0.8rem;
-}
-.subject-name:hover { text-decoration: underline; }
-
-.subject-stat { color: var(--text-3); font-size: 0.75rem; }
+.pill-name  { font-weight: 500; }
+.pill-stat  { color: var(--text-3); font-size: 0.75rem; margin-left: 0.1rem; }
 
 /* ---- Subject tabs ---- */
 .subject-tabs {
@@ -592,3 +586,19 @@ em { font-style: italic; }
 
 /* Utility */
 .hidden { display: none !important; }
+
+/* ---- Date dropdowns (setup + settings) ---- */
+.date-dropdowns {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+.date-sel {
+    flex: 1;
+    min-width: 0;
+    cursor: pointer;
+    appearance: auto;
+}
+.date-sel-day   { max-width: 80px; }
+.date-sel-month { min-width: 130px; flex: 2; }
+.date-sel-year  { max-width: 100px; }

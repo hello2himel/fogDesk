@@ -35,34 +35,17 @@
             </div>
         </div>
 
-        <!-- Subject panel: tick/untick subjects -->
+        <!-- Subject panel: include/exclude from % -->
         <div class="subject-panel">
             <div class="subject-panel-header">
-                <span><i class="ri-checkbox-circle-line"></i> Subjects</span>
-                <small>Tick to include in syllabus %</small>
+                <span>Subjects</span>
+                <small>Toggle to include or exclude from your syllabus %</small>
             </div>
             <div id="subjectList" class="subject-list"></div>
         </div>
 
         <div class="subject-tabs" id="subjectTabs"></div>
         <div class="modal-body" id="chaptersGrid"></div>
-    </div>
-</div>
-
-<!-- Confirm Modal -->
-<div id="confirmModal" class="modal-overlay hidden">
-    <div class="modal modal-sm">
-        <div class="modal-header">
-            <h3>Are you sure?</h3>
-            <button class="icon-btn" onclick="closeConfirm()"><i class="ri-close-line"></i></button>
-        </div>
-        <div class="modal-body">
-            <p id="confirmMsg" style="color:var(--text-2);margin-bottom:1.5rem;font-size:.9rem;"></p>
-            <div class="btn-row">
-                <button class="btn btn-ghost" onclick="closeConfirm()">Cancel</button>
-                <button class="btn btn-danger" id="confirmOkBtn">Confirm</button>
-            </div>
-        </div>
     </div>
 </div>
 

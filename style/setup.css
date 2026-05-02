@@ -294,3 +294,24 @@
 
 /* Hidden utility */
 .hidden { display: none !important; }
+
+/* ---- OTP hint ---- */
+.otp-hint-magic {
+    font-size: 0.8rem;
+    color: var(--text-3);
+    margin-top: 0.15rem;
+}
+
+/* ---- Spinner for loading buttons ---- */
+.spinner {
+    display: inline-block;
+    width: 14px; height: 14px;
+    border: 2px solid rgba(255,255,255,0.35);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.65s linear infinite;
+    vertical-align: middle;
+}
+
+/* Step 1 auth: no step-label needed on first screen */
+#step1 .step-label { display: none; }

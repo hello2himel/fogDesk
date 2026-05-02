@@ -24,7 +24,7 @@
             <div class="brand-steps">
                 <div class="brand-step active" data-step="1">
                     <div class="step-dot"></div>
-                    <span>Welcome</span>
+                    <span>Your Account</span>
                 </div>
                 <div class="brand-step" data-step="2">
                     <div class="step-dot"></div>
@@ -34,10 +34,6 @@
                     <div class="step-dot"></div>
                     <span>Study Period</span>
                 </div>
-                <div class="brand-step" data-step="4">
-                    <div class="step-dot"></div>
-                    <span>Your Account</span>
-                </div>
             </div>
         </div>
     </div>
@@ -45,42 +41,89 @@
     <!-- Right: Step content -->
     <div class="setup-content">
 
-        <!-- Step 1: Welcome -->
+        <!-- Step 1: Auth -->
         <div class="setup-step active" id="step1">
             <div class="step-header">
-                <span class="step-label">Step 1 of 4</span>
-                <h2>Welcome to Study Buddy 👋</h2>
-                <p>A focused tracker that compares how much time has passed against how much of your syllabus you've covered. Let's get you set up.</p>
+                <h2>Welcome to Study Buddy</h2>
+                <p>Sign in to sync your progress across devices, or create a free account to get started.</p>
             </div>
 
-            <div class="feature-grid">
-                <div class="feature-card">
-                    <i class="ri-bar-chart-2-line"></i>
-                    <h4>Dual Progress</h4>
-                    <p>Time vs chapters — know if you're on track at a glance.</p>
-                </div>
-                <div class="feature-card">
-                    <i class="ri-book-open-line"></i>
-                    <h4>Full Syllabus</h4>
-                    <p>Pre-loaded for HSC, CBSE, A-Levels & IB Diploma.</p>
-                </div>
-                <div class="feature-card">
-                    <i class="ri-cloud-line"></i>
-                    <h4>Sync Everywhere</h4>
-                    <p>Your progress stays in sync across all your devices.</p>
-                </div>
-                <div class="feature-card">
-                    <i class="ri-file-text-line"></i>
-                    <h4>Chapter Notes</h4>
-                    <p>Attach quick notes to any chapter as you study.</p>
+            <div class="auth-tabs" role="tablist">
+                <button class="auth-tab active" data-mode="login" onclick="setAuthMode('login')" role="tab">Sign in</button>
+                <button class="auth-tab" data-mode="signup" onclick="setAuthMode('signup')" role="tab">Create account</button>
+            </div>
+
+            <div id="authCredFields">
+                <div class="auth-form">
+                    <div class="form-group hidden" id="authUsernameGroup">
+                        <label for="authUsername">Username</label>
+                        <div class="input-icon-wrap">
+                            <i class="ri-at-line"></i>
+                            <input type="text" id="authUsername" class="form-input" placeholder="ada_lovelace" autocomplete="username" spellcheck="false">
+                        </div>
+                        <small>3–20 characters. Lowercase letters, numbers, underscores.</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="authEmail">Email address</label>
+                        <div class="input-icon-wrap">
+                            <i class="ri-mail-line"></i>
+                            <input type="email" id="authEmail" class="form-input" placeholder="you@example.com" autocomplete="email">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="authPassword">Password</label>
+                        <div class="input-icon-wrap">
+                            <i class="ri-lock-line"></i>
+                            <input type="password" id="authPassword" class="form-input" placeholder="Min. 6 characters" autocomplete="current-password">
+                            <button type="button" class="toggle-visible" onclick="togglePwd('authPassword','eyePwd')">
+                                <i class="ri-eye-line" id="eyePwd"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-group hidden" id="authPasswordConfirmGroup">
+                        <label for="authPasswordConfirm">Confirm password</label>
+                        <div class="input-icon-wrap">
+                            <i class="ri-lock-line"></i>
+                            <input type="password" id="authPasswordConfirm" class="form-input" placeholder="Repeat your password" autocomplete="new-password">
+                        </div>
+                    </div>
+
+                    <button class="btn btn-primary btn-lg" id="authSubmitBtn" data-mode="login" onclick="submitAuth()">
+                        <i class="ri-login-circle-line"></i> Sign in
+                    </button>
                 </div>
             </div>
 
-            <div class="step-nav">
-                <div></div>
-                <button class="btn btn-primary btn-lg" onclick="goStep(2)">
-                    Get Started <i class="ri-arrow-right-line"></i>
-                </button>
+            <!-- OTP panel -->
+            <div id="authOtpPanel" class="hidden">
+                <div class="otp-panel">
+                    <div class="otp-icon"><i class="ri-mail-check-line"></i></div>
+                    <h3>Check your inbox</h3>
+                    <p>We sent a verification code to<br><strong id="otpEmailHint"></strong></p>
+                    <p class="otp-hint-magic">You can also click the link in the email to verify instantly.</p>
+
+                    <div class="otp-input-wrap">
+                        <input type="text" id="authOtpInput" class="form-input otp-input"
+                            placeholder="Enter code" inputmode="numeric" maxlength="8"
+                            autocomplete="one-time-code" spellcheck="false">
+                    </div>
+
+                    <button class="btn btn-primary btn-lg otp-verify-btn" id="otpVerifyBtn" onclick="verifyOtp()">
+                        <i class="ri-shield-check-line"></i> Verify
+                    </button>
+
+                    <div class="otp-actions">
+                        <button class="btn btn-ghost btn-sm" onclick="backFromOtp()">
+                            <i class="ri-arrow-left-line"></i> Back
+                        </button>
+                        <button class="btn btn-ghost btn-sm" id="resendOtpBtn" onclick="resendOtp()" disabled>
+                            Resend in 30s
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <div class="setup-footer">
@@ -93,7 +136,7 @@
         <!-- Step 2: Curriculum -->
         <div class="setup-step" id="step2">
             <div class="step-header">
-                <span class="step-label">Step 2 of 4</span>
+                <span class="step-label">Step 2 of 3</span>
                 <h2>Choose your curriculum</h2>
                 <p>Select the syllabus that matches your exam board. You can change this later in Settings.</p>
             </div>
@@ -103,10 +146,7 @@
                     <input type="radio" name="syllabus" value="syllabus-bangladesh-hsc.json" checked>
                     <div class="curriculum-info">
                         <div class="curriculum-flag">🇧🇩</div>
-                        <div>
-                            <h4>Bangladesh HSC — Science</h4>
-                            <p>Higher Secondary Certificate, Science stream</p>
-                        </div>
+                        <div><h4>Bangladesh HSC — Science</h4><p>Higher Secondary Certificate, Science stream</p></div>
                     </div>
                     <i class="ri-check-circle-fill curriculum-check"></i>
                 </label>
@@ -114,10 +154,7 @@
                     <input type="radio" name="syllabus" value="syllabus-bangladesh-hsc-commerce.json">
                     <div class="curriculum-info">
                         <div class="curriculum-flag">🇧🇩</div>
-                        <div>
-                            <h4>Bangladesh HSC — Commerce</h4>
-                            <p>Higher Secondary Certificate, Commerce stream</p>
-                        </div>
+                        <div><h4>Bangladesh HSC — Commerce</h4><p>Higher Secondary Certificate, Commerce stream</p></div>
                     </div>
                     <i class="ri-check-circle-fill curriculum-check"></i>
                 </label>
@@ -125,10 +162,7 @@
                     <input type="radio" name="syllabus" value="syllabus-india-cbse.json">
                     <div class="curriculum-info">
                         <div class="curriculum-flag">🇮🇳</div>
-                        <div>
-                            <h4>India CBSE Class 12</h4>
-                            <p>Central Board of Secondary Education</p>
-                        </div>
+                        <div><h4>India CBSE Class 12</h4><p>Central Board of Secondary Education</p></div>
                     </div>
                     <i class="ri-check-circle-fill curriculum-check"></i>
                 </label>
@@ -136,10 +170,7 @@
                     <input type="radio" name="syllabus" value="syllabus-uk-alevels.json">
                     <div class="curriculum-info">
                         <div class="curriculum-flag">🇬🇧</div>
-                        <div>
-                            <h4>UK A-Levels</h4>
-                            <p>Cambridge / Edexcel A-Level subjects</p>
-                        </div>
+                        <div><h4>UK A-Levels</h4><p>Cambridge / Edexcel A-Level subjects</p></div>
                     </div>
                     <i class="ri-check-circle-fill curriculum-check"></i>
                 </label>
@@ -147,17 +178,14 @@
                     <input type="radio" name="syllabus" value="syllabus-ib-diploma.json">
                     <div class="curriculum-info">
                         <div class="curriculum-flag">🌍</div>
-                        <div>
-                            <h4>IB Diploma Programme</h4>
-                            <p>International Baccalaureate — Diploma</p>
-                        </div>
+                        <div><h4>IB Diploma Programme</h4><p>International Baccalaureate — Diploma</p></div>
                     </div>
                     <i class="ri-check-circle-fill curriculum-check"></i>
                 </label>
             </div>
 
             <div class="step-nav">
-                <button class="btn btn-ghost" onclick="goStep(1)"><i class="ri-arrow-left-line"></i> Back</button>
+                <div></div>
                 <button class="btn btn-primary btn-lg" onclick="goStep(3)">
                     Continue <i class="ri-arrow-right-line"></i>
                 </button>
@@ -167,29 +195,21 @@
         <!-- Step 3: Study Period -->
         <div class="setup-step" id="step3">
             <div class="step-header">
-                <span class="step-label">Step 3 of 4</span>
+                <span class="step-label">Step 3 of 3</span>
                 <h2>Set your study period</h2>
                 <p>When does your preparation start, and when is your exam? This powers the time progress bar.</p>
             </div>
 
             <div class="date-form">
-                <p id="dateFormatHint" style="font-size:.82rem;color:var(--text-3);"></p>
-
                 <div class="form-group">
-                    <label for="startDate">Study Start Date</label>
-                    <div class="input-icon-wrap">
-                        <i class="ri-calendar-line"></i>
-                        <input type="date" id="startDate" class="form-input">
-                    </div>
+                    <label>Study Start Date</label>
+                    <div class="date-dropdowns" id="startDateDropdowns"></div>
                     <small>The day you began or plan to begin preparation.</small>
                 </div>
 
                 <div class="form-group">
-                    <label for="endDate">Exam / Target Date</label>
-                    <div class="input-icon-wrap">
-                        <i class="ri-flag-line"></i>
-                        <input type="date" id="endDate" class="form-input">
-                    </div>
+                    <label>Exam / Target Date</label>
+                    <div class="date-dropdowns" id="endDateDropdowns"></div>
                     <small>Your exam date or last day of preparation.</small>
                 </div>
 
@@ -209,137 +229,19 @@
                         <span>remaining</span>
                     </div>
                 </div>
-
-                <p id="dateFriendly" style="font-size:.82rem;color:var(--text-3);display:none;">
-                    <span id="previewStartFmt"></span> → <span id="previewEndFmt"></span>
-                </p>
             </div>
 
             <div class="step-nav">
                 <button class="btn btn-ghost" onclick="goStep(2)"><i class="ri-arrow-left-line"></i> Back</button>
-                <button class="btn btn-primary btn-lg" onclick="validateDatesAndContinue()">
-                    Continue <i class="ri-arrow-right-line"></i>
+                <button class="btn btn-primary btn-lg" onclick="validateDatesAndFinish()">
+                    <i class="ri-check-line"></i> Finish setup
                 </button>
             </div>
         </div>
 
-        <!-- Step 4: Account (sign in / sign up + OTP) -->
-        <div class="setup-step" id="step4">
-            <div class="step-header">
-                <span class="step-label">Step 4 of 4</span>
-                <h2>Your account</h2>
-                <p>Sign in or create a new account to sync your progress across devices.</p>
-            </div>
+    </div>
+</div>
 
-            <!-- Tabs: Sign in / Create account -->
-            <div class="auth-tabs" role="tablist">
-                <button class="auth-tab active" data-mode="login"
-                    onclick="setAuthMode('login')" role="tab">Sign in</button>
-                <button class="auth-tab" data-mode="signup"
-                    onclick="setAuthMode('signup')" role="tab">Create account</button>
-            </div>
-
-            <!-- Credential fields (login + signup) -->
-            <div id="authCredFields">
-                <div class="auth-form">
-                    <!-- Username — signup only -->
-                    <div class="form-group hidden" id="authUsernameGroup">
-                        <label for="authUsername">Username</label>
-                        <div class="input-icon-wrap">
-                            <i class="ri-at-line"></i>
-                            <input type="text" id="authUsername" class="form-input"
-                                placeholder="ada_lovelace"
-                                autocomplete="username"
-                                spellcheck="false">
-                        </div>
-                        <small>3–20 characters. Lowercase letters, numbers, underscores.</small>
-                    </div>
-
-                    <!-- Email — both -->
-                    <div class="form-group">
-                        <label for="authEmail">Email address</label>
-                        <div class="input-icon-wrap">
-                            <i class="ri-mail-line"></i>
-                            <input type="email" id="authEmail" class="form-input"
-                                placeholder="you@example.com"
-                                autocomplete="email">
-                        </div>
-                    </div>
-
-                    <!-- Password — both -->
-                    <div class="form-group">
-                        <label for="authPassword">Password</label>
-                        <div class="input-icon-wrap">
-                            <i class="ri-lock-line"></i>
-                            <input type="password" id="authPassword" class="form-input"
-                                placeholder="Min. 6 characters"
-                                autocomplete="current-password">
-                            <button type="button" class="toggle-visible"
-                                onclick="togglePwd('authPassword','eyePwd')">
-                                <i class="ri-eye-line" id="eyePwd"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Confirm password — signup only -->
-                    <div class="form-group hidden" id="authPasswordConfirmGroup">
-                        <label for="authPasswordConfirm">Confirm password</label>
-                        <div class="input-icon-wrap">
-                            <i class="ri-lock-line"></i>
-                            <input type="password" id="authPasswordConfirm" class="form-input"
-                                placeholder="Repeat your password"
-                                autocomplete="new-password">
-                        </div>
-                    </div>
-
-                    <button class="btn btn-primary btn-lg" id="authSubmitBtn" data-mode="login" onclick="submitAuth()">
-                        <i class="ri-login-circle-line"></i> Sign in
-                    </button>
-                </div>
-            </div>
-
-            <!-- OTP verification panel (shown after submit) -->
-            <div id="authOtpPanel" class="hidden">
-                <div class="otp-panel">
-                    <div class="otp-icon"><i class="ri-mail-check-line"></i></div>
-                    <h3>Check your inbox</h3>
-                    <p>We sent a verification code to<br><strong id="otpEmailHint"></strong></p>
-
-                    <div class="otp-input-wrap">
-                        <input type="text" id="authOtpInput" class="form-input otp-input"
-                            placeholder="Enter code"
-                            inputmode="numeric"
-                            maxlength="8"
-                            autocomplete="one-time-code"
-                            spellcheck="false">
-                    </div>
-
-                    <button class="btn btn-primary btn-lg otp-verify-btn" id="otpVerifyBtn" onclick="verifyOtp()">
-                        <i class="ri-shield-check-line"></i> Verify
-                    </button>
-
-                    <div class="otp-actions">
-                        <button class="btn btn-ghost btn-sm" onclick="backFromOtp()">
-                            <i class="ri-arrow-left-line"></i> Back
-                        </button>
-                        <button class="btn btn-ghost btn-sm" id="resendOtpBtn" onclick="resendOtp()" disabled>
-                            Resend in 30s
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="step-nav">
-                <button class="btn btn-ghost" id="step4BackBtn" onclick="goStep(3)">
-                    <i class="ri-arrow-left-line"></i> Back
-                </button>
-            </div>
-        </div>
-
-    </div><!-- /.setup-content -->
-</div><!-- /.setup-shell -->
-
-<!-- Toast -->
 <div id="toast" class="toast hidden">
     <i id="toastIcon" class="ri-check-line"></i>
     <span id="toastMsg"></span>
