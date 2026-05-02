@@ -1,195 +1,97 @@
 {
   "Physics": {
-    "Paper 1": [
-      {"id": "phy-1-01", "title": "Chapter 1: Physical World", "done": false, "note": ""},
-      {"id": "phy-1-02", "title": "Chapter 2: Units and Measurements", "done": false, "note": ""},
-      {"id": "phy-1-03", "title": "Chapter 3: Motion in a Straight Line", "done": false, "note": ""},
-      {"id": "phy-1-04", "title": "Chapter 4: Motion in a Plane", "done": false, "note": ""},
-      {"id": "phy-1-05", "title": "Chapter 5: Laws of Motion", "done": false, "note": ""},
-      {"id": "phy-1-06", "title": "Chapter 6: Work, Energy and Power", "done": false, "note": ""},
-      {"id": "phy-1-07", "title": "Chapter 7: System of Particles and Rotational Motion", "done": false, "note": ""},
-      {"id": "phy-1-08", "title": "Chapter 8: Gravitation", "done": false, "note": ""}
+    "1st Paper": [
+      {"id": "phy1-1", "title": "ভৌত জগত ও পরিমাপ", "done": false, "note": ""},
+      {"id": "phy1-2", "title": "ভেক্টর", "done": false, "note": ""},
+      {"id": "phy1-3", "title": "গতিবিদ্যা", "done": false, "note": ""},
+      {"id": "phy1-4", "title": "নিউটনিয়ান বলবিদ্যা", "done": false, "note": ""},
+      {"id": "phy1-5", "title": "কাজ, শক্তি ও ক্ষমতা", "done": false, "note": ""},
+      {"id": "phy1-6", "title": "মহাকর্ষ ও অভিকর্ষ", "done": false, "note": ""},
+      {"id": "phy1-7", "title": "পদার্থের গাঠনিক ধর্ম", "done": false, "note": ""},
+      {"id": "phy1-8", "title": "পর্যায়বৃত্ত ধর্ম ও গতি", "done": false, "note": ""},
+      {"id": "phy1-9", "title": "তরঙ্গ", "done": false, "note": ""},
+      {"id": "phy1-10", "title": "আদর্শ গ্যাস ও গ্যাসের গতিতত্ব", "done": false, "note": ""}
     ],
-    "Paper 2": [
-      {"id": "phy-2-01", "title": "Chapter 9: Mechanical Properties of Solids", "done": false, "note": ""},
-      {"id": "phy-2-02", "title": "Chapter 10: Mechanical Properties of Fluids", "done": false, "note": ""},
-      {"id": "phy-2-03", "title": "Chapter 11: Thermal Properties of Matter", "done": false, "note": ""},
-      {"id": "phy-2-04", "title": "Chapter 12: Thermodynamics", "done": false, "note": ""},
-      {"id": "phy-2-05", "title": "Chapter 13: Kinetic Theory", "done": false, "note": ""},
-      {"id": "phy-2-06", "title": "Chapter 14: Oscillations", "done": false, "note": ""},
-      {"id": "phy-2-07", "title": "Chapter 15: Waves", "done": false, "note": ""},
-      {"id": "phy-2-08", "title": "Chapter 16: Electric Charges and Fields", "done": false, "note": ""},
-      {"id": "phy-2-09", "title": "Chapter 17: Electrostatic Potential and Capacitance", "done": false, "note": ""},
-      {"id": "phy-2-10", "title": "Chapter 18: Current Electricity", "done": false, "note": ""},
-      {"id": "phy-2-11", "title": "Chapter 19: Moving Charges and Magnetism", "done": false, "note": ""},
-      {"id": "phy-2-12", "title": "Chapter 20: Magnetism and Matter", "done": false, "note": ""},
-      {"id": "phy-2-13", "title": "Chapter 21: Electromagnetic Induction", "done": false, "note": ""},
-      {"id": "phy-2-14", "title": "Chapter 22: Alternating Current", "done": false, "note": ""},
-      {"id": "phy-2-15", "title": "Chapter 23: Electromagnetic Waves", "done": false, "note": ""},
-      {"id": "phy-2-16", "title": "Chapter 24: Ray Optics and Optical Instruments", "done": false, "note": ""},
-      {"id": "phy-2-17", "title": "Chapter 25: Wave Optics", "done": false, "note": ""},
-      {"id": "phy-2-18", "title": "Chapter 26: Dual Nature of Radiation and Matter", "done": false, "note": ""},
-      {"id": "phy-2-19", "title": "Chapter 27: Atoms", "done": false, "note": ""},
-      {"id": "phy-2-20", "title": "Chapter 28: Nuclei", "done": false, "note": ""},
-      {"id": "phy-2-21", "title": "Chapter 29: Semiconductor Electronics", "done": false, "note": ""}
+    "2nd Paper": [
+      {"id": "phy2-1", "title": "তাপগতিবিদ্যা", "done": false, "note": ""},
+      {"id": "phy2-2", "title": "স্থির তড়িৎ", "done": false, "note": ""},
+      {"id": "phy2-3", "title": "চল তড়িৎ", "done": false, "note": ""},
+      {"id": "phy2-4", "title": "তড়িত প্রবাহের চৌম্বক ক্রিয়া ও চৌম্বকত্ব", "done": false, "note": ""},
+      {"id": "phy2-5", "title": "তড়িৎচৌম্বকীয় আবেশ", "done": false, "note": ""},
+      {"id": "phy2-6", "title": "জ্যামিতিক আলোকবিজ্ঞান", "done": false, "note": ""},
+      {"id": "phy2-7", "title": "ভৌত আলোকবিজ্ঞান", "done": false, "note": ""},
+      {"id": "phy2-8", "title": "আধুনিক পদার্থবিজ্ঞান", "done": false, "note": ""},
+      {"id": "phy2-9", "title": "পরমাণুর মডেল ও নিউক্লিয়ার পদার্থবিজ্ঞান", "done": false, "note": ""},
+      {"id": "phy2-10", "title": "সেমিকন্ডাক্টর ও ইলেকট্রনিক্স", "done": false, "note": ""},
+      {"id": "phy2-11", "title": "জ্যোতির্বিজ্ঞান", "done": false, "note": ""}
     ]
   },
   "Chemistry": {
-    "Paper 1": [
-      {"id": "chem-1-01", "title": "Chapter 1: Some Basic Concepts of Chemistry", "done": false, "note": ""},
-      {"id": "chem-1-02", "title": "Chapter 2: Structure of Atom", "done": false, "note": ""},
-      {"id": "chem-1-03", "title": "Chapter 3: Classification of Elements and Periodicity", "done": false, "note": ""},
-      {"id": "chem-1-04", "title": "Chapter 4: Chemical Bonding and Molecular Structure", "done": false, "note": ""},
-      {"id": "chem-1-05", "title": "Chapter 5: States of Matter", "done": false, "note": ""},
-      {"id": "chem-1-06", "title": "Chapter 6: Thermodynamics", "done": false, "note": ""},
-      {"id": "chem-1-07", "title": "Chapter 7: Equilibrium", "done": false, "note": ""},
-      {"id": "chem-1-08", "title": "Chapter 8: Redox Reactions", "done": false, "note": ""},
-      {"id": "chem-1-09", "title": "Chapter 9: Hydrogen", "done": false, "note": ""},
-      {"id": "chem-1-10", "title": "Chapter 10: The s-Block Elements", "done": false, "note": ""},
-      {"id": "chem-1-11", "title": "Chapter 11: The p-Block Elements", "done": false, "note": ""},
-      {"id": "chem-1-12", "title": "Chapter 12: Organic Chemistry - Basic Principles", "done": false, "note": ""},
-      {"id": "chem-1-13", "title": "Chapter 13: Hydrocarbons", "done": false, "note": ""},
-      {"id": "chem-1-14", "title": "Chapter 14: Environmental Chemistry", "done": false, "note": ""}
+    "1st Paper": [
+      {"id": "chem1-1", "title": "ল্যাবরেটরির নিরাপদ ব্যবহার", "done": false, "note": ""},
+      {"id": "chem1-2", "title": "গুণগত রসায়ন", "done": false, "note": ""},
+      {"id": "chem1-3", "title": "মৌলের পর্যায়বৃত্ত ধর্ম ও রাসায়নিক বন্ধন", "done": false, "note": ""},
+      {"id": "chem1-4", "title": "রাসায়নিক পরিবর্তন", "done": false, "note": ""},
+      {"id": "chem1-5", "title": "কর্মমুখী রসায়ন", "done": false, "note": ""}
     ],
-    "Paper 2": [
-      {"id": "chem-2-01", "title": "Chapter 1: Solid State", "done": false, "note": ""},
-      {"id": "chem-2-02", "title": "Chapter 2: Solutions", "done": false, "note": ""},
-      {"id": "chem-2-03", "title": "Chapter 3: Electrochemistry", "done": false, "note": ""},
-      {"id": "chem-2-04", "title": "Chapter 4: Chemical Kinetics", "done": false, "note": ""},
-      {"id": "chem-2-05", "title": "Chapter 5: Surface Chemistry", "done": false, "note": ""},
-      {"id": "chem-2-06", "title": "Chapter 6: General Principles and Processes of Isolation of Elements", "done": false, "note": ""},
-      {"id": "chem-2-07", "title": "Chapter 7: The p-Block Elements", "done": false, "note": ""},
-      {"id": "chem-2-08", "title": "Chapter 8: The d- and f-Block Elements", "done": false, "note": ""},
-      {"id": "chem-2-09", "title": "Chapter 9: Coordination Compounds", "done": false, "note": ""},
-      {"id": "chem-2-10", "title": "Chapter 10: Haloalkanes and Haloarenes", "done": false, "note": ""},
-      {"id": "chem-2-11", "title": "Chapter 11: Alcohols, Phenols and Ethers", "done": false, "note": ""},
-      {"id": "chem-2-12", "title": "Chapter 12: Aldehydes, Ketones and Carboxylic Acids", "done": false, "note": ""},
-      {"id": "chem-2-13", "title": "Chapter 13: Amines", "done": false, "note": ""},
-      {"id": "chem-2-14", "title": "Chapter 14: Biomolecules", "done": false, "note": ""},
-      {"id": "chem-2-15", "title": "Chapter 15: Polymers", "done": false, "note": ""},
-      {"id": "chem-2-16", "title": "Chapter 16: Chemistry in Everyday Life", "done": false, "note": ""}
+    "2nd Paper": [
+      {"id": "chem2-1", "title": "পরিবেশ রসায়ন", "done": false, "note": ""},
+      {"id": "chem2-2", "title": "জৈব যৌগ", "done": false, "note": ""},
+      {"id": "chem2-3", "title": "পরিমাণগত রসায়ন", "done": false, "note": ""},
+      {"id": "chem2-4", "title": "তড়িৎ রসায়ন", "done": false, "note": ""},
+      {"id": "chem2-5", "title": "অর্থনৈতিক রসায়ন", "done": false, "note": ""}
     ]
   },
-  "Mathematics": {
-    "Paper 1": [
-      {"id": "math-1-01", "title": "Chapter 1: Sets", "done": false, "note": ""},
-      {"id": "math-1-02", "title": "Chapter 2: Relations and Functions", "done": false, "note": ""},
-      {"id": "math-1-03", "title": "Chapter 3: Trigonometric Functions", "done": false, "note": ""},
-      {"id": "math-1-04", "title": "Chapter 4: Principle of Mathematical Induction", "done": false, "note": ""},
-      {"id": "math-1-05", "title": "Chapter 5: Complex Numbers and Quadratic Equations", "done": false, "note": ""},
-      {"id": "math-1-06", "title": "Chapter 6: Linear Inequalities", "done": false, "note": ""},
-      {"id": "math-1-07", "title": "Chapter 7: Permutations and Combinations", "done": false, "note": ""},
-      {"id": "math-1-08", "title": "Chapter 8: Binomial Theorem", "done": false, "note": ""},
-      {"id": "math-1-09", "title": "Chapter 9: Sequences and Series", "done": false, "note": ""},
-      {"id": "math-1-10", "title": "Chapter 10: Straight Lines", "done": false, "note": ""},
-      {"id": "math-1-11", "title": "Chapter 11: Conic Sections", "done": false, "note": ""},
-      {"id": "math-1-12", "title": "Chapter 12: Introduction to Three Dimensional Geometry", "done": false, "note": ""},
-      {"id": "math-1-13", "title": "Chapter 13: Limits and Derivatives", "done": false, "note": ""},
-      {"id": "math-1-14", "title": "Chapter 14: Mathematical Reasoning", "done": false, "note": ""},
-      {"id": "math-1-15", "title": "Chapter 15: Statistics", "done": false, "note": ""},
-      {"id": "math-1-16", "title": "Chapter 16: Probability", "done": false, "note": ""}
+  "Higher Mathematics": {
+    "1st Paper": [
+      {"id": "math1-1", "title": "ম্যাট্রিক্স ও নির্ণায়ক", "done": false, "note": ""},
+      {"id": "math1-2", "title": "ভেক্টর", "done": false, "note": ""},
+      {"id": "math1-3", "title": "সরলরেখা", "done": false, "note": ""},
+      {"id": "math1-4", "title": "বৃত্ত", "done": false, "note": ""},
+      {"id": "math1-5", "title": "বিন্যাস ও সমাবেশ", "done": false, "note": ""},
+      {"id": "math1-6", "title": "ত্রিকোণমিতিক অনুপাত", "done": false, "note": ""},
+      {"id": "math1-7", "title": "সংযুক্ত ও যৌগিক কোণের ত্রিকোণমিতিক অনুপাত", "done": false, "note": ""},
+      {"id": "math1-8", "title": "ফাংশন ও ফাংশনের লেখচিত্র", "done": false, "note": ""},
+      {"id": "math1-9", "title": "অন্তরীকরণ", "done": false, "note": ""},
+      {"id": "math1-10", "title": "যোগজীকরণ", "done": false, "note": ""}
     ],
-    "Paper 2": [
-      {"id": "math-2-01", "title": "Chapter 1: Relations and Functions", "done": false, "note": ""},
-      {"id": "math-2-02", "title": "Chapter 2: Inverse Trigonometric Functions", "done": false, "note": ""},
-      {"id": "math-2-03", "title": "Chapter 3: Matrices", "done": false, "note": ""},
-      {"id": "math-2-04", "title": "Chapter 4: Determinants", "done": false, "note": ""},
-      {"id": "math-2-05", "title": "Chapter 5: Continuity and Differentiability", "done": false, "note": ""},
-      {"id": "math-2-06", "title": "Chapter 6: Application of Derivatives", "done": false, "note": ""},
-      {"id": "math-2-07", "title": "Chapter 7: Integrals", "done": false, "note": ""},
-      {"id": "math-2-08", "title": "Chapter 8: Application of Integrals", "done": false, "note": ""},
-      {"id": "math-2-09", "title": "Chapter 9: Differential Equations", "done": false, "note": ""},
-      {"id": "math-2-10", "title": "Chapter 10: Vector Algebra", "done": false, "note": ""},
-      {"id": "math-2-11", "title": "Chapter 11: Three Dimensional Geometry", "done": false, "note": ""},
-      {"id": "math-2-12", "title": "Chapter 12: Linear Programming", "done": false, "note": ""},
-      {"id": "math-2-13", "title": "Chapter 13: Probability", "done": false, "note": ""}
+    "2nd Paper": [
+      {"id": "math2-1", "title": "বাস্তব সংখ্যা ও অসমতা", "done": false, "note": ""},
+      {"id": "math2-2", "title": "যোগাশ্রয়ী প্রোগ্রাম", "done": false, "note": ""},
+      {"id": "math2-3", "title": "জটিল সংখ্যা", "done": false, "note": ""},
+      {"id": "math2-4", "title": "বহুপদী ও বহুপদী সমীকরণ", "done": false, "note": ""},
+      {"id": "math2-5", "title": "দ্বপদী বিস্তৃতি", "done": false, "note": ""},
+      {"id": "math2-6", "title": "কণিক", "done": false, "note": ""},
+      {"id": "math2-7", "title": "বিপরীত ত্রিকোণমিতিক ফাংশন", "done": false, "note": ""},
+      {"id": "math2-8", "title": "স্থিতিবিদ্যা", "done": false, "note": ""},
+      {"id": "math2-9", "title": "সমতলে বস্তুকণার গতি", "done": false, "note": ""},
+      {"id": "math2-10", "title": "বিস্তার পরিমাপ ও সম্ভাবনা", "done": false, "note": ""}
     ]
   },
   "Biology": {
-    "Paper 1": [
-      {"id": "bio-1-01", "title": "Chapter 1: The Living World", "done": false, "note": ""},
-      {"id": "bio-1-02", "title": "Chapter 2: Biological Classification", "done": false, "note": ""},
-      {"id": "bio-1-03", "title": "Chapter 3: Plant Kingdom", "done": false, "note": ""},
-      {"id": "bio-1-04", "title": "Chapter 4: Animal Kingdom", "done": false, "note": ""},
-      {"id": "bio-1-05", "title": "Chapter 5: Morphology of Flowering Plants", "done": false, "note": ""},
-      {"id": "bio-1-06", "title": "Chapter 6: Anatomy of Flowering Plants", "done": false, "note": ""},
-      {"id": "bio-1-07", "title": "Chapter 7: Structural Organisation in Animals", "done": false, "note": ""},
-      {"id": "bio-1-08", "title": "Chapter 8: Cell: The Unit of Life", "done": false, "note": ""},
-      {"id": "bio-1-09", "title": "Chapter 9: Biomolecules", "done": false, "note": ""},
-      {"id": "bio-1-10", "title": "Chapter 10: Cell Cycle and Cell Division", "done": false, "note": ""},
-      {"id": "bio-1-11", "title": "Chapter 11: Transport in Plants", "done": false, "note": ""},
-      {"id": "bio-1-12", "title": "Chapter 12: Mineral Nutrition", "done": false, "note": ""},
-      {"id": "bio-1-13", "title": "Chapter 13: Photosynthesis in Higher Plants", "done": false, "note": ""},
-      {"id": "bio-1-14", "title": "Chapter 14: Respiration in Plants", "done": false, "note": ""},
-      {"id": "bio-1-15", "title": "Chapter 15: Plant Growth and Development", "done": false, "note": ""},
-      {"id": "bio-1-16", "title": "Chapter 16: Digestion and Absorption", "done": false, "note": ""},
-      {"id": "bio-1-17", "title": "Chapter 17: Breathing and Exchange of Gases", "done": false, "note": ""},
-      {"id": "bio-1-18", "title": "Chapter 18: Body Fluids and Circulation", "done": false, "note": ""},
-      {"id": "bio-1-19", "title": "Chapter 19: Excretory Products and their Elimination", "done": false, "note": ""},
-      {"id": "bio-1-20", "title": "Chapter 20: Locomotion and Movement", "done": false, "note": ""},
-      {"id": "bio-1-21", "title": "Chapter 21: Neural Control and Coordination", "done": false, "note": ""},
-      {"id": "bio-1-22", "title": "Chapter 22: Chemical Coordination and Integration", "done": false, "note": ""}
+    "1st Paper": [
+      {"id": "bio1-1", "title": "কোষ ও এর গঠন", "done": false, "note": ""},
+      {"id": "bio1-2", "title": "কোষ বিভাজন", "done": false, "note": ""},
+      {"id": "bio1-3", "title": "কোষ রসায়ন", "done": false, "note": ""},
+      {"id": "bio1-4", "title": "অণুজীব, শৈবাল ও ছত্রাক", "done": false, "note": ""},
+      {"id": "bio1-5", "title": "ব্রায়োফাইটা ও টেরিডোফাইটা", "done": false, "note": ""},
+      {"id": "bio1-6", "title": "নগ্নবীজী ও আবৃতবীজী উদ্ভিদ", "done": false, "note": ""},
+      {"id": "bio1-7", "title": "টিস্যু ও টিস্যুতন্ত্র", "done": false, "note": ""},
+      {"id": "bio1-8", "title": "উদ্ভিদ শরীরতত্ব", "done": false, "note": ""},
+      {"id": "bio1-9", "title": "উদ্ভিদ প্রজনন", "done": false, "note": ""},
+      {"id": "bio1-10", "title": "জীব প্রযুক্তি", "done": false, "note": ""},
+      {"id": "bio1-11", "title": "বিস্তরণ ও সংরক্ষণ, জীবের পরিবেশ", "done": false, "note": ""}
     ],
-    "Paper 2": [
-      {"id": "bio-2-01", "title": "Chapter 1: Reproduction in Organisms", "done": false, "note": ""},
-      {"id": "bio-2-02", "title": "Chapter 2: Sexual Reproduction in Flowering Plants", "done": false, "note": ""},
-      {"id": "bio-2-03", "title": "Chapter 3: Human Reproduction", "done": false, "note": ""},
-      {"id": "bio-2-04", "title": "Chapter 4: Reproductive Health", "done": false, "note": ""},
-      {"id": "bio-2-05", "title": "Chapter 5: Principles of Inheritance and Variation", "done": false, "note": ""},
-      {"id": "bio-2-06", "title": "Chapter 6: Molecular Basis of Inheritance", "done": false, "note": ""},
-      {"id": "bio-2-07", "title": "Chapter 7: Evolution", "done": false, "note": ""},
-      {"id": "bio-2-08", "title": "Chapter 8: Human Health and Disease", "done": false, "note": ""},
-      {"id": "bio-2-09", "title": "Chapter 9: Strategies for Enhancement in Food Production", "done": false, "note": ""},
-      {"id": "bio-2-10", "title": "Chapter 10: Microbes in Human Welfare", "done": false, "note": ""},
-      {"id": "bio-2-11", "title": "Chapter 11: Biotechnology: Principles and Processes", "done": false, "note": ""},
-      {"id": "bio-2-12", "title": "Chapter 12: Biotechnology and its Applications", "done": false, "note": ""},
-      {"id": "bio-2-13", "title": "Chapter 13: Organisms and Populations", "done": false, "note": ""},
-      {"id": "bio-2-14", "title": "Chapter 14: Ecosystem", "done": false, "note": ""},
-      {"id": "bio-2-15", "title": "Chapter 15: Biodiversity and Conservation", "done": false, "note": ""},
-      {"id": "bio-2-16", "title": "Chapter 16: Environmental Issues", "done": false, "note": ""}
-    ]
-  },
-  "ICT": {
-    "Theory": [
-      {"id": "ict-1-01", "title": "Chapter 1: Information and Communication Technology", "done": false, "note": ""},
-      {"id": "ict-1-02", "title": "Chapter 2: Communication Systems and Networks", "done": false, "note": ""},
-      {"id": "ict-1-03", "title": "Chapter 3: Number Systems and Digital Logic", "done": false, "note": ""},
-      {"id": "ict-1-04", "title": "Chapter 4: Web Design Introduction and HTML", "done": false, "note": ""},
-      {"id": "ict-1-05", "title": "Chapter 5: Programming Language", "done": false, "note": ""},
-      {"id": "ict-1-06", "title": "Chapter 6: Database Management System", "done": false, "note": ""}
-    ],
-    "Practical": [
-      {"id": "ict-2-01", "title": "HTML and CSS Practice", "done": false, "note": ""},
-      {"id": "ict-2-02", "title": "C Programming Exercises", "done": false, "note": ""},
-      {"id": "ict-2-03", "title": "Database Design Projects", "done": false, "note": ""},
-      {"id": "ict-2-04", "title": "Web Development Projects", "done": false, "note": ""},
-      {"id": "ict-2-05", "title": "Network Configuration", "done": false, "note": ""}
-    ]
-  },
-  "English": {
-    "Paper 1": [
-      {"id": "eng-1-01", "title": "Unit 1: Introducing Oneself", "done": false, "note": ""},
-      {"id": "eng-1-02", "title": "Unit 2: Pastimes", "done": false, "note": ""},
-      {"id": "eng-1-03", "title": "Unit 3: Time and Seasons", "done": false, "note": ""},
-      {"id": "eng-1-04", "title": "Unit 4: Asking for and Giving Directions", "done": false, "note": ""},
-      {"id": "eng-1-05", "title": "Unit 5: Festivals and Celebrations", "done": false, "note": ""},
-      {"id": "eng-1-06", "title": "Unit 6: Food and Nutrition", "done": false, "note": ""},
-      {"id": "eng-1-07", "title": "Unit 7: Ethnic Food", "done": false, "note": ""},
-      {"id": "eng-1-08", "title": "Unit 8: Shopping", "done": false, "note": ""},
-      {"id": "eng-1-09", "title": "Unit 9: Games and Sports", "done": false, "note": ""},
-      {"id": "eng-1-10", "title": "Unit 10: People and Places", "done": false, "note": ""}
-    ],
-    "Paper 2": [
-      {"id": "eng-2-01", "title": "Unit 1: Career Path", "done": false, "note": ""},
-      {"id": "eng-2-02", "title": "Unit 2: Education", "done": false, "note": ""},
-      {"id": "eng-2-03", "title": "Unit 3: Human Relationships", "done": false, "note": ""},
-      {"id": "eng-2-04", "title": "Unit 4: Telecommunication", "done": false, "note": ""},
-      {"id": "eng-2-05", "title": "Unit 5: Media and Advertising", "done": false, "note": ""},
-      {"id": "eng-2-06", "title": "Unit 6: Travel and Tourism", "done": false, "note": ""},
-      {"id": "eng-2-07", "title": "Unit 7: Environment", "done": false, "note": ""},
-      {"id": "eng-2-08", "title": "Unit 8: Globalization and Trade", "done": false, "note": ""},
-      {"id": "eng-2-09", "title": "Unit 9: Peace and Conflict", "done": false, "note": ""},
-      {"id": "eng-2-10", "title": "Unit 10: Science and Technology", "done": false, "note": ""}
+    "2nd Paper": [
+      {"id": "bio2-1", "title": "প্রাণীর ভিন্নতা ও শ্রেণিবিন্যাস", "done": false, "note": ""},
+      {"id": "bio2-2", "title": "প্রাণীর পরিচিতি", "done": false, "note": ""},
+      {"id": "bio2-3", "title": "পরিপাক ও শোষণ", "done": false, "note": ""},
+      {"id": "bio2-4", "title": "রক্ত সঞ্চালন, শ্বাসক্রিয়া ও বর্জ্য নিষ্কাশন", "done": false, "note": ""},
+      {"id": "bio2-5", "title": "চলন ও অঙ্গসঞ্চালনা", "done": false, "note": ""},
+      {"id": "bio2-6", "title": "সমন্বয় ও নিয়ন্ত্রণ", "done": false, "note": ""},
+      {"id": "bio2-7", "title": "মানব জীবনের ধারাবাহিকতা ও প্রতিরক্ষা", "done": false, "note": ""},
+      {"id": "bio2-8", "title": "জিনতত্ত্ব ও বিবর্তন", "done": false, "note": ""},
+      {"id": "bio2-9", "title": "প্রাণীর আচরণ", "done": false, "note": ""}
     ]
   }
 }
