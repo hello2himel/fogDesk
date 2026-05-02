@@ -1,48 +1,69 @@
 /* =============================================
    DB — cloud-first data layer
-   • SB_CONFIG (from _env.js) holds URL + key — users never see these
-   • sessionStorage holds only the user's email (auth token)
-   • No localStorage anywhere
+   Auth is fully handled by Supabase Auth.
+   Session stored in sessionStorage by the SDK.
+   No localStorage anywhere.
    ============================================= */
 
 const DB = (() => {
-    const SS = {
-        get: k  => { try { return JSON.parse(sessionStorage.getItem('sb_' + k)); } catch { return null; } },
-        set: (k, v) => { try { sessionStorage.setItem('sb_' + k, JSON.stringify(v)); } catch {} },
-        clear:  () => sessionStorage.clear(),
-    };
+    function _cfg() { return window.SB_CONFIG || { supa_url: '', supa_key: '' }; }
 
-    /* URL + key always from env; never user-supplied */
-    function _cfg() {
-        return window.SB_CONFIG || { url: '', key: '' };
+    /* Init cloud client — call once on every page load */
+    function initCloud() {
+        const { supa_url, supa_key } = _cfg();
+        if (!supa_url || !supa_key) return false;
+        // Retry until SDK is loaded (it loads async)
+        if (typeof window.supabase === 'undefined') return false;
+        return SB.init(supa_url, supa_key);
+    }
+
+    async function ensureReady() {
+        if (SB.ready()) return true;
+        // SDK may still be loading — wait up to 3s
+        for (let i = 0; i < 30; i++) {
+            await new Promise(r => setTimeout(r, 100));
+            if (initCloud()) return true;
+        }
+        return false;
     }
 
     /* ---- Auth ---- */
-    function getEmail() { return SS.get('email') || ''; }
 
-    function saveEmail(email) { SS.set('email', email); }
-
-    function isLoggedIn() {
-        const { url, key } = _cfg();
-        return !!(url && key && getEmail());
+    async function isLoggedIn() {
+        if (!(await ensureReady())) return false;
+        return SB.isLoggedIn();
     }
 
-    function logout() {
-        SS.clear();
+    async function getUser() {
+        if (!(await ensureReady())) return null;
+        return SB.getUser();
+    }
+
+    async function signUp(email, password, username) {
+        await ensureReady();
+        return SB.signUp(email, password, username);
+    }
+
+    async function signIn(email, password) {
+        await ensureReady();
+        return SB.signIn(email, password);
+    }
+
+    async function verifyOtp(email, token) {
+        await ensureReady();
+        return SB.verifyOtp(email, token);
+    }
+
+    async function resendOtp(email) {
+        await ensureReady();
+        return SB.resendOtp(email);
+    }
+
+    async function logout() {
+        if (SB.ready()) await SB.signOut();
+        sessionStorage.clear();
         window.location.replace('setup.html');
     }
-
-    /* ---- Init cloud client ---- */
-    function initCloud() {
-        const { url, key } = _cfg();
-        if (!url || !key) return false;
-        const ok = SB.init(url, key);
-        const email = getEmail();
-        if (ok && email) SB.setEmail(email);
-        return ok;
-    }
-
-    function cloudReady() { return SB.isReady(); }
 
     /* ---- Syllabus loader ---- */
     async function loadSyllabus(filename) {
@@ -53,26 +74,14 @@ const DB = (() => {
 
     /* ---- Cloud R/W ---- */
     async function pull() {
-        if (!SB.isReady()) throw new Error('Not signed in');
-        const { data, error } = await SB.fetch();
-        if (error &&
-            !error.message.includes('PGRST116') &&
-            !error.message.includes('null')) throw error;
-        return data || null;
+        if (!(await ensureReady())) throw new Error('Not ready');
+        return SB.fetchProgress();
     }
 
     async function push(chapters, settings, enabledSubjects) {
-        if (!SB.isReady()) throw new Error('Not signed in');
-        const { error } = await SB.upsert(chapters, { ...settings, enabledSubjects });
-        if (error) throw error;
+        if (!(await ensureReady())) throw new Error('Not ready');
+        await SB.upsertProgress(chapters, { ...settings, enabledSubjects });
     }
 
-    return {
-        getEmail, saveEmail,
-        isLoggedIn, logout,
-        initCloud, cloudReady,
-        loadSyllabus,
-        pull, push,
-        _cfg,
-    };
+    return { initCloud, ensureReady, isLoggedIn, getUser, signUp, signIn, verifyOtp, resendOtp, logout, loadSyllabus, pull, push, _cfg };
 })();

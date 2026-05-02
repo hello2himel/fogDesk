@@ -223,15 +223,15 @@
             </div>
         </div>
 
-        <!-- Step 4: Account (login / sign-up) -->
+        <!-- Step 4: Account (sign in / sign up + OTP) -->
         <div class="setup-step" id="step4">
             <div class="step-header">
                 <span class="step-label">Step 4 of 4</span>
                 <h2>Your account</h2>
-                <p>Sign in to sync your progress across devices, or create a new account to get started.</p>
+                <p>Sign in or create a new account to sync your progress across devices.</p>
             </div>
 
-            <!-- Login / Sign-up tabs -->
+            <!-- Tabs: Sign in / Create account -->
             <div class="auth-tabs" role="tablist">
                 <button class="auth-tab active" data-mode="login"
                     onclick="setAuthMode('login')" role="tab">Sign in</button>
@@ -239,41 +239,100 @@
                     onclick="setAuthMode('signup')" role="tab">Create account</button>
             </div>
 
-            <div class="auth-form" id="authForm">
-                <!-- Sign-up only: name -->
-                <div class="form-group hidden" id="authSignupFields">
-                    <label for="authName">Your name</label>
-                    <div class="input-icon-wrap">
-                        <i class="ri-user-line"></i>
-                        <input type="text" id="authName" class="form-input" placeholder="Ada Lovelace" autocomplete="name">
+            <!-- Credential fields (login + signup) -->
+            <div id="authCredFields">
+                <div class="auth-form">
+                    <!-- Username — signup only -->
+                    <div class="form-group hidden" id="authUsernameGroup">
+                        <label for="authUsername">Username</label>
+                        <div class="input-icon-wrap">
+                            <i class="ri-at-line"></i>
+                            <input type="text" id="authUsername" class="form-input"
+                                placeholder="ada_lovelace"
+                                autocomplete="username"
+                                spellcheck="false">
+                        </div>
+                        <small>3–20 characters. Lowercase letters, numbers, underscores.</small>
+                    </div>
+
+                    <!-- Email — both -->
+                    <div class="form-group">
+                        <label for="authEmail">Email address</label>
+                        <div class="input-icon-wrap">
+                            <i class="ri-mail-line"></i>
+                            <input type="email" id="authEmail" class="form-input"
+                                placeholder="you@example.com"
+                                autocomplete="email">
+                        </div>
+                    </div>
+
+                    <!-- Password — both -->
+                    <div class="form-group">
+                        <label for="authPassword">Password</label>
+                        <div class="input-icon-wrap">
+                            <i class="ri-lock-line"></i>
+                            <input type="password" id="authPassword" class="form-input"
+                                placeholder="Min. 6 characters"
+                                autocomplete="current-password">
+                            <button type="button" class="toggle-visible"
+                                onclick="togglePwd('authPassword','eyePwd')">
+                                <i class="ri-eye-line" id="eyePwd"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Confirm password — signup only -->
+                    <div class="form-group hidden" id="authPasswordConfirmGroup">
+                        <label for="authPasswordConfirm">Confirm password</label>
+                        <div class="input-icon-wrap">
+                            <i class="ri-lock-line"></i>
+                            <input type="password" id="authPasswordConfirm" class="form-input"
+                                placeholder="Repeat your password"
+                                autocomplete="new-password">
+                        </div>
+                    </div>
+
+                    <button class="btn btn-primary btn-lg" id="authSubmitBtn" data-mode="login" onclick="submitAuth()">
+                        <i class="ri-login-circle-line"></i> Sign in
+                    </button>
+                </div>
+            </div>
+
+            <!-- OTP verification panel (shown after submit) -->
+            <div id="authOtpPanel" class="hidden">
+                <div class="otp-panel">
+                    <div class="otp-icon"><i class="ri-mail-check-line"></i></div>
+                    <h3>Check your inbox</h3>
+                    <p>We sent a verification code to<br><strong id="otpEmailHint"></strong></p>
+
+                    <div class="otp-input-wrap">
+                        <input type="text" id="authOtpInput" class="form-input otp-input"
+                            placeholder="Enter code"
+                            inputmode="numeric"
+                            maxlength="8"
+                            autocomplete="one-time-code"
+                            spellcheck="false">
+                    </div>
+
+                    <button class="btn btn-primary btn-lg otp-verify-btn" id="otpVerifyBtn" onclick="verifyOtp()">
+                        <i class="ri-shield-check-line"></i> Verify
+                    </button>
+
+                    <div class="otp-actions">
+                        <button class="btn btn-ghost btn-sm" onclick="backFromOtp()">
+                            <i class="ri-arrow-left-line"></i> Back
+                        </button>
+                        <button class="btn btn-ghost btn-sm" id="resendOtpBtn" onclick="resendOtp()" disabled>
+                            Resend in 30s
+                        </button>
                     </div>
                 </div>
-
-                <!-- Shared: email -->
-                <div class="form-group" id="authLoginFields">
-                    <label for="authEmail">Email address</label>
-                    <div class="input-icon-wrap">
-                        <i class="ri-mail-line"></i>
-                        <input type="email" id="authEmail" class="form-input"
-                            placeholder="you@example.com"
-                            autocomplete="email"
-                            onkeydown="if(event.key==='Enter')submitAuth()">
-                    </div>
-                    <small>Your progress is tied to this email — use the same one on any device.</small>
-                </div>
-
-                <div class="connection-status hidden" id="connectionStatus">
-                    <i class="ri-check-circle-fill"></i>
-                    <span>Connected! Loading your dashboard…</span>
-                </div>
-
-                <button class="btn btn-primary btn-lg" id="authSubmitBtn" data-mode="login" onclick="submitAuth()">
-                    <i class="ri-login-circle-line"></i> Sign in &amp; Finish
-                </button>
             </div>
 
             <div class="step-nav">
-                <button class="btn btn-ghost" onclick="goStep(3)"><i class="ri-arrow-left-line"></i> Back</button>
+                <button class="btn btn-ghost" id="step4BackBtn" onclick="goStep(3)">
+                    <i class="ri-arrow-left-line"></i> Back
+                </button>
             </div>
         </div>
 

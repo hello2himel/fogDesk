@@ -1,19 +1,27 @@
 /* =============================================
    Cloud client — internal only, never user-facing
+   Uses Supabase Auth (email + password + OTP).
    Credentials always come from SB_CONFIG (_env.js).
    ============================================= */
 
 const SB = (() => {
     let _client = null;
-    let _email  = null;
 
-    function init(url, key) {
-        if (!url || !key) { _client = null; return false; }
+    function init(supa_url, supa_key) {
+        if (!supa_url || !supa_key) { _client = null; return false; }
         try {
-            _client = (typeof window.supabase !== 'undefined')
-                ? window.supabase.createClient(url, key)
-                : _makeRestClient(url, key);
-            return true;
+            if (typeof window.supabase !== 'undefined') {
+                _client = window.supabase.createClient(supa_url, supa_key, {
+                    auth: {
+                        storage: sessionStorage,
+                        autoRefreshToken: true,
+                        persistSession: true,
+                        detectSessionInUrl: true,
+                    }
+                });
+                return true;
+            }
+            return false;
         } catch (e) {
             console.error('[cloud] init error', e);
             _client = null;
@@ -21,103 +29,88 @@ const SB = (() => {
         }
     }
 
-    function setEmail(email) { _email = email; }
-    function getEmail()      { return _email; }
-    function isReady()       { return _client !== null && !!_email; }
+    function ready() { return _client !== null; }
 
-    /* Lightweight REST fallback (no SDK) */
-    function _makeRestClient(url, key) {
-        const base = url.replace(/\/$/, '');
-        const H = {
-            'apikey': key,
-            'Authorization': `Bearer ${key}`,
-            'Content-Type': 'application/json',
-        };
+    /* ---- Auth ---- */
 
-        async function _req(method, path, body, extra = {}) {
-            const res = await fetch(`${base}/rest/v1${path}`, {
-                method,
-                headers: { ...H, ...extra },
-                body: body !== undefined ? JSON.stringify(body) : undefined,
-            });
-            const text = await res.text();
-            if (!res.ok) throw new Error(`${res.status}: ${text}`);
-            return text ? JSON.parse(text) : null;
-        }
-
-        return {
-            _rest: true,
-            from(table) {
-                const ctx = {
-                    _t: table, _f: [], _sel: '*', _one: false,
-                    select(c) { ctx._sel = c || '*'; return ctx; },
-                    eq(col, val) { ctx._f.push(`${col}=eq.${encodeURIComponent(val)}`); return ctx; },
-                    single() { ctx._one = true; return ctx; },
-                    async execute() {
-                        const qs = ctx._f.length ? `&${ctx._f.join('&')}` : '';
-                        const raw = await _req('GET', `/${ctx._t}?select=${ctx._sel}${qs}`);
-                        const arr = Array.isArray(raw) ? raw : (raw ? [raw] : []);
-                        return { data: ctx._one ? (arr[0] ?? null) : arr, error: null };
-                    },
-                    then(res) { ctx.execute().then(res).catch(e => res({ data: null, error: e })); },
-                    async upsert(row) {
-                        try {
-                            const data = await _req('POST', `/${ctx._t}`,
-                                Array.isArray(row) ? row : [row],
-                                { 'Prefer': 'resolution=merge-duplicates,return=representation' });
-                            return { data, error: null };
-                        } catch (e) { return { data: null, error: e }; }
-                    },
-                };
-                return ctx;
-            },
-        };
+    async function getSession() {
+        if (!_client) throw new Error('Not initialised');
+        const { data, error } = await _client.auth.getSession();
+        if (error) throw error;
+        return data.session || null;
     }
 
-    /* Fetch this user's row */
-    async function fetch(emailOverride) {
-        const email = emailOverride || _email;
-        if (!_client || !email) throw new Error('Not ready');
-        if (_client._rest) {
-            const ctx = _client.from('study_progress');
-            ctx.eq('user_email', email);
-            ctx._one = true;
-            return ctx.execute();
-        }
-        return _client.from('study_progress').select('*').eq('user_email', email).single();
+    async function getUser() {
+        const s = await getSession();
+        return s?.user || null;
     }
 
-    /* Upsert this user's row */
-    async function upsert(chapters, settings) {
-        if (!_client || !_email) throw new Error('Not ready');
-        const row = {
-            user_email: _email,
-            chapters,
-            settings,
-            updated_at: new Date().toISOString(),
-        };
-        if (_client._rest) return _client.from('study_progress').upsert(row);
-        return _client.from('study_progress').upsert(row, { onConflict: 'user_email' });
+    async function isLoggedIn() {
+        try { return !!(await getSession()); } catch { return false; }
     }
 
-    /* Check connectivity — a 404/no-row is fine, real errors throw */
-    async function ping(email) {
-        if (!_client) throw new Error('Client not initialised');
-        const { error } = await fetch(email);
-        if (error &&
-            !error.message.includes('PGRST116') &&
-            !error.message.includes('406') &&
-            !error.message.includes('404')) throw error;
-        return true;
+    async function signUp(email, password, username) {
+        if (!_client) throw new Error('Not initialised');
+        const { data, error } = await _client.auth.signUp({
+            email,
+            password,
+            options: { data: { username } }
+        });
+        if (error) throw error;
+        return data;
     }
 
-    return { init, setEmail, getEmail, isReady, fetch, upsert, ping };
+    async function signIn(email, password) {
+        if (!_client) throw new Error('Not initialised');
+        const { data, error } = await _client.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+        return data;
+    }
+
+    async function verifyOtp(email, token) {
+        if (!_client) throw new Error('Not initialised');
+        const { data, error } = await _client.auth.verifyOtp({ email, token, type: 'email' });
+        if (error) throw error;
+        return data;
+    }
+
+    async function resendOtp(email) {
+        if (!_client) throw new Error('Not initialised');
+        const { error } = await _client.auth.resend({ type: 'signup', email });
+        if (error) throw error;
+    }
+
+    async function signOut() {
+        if (_client) await _client.auth.signOut();
+    }
+
+    /* ---- Data (auth JWT is sent automatically by the SDK) ---- */
+
+    async function fetchProgress() {
+        if (!_client) throw new Error('Not initialised');
+        const { data, error } = await _client.from('study_progress').select('*').single();
+        if (error && error.code !== 'PGRST116') throw error;
+        return data || null;
+    }
+
+    async function upsertProgress(chapters, settings) {
+        if (!_client) throw new Error('Not initialised');
+        const user = await getUser();
+        if (!user) throw new Error('Not signed in');
+        const { error } = await _client.from('study_progress').upsert(
+            { user_id: user.id, chapters, settings, updated_at: new Date().toISOString() },
+            { onConflict: 'user_id' }
+        );
+        if (error) throw error;
+    }
+
+    return { init, ready, getSession, getUser, isLoggedIn, signUp, signIn, verifyOtp, resendOtp, signOut, fetchProgress, upsertProgress };
 })();
 
-/* Load Supabase JS SDK in the background */
+/* Load Supabase SDK synchronously so it's available immediately */
 (function () {
     const s = document.createElement('script');
     s.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js';
-    s.async = true;
+    s.async = false;
     document.head.appendChild(s);
 }());

@@ -1,8 +1,8 @@
 /* =============================================
    Study Buddy — Main App
    Cloud-first. No localStorage.
-   Subject ticks control which subjects count
-   toward the syllabus % progress.
+   Auth via Supabase session (sessionStorage).
+   Subject ticks control syllabus % calculation.
    ============================================= */
 
 let chapters        = {};
@@ -13,7 +13,8 @@ let pendingAction   = null;
 let syncState       = 'offline';
 let lastSyncTime    = null;
 let isSaving        = false;
-let _settings       = null; // in-memory cache
+let _settings       = null;
+let _user           = null;
 
 /* ---- Date helpers ---- */
 function fmtDate(iso) {
@@ -29,15 +30,12 @@ function fmtRange(s, e) {
 
 /* ---- Boot ---- */
 async function boot() {
-    if (!DB.isLoggedIn()) { window.location.replace('setup.html'); return; }
+    DB.initCloud();
 
-    const ok = DB.initCloud();
-    if (!ok) {
-        hideLoader();
-        showToast('App not configured. Contact the developer.', 'error');
-        renderShell({ startDate: '', endDate: '' });
-        return;
-    }
+    const loggedIn = await DB.isLoggedIn();
+    if (!loggedIn) { window.location.replace('setup.html'); return; }
+
+    _user = await DB.getUser();
 
     setSyncState('syncing');
     try {
@@ -48,7 +46,6 @@ async function boot() {
             enabledSubjects = s.enabledSubjects || defaultEnabled(chapters);
             _settings       = { syllabus: s.syllabus || '', startDate: s.startDate || '', endDate: s.endDate || '' };
         } else {
-            // First-ever login for this account
             chapters        = await DB.loadSyllabus('syllabus-bangladesh-hsc.json');
             enabledSubjects = defaultEnabled(chapters);
             _settings       = { syllabus: 'syllabus-bangladesh-hsc.json', startDate: '', endDate: '' };
@@ -85,6 +82,9 @@ function renderDashboard() {
     const tP   = calcTime(s.startDate, s.endDate);
     const sP   = calcSyllabus();
     const ins  = insight(tP.pct, sP.pct);
+    const displayName = _user?.user_metadata?.username
+        ? '@' + _user.user_metadata.username
+        : (_user?.email || '');
 
     app.innerHTML = `
     <div class="app-shell fade-in">
@@ -98,25 +98,32 @@ function renderDashboard() {
                     <div class="sync-dot ${syncState}" id="syncDot"></div>
                     <span id="syncLabel">${syncLabel()}</span>
                 </div>
-                <a href="settings.html" class="btn btn-ghost btn-sm">
-                    <i class="ri-settings-3-line"></i> Settings
-                </a>
-                <button class="btn btn-ghost btn-sm" onclick="triggerLogout()" title="Sign out">
-                    <i class="ri-logout-box-r-line"></i>
-                </button>
+                <div class="header-actions">
+                    <a href="settings.html" class="btn btn-ghost btn-sm">
+                        <i class="ri-settings-3-line"></i>
+                        <span class="btn-label">Settings</span>
+                    </a>
+                    <button class="btn btn-ghost btn-sm" onclick="triggerLogout()" title="Sign out">
+                        <i class="ri-logout-box-r-line"></i>
+                    </button>
+                </div>
             </div>
         </header>
 
         <div class="progress-cards">
             <div class="progress-card">
                 <div class="progress-card-num" id="timePct">${tP.pct}%</div>
-                <div class="progress-bar-track"><div class="progress-bar-fill" id="timeFill" style="width:${tP.pct}%"></div></div>
+                <div class="progress-bar-track">
+                    <div class="progress-bar-fill" id="timeFill" style="width:${tP.pct}%"></div>
+                </div>
                 <div class="progress-card-label">Time elapsed</div>
                 <div class="progress-card-sub">${tP.elapsed} / ${tP.total} days</div>
             </div>
             <div class="progress-card">
                 <div class="progress-card-num" id="sylPct">${sP.pct}%</div>
-                <div class="progress-bar-track"><div class="progress-bar-fill" id="sylFill" style="width:${sP.pct}%"></div></div>
+                <div class="progress-bar-track">
+                    <div class="progress-bar-fill" id="sylFill" style="width:${sP.pct}%"></div>
+                </div>
                 <div class="progress-card-label">Syllabus done</div>
                 <div class="progress-card-sub">${sP.done} / ${sP.total} chapters
                     ${sP.skipped > 0 ? `<span class="skip-note">(${sP.skipped} skipped)</span>` : ''}
@@ -134,7 +141,7 @@ function renderDashboard() {
                 <i class="ri-edit-line"></i> Edit Progress
             </button>
             <button class="btn btn-ghost" onclick="exportCSV()">
-                <i class="ri-download-line"></i> Export CSV
+                <i class="ri-download-line"></i> Export
             </button>
             <button class="btn btn-ghost" id="syncBtn" onclick="manualSync()">
                 <i class="ri-cloud-line"></i> Sync
@@ -145,14 +152,13 @@ function renderDashboard() {
     <footer class="app-footer">
         Made with ❤️ by <a href="https://github.com/hello2himel" target="_blank">@hello2himel</a> from 🇧🇩
         <span class="footer-sep">·</span>
-        This is open source software.
-        <a href="https://github.com/hello2himel/study-buddy" target="_blank">View Source Code</a>
+        Open source.
+        <a href="https://github.com/hello2himel/study-buddy" target="_blank">View Source</a>
     </footer>
-    </div>
     `;
 }
 
-/* ---- Progress calculations ---- */
+/* ---- Progress ---- */
 function calcTime(startDate, endDate) {
     if (!startDate || !endDate) return { pct: 0, elapsed: 0, total: 0 };
     const s = new Date(startDate), e = new Date(endDate), n = new Date();
@@ -175,16 +181,15 @@ function calcSyllabus() {
 
 function insight(tP, sP) {
     const d = sP - tP;
-    if (d >= 5)  return { type: 'ahead',   icon: 'ri-rocket-line',        msg: `You're ${d}% ahead of schedule. Keep it up!` };
-    if (d <= -10) return { type: 'behind', icon: 'ri-alert-line',          msg: `You're ${Math.abs(d)}% behind. Time to push harder.` };
-    return              { type: 'ontrack', icon: 'ri-check-double-line',   msg: "You're roughly on track. Stay consistent!" };
+    if (d >= 5)   return { type: 'ahead',   icon: 'ri-rocket-line',      msg: `You're ${d}% ahead of schedule. Keep it up!` };
+    if (d <= -10) return { type: 'behind',  icon: 'ri-alert-line',       msg: `You're ${Math.abs(d)}% behind. Time to push harder.` };
+    return              { type: 'ontrack', icon: 'ri-check-double-line', msg: "You're roughly on track. Stay consistent!" };
 }
 
 function syncLabel() {
     if (syncState === 'syncing') return 'Saving…';
     if (syncState === 'success') return 'Saved';
     if (syncState === 'error')   return 'Save failed';
-    if (!DB.cloudReady())        return 'Offline';
     return lastSyncTime ? 'Saved ' + timeAgo(lastSyncTime) : 'Ready';
 }
 
@@ -206,15 +211,13 @@ function openSyllabus() {
 }
 function closeSyllabus() { document.getElementById('syllabusModal').classList.add('hidden'); }
 
-/* Subject panel with tick buttons */
 function renderSubjectList() {
     const container = document.getElementById('subjectList');
     if (!container) return;
     container.innerHTML = Object.keys(chapters).map(sub => {
         const on    = enabledSubjects[sub] !== false;
-        const papers = chapters[sub];
-        const total = Object.values(papers).reduce((a, c) => a + c.length, 0);
-        const done  = Object.values(papers).reduce((a, c) => a + c.filter(x => x.done).length, 0);
+        const total = Object.values(chapters[sub]).reduce((a, c) => a + c.length, 0);
+        const done  = Object.values(chapters[sub]).reduce((a, c) => a + c.filter(x => x.done).length, 0);
         return `
         <div class="subject-row ${on ? 'enabled' : 'disabled'}">
             <button class="subject-tick ${on ? 'ticked' : ''}"
@@ -241,15 +244,14 @@ function renderTabs() {
     ).join('');
 }
 
-function switchTab(sub) {
-    activeTab = sub;
-    renderTabs();
-    renderChapters();
-}
+function switchTab(sub) { activeTab = sub; renderTabs(); renderChapters(); }
 
 function renderChapters() {
     const grid = document.getElementById('chaptersGrid');
-    if (!chapters[activeTab]) { grid.innerHTML = '<p style="color:var(--text-3);padding:1rem;">No chapters found.</p>'; return; }
+    if (!chapters[activeTab]) {
+        grid.innerHTML = '<p style="color:var(--text-3);padding:1rem;">No chapters found.</p>';
+        return;
+    }
     grid.innerHTML = '<div class="chapters-grid">' +
         Object.entries(chapters[activeTab]).map(([paper, chs]) => `
             <div class="paper-section">
@@ -257,11 +259,13 @@ function renderChapters() {
                 <div class="chapter-list">
                     ${chs.map(ch => `
                         <div class="chapter-item">
-                            <div class="ch-checkbox ${ch.done ? 'done' : ''}" onclick="toggleChapter('${activeTab}','${paper}','${ch.id}')" title="Toggle">
+                            <div class="ch-checkbox ${ch.done ? 'done' : ''}"
+                                onclick="toggleChapter('${activeTab}','${paper}','${ch.id}')">
                                 ${ch.done ? '<i class="ri-check-line scale-in"></i>' : ''}
                             </div>
                             <div class="ch-text">
-                                <div class="ch-title ${ch.done ? 'done' : ''}" onclick="toggleChapter('${activeTab}','${paper}','${ch.id}')">${ch.title}</div>
+                                <div class="ch-title ${ch.done ? 'done' : ''}"
+                                    onclick="toggleChapter('${activeTab}','${paper}','${ch.id}')">${ch.title}</div>
                                 ${expandedNotes[ch.id] ? `
                                 <div class="ch-note-area">
                                     <textarea placeholder="Add a note…"
@@ -269,7 +273,8 @@ function renderChapters() {
                                     >${ch.note || ''}</textarea>
                                 </div>` : ''}
                             </div>
-                            <div class="ch-note-btn ${ch.note ? 'active' : ''}" title="Note" onclick="toggleNote('${ch.id}')">
+                            <div class="ch-note-btn ${ch.note ? 'active' : ''}"
+                                title="Note" onclick="toggleNote('${ch.id}')">
                                 <i class="ri-file-text-line"></i>
                             </div>
                         </div>`).join('')}
@@ -278,7 +283,9 @@ function renderChapters() {
 }
 
 function toggleChapter(sub, paper, id) {
-    chapters[sub][paper] = chapters[sub][paper].map(ch => ch.id === id ? { ...ch, done: !ch.done } : ch);
+    chapters[sub][paper] = chapters[sub][paper].map(ch =>
+        ch.id === id ? { ...ch, done: !ch.done } : ch
+    );
     updateBars();
     renderChapters();
     renderSubjectList();
@@ -288,19 +295,21 @@ function toggleChapter(sub, paper, id) {
 function toggleNote(id) { expandedNotes[id] = !expandedNotes[id]; renderChapters(); }
 
 function saveNote(sub, paper, id, note) {
-    chapters[sub][paper] = chapters[sub][paper].map(ch => ch.id === id ? { ...ch, note } : ch);
+    chapters[sub][paper] = chapters[sub][paper].map(ch =>
+        ch.id === id ? { ...ch, note } : ch
+    );
     scheduleSave();
 }
 
 function updateBars() {
-    const s = _settings || {};
-    const t = calcTime(s.startDate, s.endDate);
-    const p = calcSyllabus();
-    const $ = id => document.getElementById(id);
-    if ($('timePct'))  $('timePct').textContent  = t.pct + '%';
-    if ($('timeFill')) $('timeFill').style.width  = t.pct + '%';
-    if ($('sylPct'))   $('sylPct').textContent   = p.pct + '%';
-    if ($('sylFill'))  $('sylFill').style.width   = p.pct + '%';
+    const s  = _settings || {};
+    const tP = calcTime(s.startDate, s.endDate);
+    const sP = calcSyllabus();
+    const $  = id => document.getElementById(id);
+    if ($('timePct'))  $('timePct').textContent   = tP.pct + '%';
+    if ($('timeFill')) $('timeFill').style.width   = tP.pct + '%';
+    if ($('sylPct'))   $('sylPct').textContent    = sP.pct + '%';
+    if ($('sylFill'))  $('sylFill').style.width    = sP.pct + '%';
 }
 
 /* ---- Sync ---- */
@@ -311,7 +320,7 @@ function scheduleSave() {
 }
 
 async function silentSync() {
-    if (!DB.cloudReady() || isSaving) return;
+    if (isSaving) return;
     isSaving = true;
     setSyncState('syncing');
     try {
@@ -326,7 +335,6 @@ async function silentSync() {
 }
 
 async function manualSync() {
-    if (!DB.cloudReady()) { showToast('Not connected', 'error'); return; }
     setSyncState('syncing');
     try {
         await DB.push(chapters, _settings || {}, enabledSubjects);
@@ -345,7 +353,7 @@ function setSyncState(state) {
     syncState = state;
     const dot   = document.getElementById('syncDot');
     const label = document.getElementById('syncLabel');
-    if (dot)   dot.className   = 'sync-dot ' + state;
+    if (dot)   dot.className    = 'sync-dot ' + state;
     if (label) label.textContent = syncLabel();
 }
 
@@ -356,7 +364,7 @@ function exportCSV() {
         const inc = enabledSubjects[sub] !== false ? 'Yes' : 'No';
         Object.entries(papers).forEach(([paper, chs]) => {
             chs.forEach(ch => {
-                rows.push(`"${sub}","${paper}","${ch.title.replace(/"/g, '""')}",${ch.done ? 'Yes' : 'No'},${inc},"${(ch.note || '').replace(/"/g, '""')}"`);
+                rows.push(`"${sub}","${paper}","${ch.title.replace(/"/g,'""')}",${ch.done?'Yes':'No'},${inc},"${(ch.note||'').replace(/"/g,'""')}"`);
             });
         });
     });
@@ -368,7 +376,9 @@ function exportCSV() {
     showToast('CSV exported', 'success');
 }
 
-/* ---- Confirm modal ---- */
+/* ---- Logout / Confirm ---- */
+function triggerLogout() { openConfirm('logout', 'Sign out? Your progress stays safely in the cloud.'); }
+
 function openConfirm(action, msg) {
     pendingAction = action;
     document.getElementById('confirmMsg').textContent = msg;
@@ -381,7 +391,7 @@ function closeConfirm() {
 }
 async function execAction() {
     if (pendingAction === 'resetAll') await resetAll();
-    if (pendingAction === 'logout')   DB.logout();
+    if (pendingAction === 'logout')   await DB.logout();
     closeConfirm();
 }
 
@@ -399,16 +409,12 @@ async function resetAll() {
     } catch (e) { showToast('Reset failed: ' + e.message, 'error'); }
 }
 
-function triggerLogout() { openConfirm('logout', 'Sign out? Your progress is safely saved in the cloud.'); }
-
 /* ---- Toast ---- */
 function showToast(msg, type = 'success') {
     const el = document.getElementById('toast');
-    const ic = document.getElementById('toastIcon');
-    const tx = document.getElementById('toastMsg');
-    el.className  = 'toast ' + type;
-    ic.className  = type === 'success' ? 'ri-check-line' : 'ri-error-warning-line';
-    tx.textContent = msg;
+    el.className = 'toast ' + type;
+    document.getElementById('toastIcon').className = type === 'success' ? 'ri-check-line' : 'ri-error-warning-line';
+    document.getElementById('toastMsg').textContent = msg;
     clearTimeout(el._t);
     el._t = setTimeout(() => el.classList.add('hidden'), 3500);
 }

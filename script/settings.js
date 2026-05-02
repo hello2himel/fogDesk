@@ -5,14 +5,20 @@
 let pendingAction = null;
 
 async function init() {
-    if (!DB.isLoggedIn()) { window.location.replace('setup.html'); return; }
     DB.initCloud();
 
-    // Show signed-in email
-    const em = DB.getEmail() || '';
-    document.getElementById('accountEmail').textContent = em || '—';
-    const av = document.getElementById('accountAvatar');
-    if (av && em) av.textContent = em[0].toUpperCase();
+    const loggedIn = await DB.isLoggedIn();
+    if (!loggedIn) { window.location.replace('setup.html'); return; }
+
+    const user = await DB.getUser();
+    if (user) {
+        const email    = user.email || '';
+        const username = user.user_metadata?.username || '';
+        document.getElementById('accountEmail').textContent    = email || '—';
+        document.getElementById('accountUsername').textContent = username ? '@' + username : '—';
+        const av = document.getElementById('accountAvatar');
+        if (av) av.textContent = (username || email || '?')[0].toUpperCase();
+    }
 
     // Date format hint
     const hint = document.getElementById('dateFormatHint');
@@ -21,22 +27,18 @@ async function init() {
     });
 
     // Load settings from cloud
-    if (DB.cloudReady()) {
-        try {
-            const data = await DB.pull();
-            if (data?.settings) {
-                const s = data.settings;
-                document.getElementById('startDate').value = s.startDate || '';
-                document.getElementById('endDate').value   = s.endDate   || '';
-                if (s.syllabus) document.getElementById('syllabusSelect').value = s.syllabus;
-            }
-            updateStatus('connected');
-        } catch (e) {
-            updateStatus('error');
-            showToast('Could not load settings: ' + e.message, 'error');
+    try {
+        const data = await DB.pull();
+        if (data?.settings) {
+            const s = data.settings;
+            document.getElementById('startDate').value = s.startDate || '';
+            document.getElementById('endDate').value   = s.endDate   || '';
+            if (s.syllabus) document.getElementById('syllabusSelect').value = s.syllabus;
         }
-    } else {
-        updateStatus('offline');
+        updateStatus('connected');
+    } catch (e) {
+        updateStatus('error');
+        showToast('Could not load settings: ' + e.message, 'error');
     }
 }
 
@@ -117,9 +119,9 @@ function closeConfirm() {
     pendingAction = null;
     document.getElementById('confirmModal').classList.add('hidden');
 }
-function execAction() {
-    if (pendingAction === 'resetChapters') resetChapters();
-    if (pendingAction === 'logout')        DB.logout();
+async function execAction() {
+    if (pendingAction === 'resetChapters') await resetChapters();
+    if (pendingAction === 'logout')        await DB.logout();
     closeConfirm();
 }
 
@@ -138,7 +140,7 @@ async function resetChapters() {
 /* ---- Toast ---- */
 function showToast(msg, type = 'success') {
     const el = document.getElementById('toast');
-    el.className   = 'toast ' + type;
+    el.className = 'toast ' + type;
     document.getElementById('toastIcon').className = type === 'success' ? 'ri-check-line' : 'ri-error-warning-line';
     document.getElementById('toastMsg').textContent = msg;
     clearTimeout(el._t);
