@@ -7,11 +7,11 @@
 const SB = (() => {
     let _client = null;
 
-    function init(supa_url, supa_key) {
-        if (!supa_url || !supa_key) { _client = null; return false; }
+    function init(url, key) {
+        if (!url || !key) { _client = null; return false; }
         try {
             if (typeof window.supabase !== 'undefined') {
-                _client = window.supabase.createClient(supa_url, supa_key, {
+                _client = window.supabase.createClient(url, key, {
                     auth: {
                         storage: sessionStorage,
                         autoRefreshToken: true,

@@ -118,7 +118,7 @@ function setAuthMode(mode) {
 /* Validate fields and call Supabase Auth */
 async function submitAuth() {
     const cfg = DB._cfg();
-    if (!cfg.supa_url || !cfg.supa_key) {
+    if (!cfg.url || !cfg.key) {
         toast('This app is not configured. Contact the developer.', 'error');
         return;
     }

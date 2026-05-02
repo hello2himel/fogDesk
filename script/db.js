@@ -6,15 +6,15 @@
    ============================================= */
 
 const DB = (() => {
-    function _cfg() { return window.SB_CONFIG || { supa_url: '', supa_key: '' }; }
+    function _cfg() { return window.SB_CONFIG || { url: '', key: '' }; }
 
     /* Init cloud client — call once on every page load */
     function initCloud() {
-        const { supa_url, supa_key } = _cfg();
-        if (!supa_url || !supa_key) return false;
+        const { url, key } = _cfg();
+        if (!url || !key) return false;
         // Retry until SDK is loaded (it loads async)
         if (typeof window.supabase === 'undefined') return false;
-        return SB.init(supa_url, supa_key);
+        return SB.init(url, key);
     }
 
     async function ensureReady() {
