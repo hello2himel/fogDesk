@@ -1,6 +1,7 @@
 -- =============================================
--- Study Buddy — Supabase SQL Schema
+-- Fogdesk — Supabase SQL Schema
 -- Run this in: Supabase Dashboard → SQL Editor
+-- Safe to re-run: all statements are idempotent
 -- =============================================
 
 -- 1. Create the table (uses auth.uid() — tied to Supabase Auth)
@@ -16,6 +17,11 @@ CREATE TABLE IF NOT EXISTS study_progress (
 ALTER TABLE study_progress ENABLE ROW LEVEL SECURITY;
 
 -- 3. Policy: users can only read/write their own row
+--    DROP IF EXISTS makes this safe to re-run (CREATE POLICY has no OR REPLACE)
+DROP POLICY IF EXISTS "Users can read own row"   ON study_progress;
+DROP POLICY IF EXISTS "Users can insert own row"  ON study_progress;
+DROP POLICY IF EXISTS "Users can update own row"  ON study_progress;
+
 CREATE POLICY "Users can read own row"
   ON study_progress FOR SELECT
   USING (auth.uid() = user_id);
@@ -53,6 +59,22 @@ CREATE OR REPLACE TRIGGER trg_study_progress_updated_at
 --
 -- Authentication → URL Configuration:
 --   Site URL: https://yourapp.netlify.app
+-- =============================================
+
+-- =============================================
+-- Username storage
+-- =============================================
+-- Usernames are stored in Supabase Auth user_metadata
+-- as { username: "..." } — no extra table is needed.
+--
+-- Set via:
+--   supabase.auth.updateUser({ data: { username: newUsername } })
+--
+-- Read via:
+--   user.user_metadata?.username
+--
+-- Username validation (3–20 chars, letters/numbers/underscores)
+-- is enforced client-side in settings.js changeUsername().
 -- =============================================
 
 -- =============================================

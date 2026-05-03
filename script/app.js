@@ -1,5 +1,5 @@
 /* =============================================
-   Study Buddy — Main App
+   Fogdesk — Main App
    Cloud-first. No localStorage.
    Auth via Supabase session (sessionStorage).
    Subject ticks control syllabus % calculation.
@@ -161,8 +161,8 @@ function renderDashboard() {
                     <i class="ri-settings-3-line"></i>
                     <span class="btn-label">Settings</span>
                 </a>
-                <button class="btn btn-ghost btn-sm" onclick="triggerLogout()" title="Sign out">
-                    <i class="ri-logout-box-r-line"></i>
+                <button class="btn btn-ghost btn-sm topbar-love-btn" onclick="openDonate(true)" title="Support Fogdesk">
+                    <i class="ri-heart-line"></i>
                 </button>
             </div>
         </div>
@@ -221,7 +221,7 @@ function renderDashboard() {
         Made with ❤️ by <a href="https://github.com/hello2himel" target="_blank">@hello2himel</a> from 🇧🇩
         <span class="footer-sep">·</span>
         Open source.
-        <a href="https://github.com/hello2himel/study-buddy" target="_blank">View Source</a>
+        <a href="https://github.com/hello2himel/fogdesk" target="_blank">View Source</a>
     </footer>
     `;
 }
@@ -521,4 +521,74 @@ document.getElementById('syllabusModal').addEventListener('click', e => {
     if (e.target === document.getElementById('syllabusModal')) closeSyllabus();
 });
 
-boot();
+// boot() is called via patchedBoot() below (with donate tracking)
+
+/* ── Donate system ───────────────────────────────────────────────
+   Shows a polite modal once after 7+ days of use.
+   Uses localStorage only for the donate-nudge timestamps
+   (not for any study data — that lives in Supabase).
+   Keys:
+     fd_first_visit  — ISO timestamp of first ever visit
+     fd_donate_shown — ISO timestamp of last time modal was shown
+     fd_donated      — "1" if user clicked the donate link (never nudge again)
+   ──────────────────────────────────────────────────────────────── */
+
+const DONATE_URL   = 'https://hello2himel.netlify.app/donate?source=fogdesk';
+const DONATE_DAYS  = 7;    // minimum days before first nudge
+const DONATE_SNOOZE = 60;  // days before re-showing after "maybe later"
+
+function _donateKey(k) { return 'fd_' + k; }
+
+function _daysSince(isoKey) {
+    const raw = localStorage.getItem(_donateKey(isoKey));
+    if (!raw) return null;
+    return (Date.now() - new Date(raw).getTime()) / 86400000;
+}
+
+function initDonateTracking() {
+    // Record first visit if not already set
+    if (!localStorage.getItem(_donateKey('first_visit'))) {
+        localStorage.setItem(_donateKey('first_visit'), new Date().toISOString());
+    }
+}
+
+function checkDonateNudge() {
+    // Never nudge if already donated
+    if (localStorage.getItem(_donateKey('donated'))) return;
+
+    const daysSinceFirst = _daysSince('first_visit');
+    if (daysSinceFirst === null || daysSinceFirst < DONATE_DAYS) return;
+
+    const daysSinceShown = _daysSince('donate_shown');
+    // Show if never shown, or enough time has passed since last snooze
+    if (daysSinceShown !== null && daysSinceShown < DONATE_SNOOZE) return;
+
+    // Delay slightly so it doesn't interrupt page load
+    setTimeout(() => openDonate(false), 3000);
+}
+
+function openDonate(manual = false) {
+    document.getElementById('donateBackdrop')?.classList.remove('hidden');
+    document.getElementById('donateModal')?.classList.remove('hidden');
+    if (!manual) {
+        localStorage.setItem(_donateKey('donate_shown'), new Date().toISOString());
+    }
+}
+
+function closeDonate() {
+    document.getElementById('donateBackdrop')?.classList.add('hidden');
+    document.getElementById('donateModal')?.classList.add('hidden');
+}
+
+function snoozeDonate() {
+    localStorage.setItem(_donateKey('donate_shown'), new Date().toISOString());
+    closeDonate();
+}
+
+// Hook into boot — run tracking after successful load
+const _origBoot = boot;
+(async function patchedBoot() {
+    initDonateTracking();
+    await _origBoot();
+    checkDonateNudge();
+})();

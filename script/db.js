@@ -87,6 +87,11 @@ const DB = (() => {
         return SB.handleEmailCallback();
     }
 
+    async function changeUsername(newUsername) {
+        await ensureReady();
+        return SB.changeUsername(newUsername);
+    }
+
     async function changeEmail(currentPassword, newEmail) {
         await ensureReady();
         return SB.changeEmail(currentPassword, newEmail);
@@ -150,7 +155,7 @@ const DB = (() => {
     return {
         initCloud, ensureReady, isLoggedIn, getUser,
         signUp, signIn, verifyOtp, resendOtp, handleEmailCallback,
-        changeEmail, changePassword, deleteAccount,
+        changeEmail, changeUsername, changePassword, deleteAccount,
         logout, loadSyllabus, pull, push, _cfg,
         _cacheRead, _cacheWrite, _cacheClear,
     };

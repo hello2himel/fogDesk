@@ -64,6 +64,34 @@ function toggleForm(id) {
     }
 }
 
+/* ── Change username ──────────────────────────────────────────── */
+async function changeUsername() {
+    const raw = document.getElementById('newUsername').value.trim();
+    const btn = document.getElementById('changeUsernameBtn');
+
+    if (!/^[a-zA-Z0-9_]{3,20}$/.test(raw)) {
+        showToast('Username must be 3–20 characters: letters, numbers, underscores', 'error');
+        return;
+    }
+
+    setBtnLoading(btn, 'Saving…');
+    try {
+        await DB.changeUsername(raw);
+        // Update the UI immediately
+        const display = '@' + raw;
+        document.getElementById('accountUsername').textContent = display;
+        const av = document.getElementById('accountAvatar');
+        if (av) av.textContent = raw[0].toUpperCase();
+        showToast('Username updated ✓', 'success');
+        toggleForm('changeUsernameForm');
+        document.getElementById('newUsername').value = '';
+    } catch (e) {
+        showToast(e.message || 'Failed to update username', 'error');
+    } finally {
+        setBtnReady(btn, '<i class="ri-check-line"></i> Save username');
+    }
+}
+
 /* ── Change email ─────────────────────────────────────────────── */
 async function changeEmail() {
     const newEmail  = document.getElementById('newEmail').value.trim();

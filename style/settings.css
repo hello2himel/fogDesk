@@ -238,3 +238,171 @@
     .inline-form-actions { flex-direction: column-reverse; }
     .inline-form-actions .btn { width: 100%; justify-content: center; }
 }
+
+/* ── Clickable account card ──────────────────────────────────── */
+.account-info-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    text-align: left;
+    transition: background var(--transition), border-color var(--transition), box-shadow var(--transition);
+    font-family: var(--font-body);
+    color: var(--text);
+    position: relative;
+}
+.account-info-btn:hover {
+    background: var(--surface-3, #eeece6);
+    border-color: var(--border-strong);
+    box-shadow: var(--shadow-sm);
+}
+.account-info-btn:hover .account-info-arrow {
+    transform: translateX(2px);
+    color: var(--ink);
+}
+.account-info-btn:active {
+    background: var(--surface-2);
+}
+.account-info-text {
+    flex: 1;
+    min-width: 0;
+}
+.account-info-arrow {
+    font-size: 1.25rem;
+    color: var(--text-3);
+    flex-shrink: 0;
+    transition: transform var(--transition), color var(--transition);
+}
+
+/* ── Account settings divider label ────────────────────────────── */
+.account-settings-divider {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 0.25rem 0 0.1rem;
+}
+.account-settings-divider i {
+    font-size: 0.85rem;
+}
+
+/* ── Account info modal ─────────────────────────────────────────── */
+.acct-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(26, 24, 20, 0.35);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    z-index: 200;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.22s ease;
+}
+.acct-modal-backdrop.open {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.acct-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -46%) scale(0.96);
+    z-index: 201;
+    width: min(360px, calc(100vw - 2.5rem));
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-lg);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.22s ease, transform 0.22s ease;
+}
+.acct-modal.open {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translate(-50%, -50%) scale(1);
+}
+
+.acct-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem 0.75rem;
+    border-bottom: 1px solid var(--border);
+}
+.acct-modal-title {
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+}
+.acct-modal-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: var(--radius-sm);
+    color: var(--text-2);
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: background var(--transition), color var(--transition);
+    border: none;
+    background: none;
+}
+.acct-modal-close:hover {
+    background: var(--surface-2);
+    color: var(--ink);
+}
+
+.acct-modal-body {
+    padding: 1.75rem 1.5rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.35rem;
+    text-align: center;
+}
+.acct-modal-avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--ink);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+    flex-shrink: 0;
+}
+.acct-modal-username {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--ink);
+}
+.acct-modal-email {
+    font-size: 0.8375rem;
+    color: var(--text-2);
+}
+.acct-modal-badge {
+    margin-top: 0.6rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--green);
+    background: var(--green-bg);
+    padding: 0.25rem 0.65rem;
+    border-radius: 99px;
+}

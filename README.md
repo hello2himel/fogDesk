@@ -1,4 +1,4 @@
-# Study Buddy
+# Fogdesk
 
 > Track time elapsed vs syllabus completed — know if you're ahead or behind, at a glance.
 
@@ -23,7 +23,7 @@
 ### 1. Create a Supabase project
 
 1. Go to [supabase.com](https://supabase.com) → New project
-2. In **SQL Editor**, run the schema from [`sql/schema.sql`](sql/schema.sql)
+2. In **SQL Editor**, run the schema from [`example/schema.sql`](example/schema.sql)
 3. Copy your **Project URL** and **anon key** from Settings → API
 
 ### 2. Deploy to Netlify
@@ -45,7 +45,7 @@
 
 ```bash
 # Clone the repo
-git clone https://github.com/hello2himel/study-buddy
+git clone https://github.com/hello2himel/fogdesk
 
 # Edit _env.js directly (do NOT commit this file with real keys)
 # Set SB_URL and SB_KEY in _env.js temporarily
@@ -61,7 +61,7 @@ python3 -m http.server 8080
 ## Folder structure
 
 ```
-study-buddy/
+fogdesk/
 ├── index.html          Dashboard
 ├── setup.html          Onboarding wizard
 ├── settings.html       Settings page
@@ -79,9 +79,17 @@ study-buddy/
 │   ├── main.css        Design system + dashboard
 │   ├── setup.css       Wizard styles
 │   └── settings.css    Settings styles
-└── sql/
-    └── schema.sql      Supabase table schema
+└── example/
+    ├── schema.sql          Supabase table schema
+    ├── email-verification.html   Supabase signup email template
+    └── email-change.html         Supabase email-change template
 ```
+
+---
+
+## Supporting the project
+
+Fogdesk is free, open source, and built in spare evenings. If it's been useful, you can support the project at [hello2himel.netlify.app/donate](https://hello2himel.netlify.app/donate?source=fogdesk). No pressure at all.
 
 ---
 
@@ -92,4 +100,4 @@ MIT — free to use, fork, and modify.
 ---
 
 Made with ❤️ by [@hello2himel](https://github.com/hello2himel) from 🇧🇩  
-This is open source software — [View Source Code](https://github.com/hello2himel/study-buddy)
+This is open source software — [View Source Code](https://github.com/hello2himel/fogdesk)

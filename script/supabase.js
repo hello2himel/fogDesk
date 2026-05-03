@@ -140,6 +140,17 @@ const SB = (() => {
         if (error) throw error;
     }
 
+    async function changeUsername(newUsername) {
+        if (!_client) throw new Error('Not initialised');
+        const user = await getUser();
+        if (!user) throw new Error('Not signed in');
+        // Username is stored in user_metadata — no re-auth required
+        const { error } = await _client.auth.updateUser({
+            data: { username: newUsername }
+        });
+        if (error) throw error;
+    }
+
     async function deleteAccount(currentPassword) {
         if (!_client) throw new Error('Not initialised');
         const user = await getUser();
@@ -175,7 +186,7 @@ const SB = (() => {
         if (error) throw error;
     }
 
-    return { init, ready, getSession, getUser, isLoggedIn, signUp, signIn, verifyOtp, resendOtp, handleEmailCallback, signOut, changeEmail, changePassword, deleteAccount, fetchProgress, upsertProgress };
+    return { init, ready, getSession, getUser, isLoggedIn, signUp, signIn, verifyOtp, resendOtp, handleEmailCallback, signOut, changeEmail, changeUsername, changePassword, deleteAccount, fetchProgress, upsertProgress };
 })();
 
 /* Load Supabase SDK synchronously so it's available immediately */

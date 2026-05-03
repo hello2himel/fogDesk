@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Study Buddy — Settings</title>
+    <title>Fogdesk — Settings</title>
     <link href="https://cdn.jsdelivr.net/npm/remixicon@4.3.0/fonts/remixicon.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style/main.css">
@@ -31,15 +31,47 @@
                 <h2>Account</h2>
             </div>
 
-            <!-- Identity chip -->
-            <div class="account-info">
+            <!-- Identity chip — clickable, opens account modal -->
+            <button class="account-info account-info-btn" id="accountInfoBtn" onclick="openAccountModal()" aria-label="Open account info">
                 <div class="account-avatar" id="accountAvatar">?</div>
-                <div>
+                <div class="account-info-text">
                     <div class="account-username" id="accountUsername">—</div>
-                    <div class="account-email"    id="accountEmail">—</div>
+                    <div class="account-email" id="accountEmail">—</div>
                     <div class="account-label">Signed in · synced to cloud</div>
                 </div>
+                <i class="ri-arrow-right-s-line account-info-arrow"></i>
+            </button>
+
+            <!-- Account settings label -->
+            <div class="account-settings-divider">
+                <i class="ri-settings-3-line"></i>
+                <span>Account settings</span>
             </div>
+
+            <!-- Change username -->
+                <div class="inline-form-block">
+                    <button class="inline-form-toggle" onclick="toggleForm('changeUsernameForm')" aria-expanded="false">
+                        <span><i class="ri-at-line"></i> Change username</span>
+                        <i class="ri-arrow-down-s-line toggle-chevron"></i>
+                    </button>
+                    <div class="inline-form" id="changeUsernameForm" hidden>
+                        <div class="form-group">
+                            <label for="newUsername">New username</label>
+                            <div class="input-icon-wrap">
+                                <i class="ri-at-line"></i>
+                                <input type="text" id="newUsername" class="form-input"
+                                    placeholder="e.g. studymaster42" autocomplete="username" spellcheck="false">
+                            </div>
+                            <small>Letters, numbers, and underscores only. 3–20 characters.</small>
+                        </div>
+                        <div class="inline-form-actions">
+                            <button class="btn btn-ghost btn-sm" onclick="toggleForm('changeUsernameForm')">Cancel</button>
+                            <button class="btn btn-primary btn-sm" id="changeUsernameBtn" onclick="changeUsername()">
+                                <i class="ri-check-line"></i> Save username
+                            </button>
+                        </div>
+                    </div>
+                </div>
 
             <!-- Change email -->
             <div class="inline-form-block">
@@ -259,9 +291,28 @@
         Made with ❤️ by <a href="https://github.com/hello2himel" target="_blank">@hello2himel</a> from 🇧🇩
         <span class="footer-sep">·</span>
         Open source software.
-        <a href="https://github.com/hello2himel/study-buddy" target="_blank">View Source Code</a>
+        <a href="https://github.com/hello2himel/fogdesk" target="_blank">View Source Code</a>
     </footer>
 
+</div>
+
+<!-- Account Info Modal -->
+<div class="acct-modal-backdrop" id="acctModalBackdrop" onclick="closeAccountModal()"></div>
+<div class="acct-modal" id="acctModal" role="dialog" aria-modal="true" aria-label="Account details">
+    <div class="acct-modal-header">
+        <span class="acct-modal-title">Account</span>
+        <button class="acct-modal-close" onclick="closeAccountModal()" aria-label="Close">
+            <i class="ri-close-line"></i>
+        </button>
+    </div>
+    <div class="acct-modal-body">
+        <div class="acct-modal-avatar" id="modalAvatar">?</div>
+        <div class="acct-modal-username" id="modalUsername">loading...</div>
+        <div class="acct-modal-email" id="modalEmail">loading...</div>
+        <div class="acct-modal-badge">
+            <i class="ri-cloud-line"></i> Synced to cloud
+        </div>
+    </div>
 </div>
 
 <div id="toast" class="toast hidden">
@@ -272,5 +323,25 @@
 <script src="script/supabase.js"></script>
 <script src="script/db.js"></script>
 <script src="script/settings.js"></script>
+<script>
+function openAccountModal() {
+    const modal = document.getElementById('acctModal');
+    const backdrop = document.getElementById('acctModalBackdrop');
+    document.getElementById('modalUsername').textContent = document.getElementById('accountUsername').textContent;
+    document.getElementById('modalEmail').textContent    = document.getElementById('accountEmail').textContent;
+    document.getElementById('modalAvatar').textContent   = document.getElementById('accountAvatar').textContent;
+    backdrop.classList.add('open');
+    modal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+function closeAccountModal() {
+    document.getElementById('acctModal').classList.remove('open');
+    document.getElementById('acctModalBackdrop').classList.remove('open');
+    document.body.style.overflow = '';
+}
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeAccountModal();
+});
+</script>
 </body>
 </html>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Study Buddy</title>
+    <title>Fogdesk</title>
     <link href="https://cdn.jsdelivr.net/npm/remixicon@4.3.0/fonts/remixicon.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style/main.css">
@@ -53,6 +53,24 @@
 <div id="toast" class="toast hidden">
     <i id="toastIcon" class="ri-check-line"></i>
     <span id="toastMsg"></span>
+</div>
+
+
+<!-- Donate Modal -->
+<div class="donate-backdrop hidden" id="donateBackdrop" onclick="closeDonate()"></div>
+<div class="donate-modal hidden" id="donateModal" role="dialog" aria-modal="true">
+    <button class="donate-modal-close" onclick="closeDonate()" aria-label="Close"><i class="ri-close-line"></i></button>
+    <div class="donate-icon">☕</div>
+    <h3 class="donate-title">Thanks for using Fogdesk.</h3>
+    <p class="donate-body">
+        I built this in my spare time as a hobby project. It's open source, has no ads,
+        and will always be free. If it's helped you study, buying me a coffee would genuinely mean a lot.
+        Totally up to you though.
+    </p>
+    <a class="donate-btn" href="https://hello2himel.netlify.app/donate?source=fogdesk" target="_blank" rel="noopener" onclick="closeDonate()">
+        Buy me a coffee
+    </a>
+    <button class="donate-later" onclick="snoozeDonate()">Maybe another time</button>
 </div>
 
 <script src="script/supabase.js"></script>
