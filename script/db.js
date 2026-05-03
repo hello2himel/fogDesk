@@ -87,6 +87,21 @@ const DB = (() => {
         return SB.handleEmailCallback();
     }
 
+    async function changeEmail(currentPassword, newEmail) {
+        await ensureReady();
+        return SB.changeEmail(currentPassword, newEmail);
+    }
+
+    async function changePassword(currentPassword, newPassword) {
+        await ensureReady();
+        return SB.changePassword(currentPassword, newPassword);
+    }
+
+    async function deleteAccount(currentPassword) {
+        await ensureReady();
+        return SB.deleteAccount(currentPassword);
+    }
+
     async function logout() {
         if (SB.ready()) await SB.signOut();
         sessionStorage.clear();
@@ -135,6 +150,7 @@ const DB = (() => {
     return {
         initCloud, ensureReady, isLoggedIn, getUser,
         signUp, signIn, verifyOtp, resendOtp, handleEmailCallback,
+        changeEmail, changePassword, deleteAccount,
         logout, loadSyllabus, pull, push, _cfg,
         _cacheRead, _cacheWrite, _cacheClear,
     };

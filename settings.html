@@ -24,23 +24,110 @@
 
     <main class="settings-main">
 
-        <!-- Account -->
+        <!-- ── Account ── -->
         <section class="settings-section">
             <div class="section-heading">
                 <i class="ri-user-line"></i>
                 <h2>Account</h2>
             </div>
+
+            <!-- Identity chip -->
             <div class="account-info">
                 <div class="account-avatar" id="accountAvatar">?</div>
                 <div>
                     <div class="account-username" id="accountUsername">—</div>
-                    <div class="account-email" id="accountEmail">—</div>
+                    <div class="account-email"    id="accountEmail">—</div>
                     <div class="account-label">Signed in · synced to cloud</div>
+                </div>
+            </div>
+
+            <!-- Change email -->
+            <div class="inline-form-block">
+                <button class="inline-form-toggle" onclick="toggleForm('changeEmailForm')" aria-expanded="false">
+                    <span><i class="ri-mail-line"></i> Change email address</span>
+                    <i class="ri-arrow-down-s-line toggle-chevron"></i>
+                </button>
+                <div class="inline-form" id="changeEmailForm" hidden>
+                    <div class="form-group">
+                        <label for="newEmail">New email address</label>
+                        <div class="input-icon-wrap">
+                            <i class="ri-mail-line"></i>
+                            <input type="email" id="newEmail" class="form-input"
+                                placeholder="new@example.com" autocomplete="email">
+                        </div>
+                        <small>Supabase will send a confirmation link to the new address before switching.</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="emailCurrentPwd">Current password</label>
+                        <div class="input-icon-wrap">
+                            <i class="ri-lock-line"></i>
+                            <input type="password" id="emailCurrentPwd" class="form-input"
+                                placeholder="Enter your current password" autocomplete="current-password">
+                            <button type="button" class="toggle-visible"
+                                onclick="togglePwd('emailCurrentPwd','eyeEmailPwd')">
+                                <i class="ri-eye-line" id="eyeEmailPwd"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="inline-form-actions">
+                        <button class="btn btn-ghost btn-sm" onclick="toggleForm('changeEmailForm')">Cancel</button>
+                        <button class="btn btn-primary btn-sm" id="changeEmailBtn" onclick="changeEmail()">
+                            <i class="ri-send-plane-line"></i> Send confirmation
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Change password -->
+            <div class="inline-form-block">
+                <button class="inline-form-toggle" onclick="toggleForm('changePasswordForm')" aria-expanded="false">
+                    <span><i class="ri-lock-line"></i> Change password</span>
+                    <i class="ri-arrow-down-s-line toggle-chevron"></i>
+                </button>
+                <div class="inline-form" id="changePasswordForm" hidden>
+                    <div class="form-group">
+                        <label for="currentPwd">Current password</label>
+                        <div class="input-icon-wrap">
+                            <i class="ri-lock-line"></i>
+                            <input type="password" id="currentPwd" class="form-input"
+                                placeholder="Your current password" autocomplete="current-password">
+                            <button type="button" class="toggle-visible"
+                                onclick="togglePwd('currentPwd','eyeCurrent')">
+                                <i class="ri-eye-line" id="eyeCurrent"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="newPwd">New password</label>
+                        <div class="input-icon-wrap">
+                            <i class="ri-lock-line"></i>
+                            <input type="password" id="newPwd" class="form-input"
+                                placeholder="Min. 6 characters" autocomplete="new-password">
+                            <button type="button" class="toggle-visible"
+                                onclick="togglePwd('newPwd','eyeNew')">
+                                <i class="ri-eye-line" id="eyeNew"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="confirmPwd">Confirm new password</label>
+                        <div class="input-icon-wrap">
+                            <i class="ri-lock-line"></i>
+                            <input type="password" id="confirmPwd" class="form-input"
+                                placeholder="Repeat new password" autocomplete="new-password">
+                        </div>
+                    </div>
+                    <div class="inline-form-actions">
+                        <button class="btn btn-ghost btn-sm" onclick="toggleForm('changePasswordForm')">Cancel</button>
+                        <button class="btn btn-primary btn-sm" id="changePasswordBtn" onclick="changePassword()">
+                            <i class="ri-check-line"></i> Update password
+                        </button>
+                    </div>
                 </div>
             </div>
         </section>
 
-        <!-- Study Period -->
+        <!-- ── Study Period ── -->
         <section class="settings-section">
             <div class="section-heading">
                 <i class="ri-calendar-line"></i>
@@ -61,7 +148,7 @@
             </button>
         </section>
 
-        <!-- Curriculum -->
+        <!-- ── Curriculum ── -->
         <section class="settings-section">
             <div class="section-heading">
                 <i class="ri-book-open-line"></i>
@@ -86,7 +173,7 @@
             </button>
         </section>
 
-        <!-- Data -->
+        <!-- ── Data ── -->
         <section class="settings-section">
             <div class="section-heading">
                 <i class="ri-database-line"></i>
@@ -119,6 +206,49 @@
                     <button class="btn btn-danger btn-sm" onclick="confirmLogout()">
                         <i class="ri-logout-box-r-line"></i> Sign out
                     </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ── Danger Zone ── -->
+        <section class="settings-section danger-section">
+            <div class="section-heading">
+                <i class="ri-error-warning-line"></i>
+                <h2>Danger Zone</h2>
+            </div>
+
+            <div class="inline-form-block danger-block">
+                <button class="inline-form-toggle danger-toggle" onclick="toggleForm('deleteAccountForm')" aria-expanded="false">
+                    <span><i class="ri-delete-bin-line"></i> Delete account</span>
+                    <i class="ri-arrow-down-s-line toggle-chevron"></i>
+                </button>
+                <div class="inline-form" id="deleteAccountForm" hidden>
+                    <p class="danger-warning">
+                        This permanently deletes your account and all study progress. There is no undo.
+                    </p>
+                    <div class="form-group">
+                        <label for="deleteConfirmText">Type <strong>DELETE</strong> to confirm</label>
+                        <input type="text" id="deleteConfirmText" class="form-input"
+                            placeholder="DELETE" autocomplete="off" spellcheck="false">
+                    </div>
+                    <div class="form-group">
+                        <label for="deletePwd">Your password</label>
+                        <div class="input-icon-wrap">
+                            <i class="ri-lock-line"></i>
+                            <input type="password" id="deletePwd" class="form-input"
+                                placeholder="Confirm with your password" autocomplete="current-password">
+                            <button type="button" class="toggle-visible"
+                                onclick="togglePwd('deletePwd','eyeDelete')">
+                                <i class="ri-eye-line" id="eyeDelete"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="inline-form-actions">
+                        <button class="btn btn-ghost btn-sm" onclick="toggleForm('deleteAccountForm')">Cancel</button>
+                        <button class="btn btn-danger btn-sm" id="deleteAccountBtn" onclick="deleteAccount()">
+                            <i class="ri-delete-bin-line"></i> Permanently delete
+                        </button>
+                    </div>
                 </div>
             </div>
         </section>

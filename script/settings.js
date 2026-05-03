@@ -41,7 +41,108 @@ async function init() {
     }
 }
 
-/* ---- Native date dropdowns ---- */
+/* ── Inline form toggle ──────────────────────────────────────── */
+function toggleForm(id) {
+    const form   = document.getElementById(id);
+    const toggle = form.previousElementSibling; // the button
+    const isOpen = !form.hidden;
+
+    // Close all forms first
+    document.querySelectorAll('.inline-form').forEach(f => {
+        f.hidden = true;
+        const t = f.previousElementSibling;
+        if (t) { t.setAttribute('aria-expanded', 'false'); t.classList.remove('open'); }
+    });
+
+    // Open the clicked one (unless it was already open)
+    if (!isOpen) {
+        form.hidden = false;
+        toggle.setAttribute('aria-expanded', 'true');
+        toggle.classList.add('open');
+        // Focus first input inside
+        setTimeout(() => form.querySelector('input')?.focus(), 60);
+    }
+}
+
+/* ── Change email ─────────────────────────────────────────────── */
+async function changeEmail() {
+    const newEmail  = document.getElementById('newEmail').value.trim();
+    const password  = document.getElementById('emailCurrentPwd').value;
+    const btn       = document.getElementById('changeEmailBtn');
+
+    if (!newEmail || !newEmail.includes('@')) { showToast('Enter a valid email address', 'error'); return; }
+    if (!password) { showToast('Enter your current password', 'error'); return; }
+
+    setBtnLoading(btn, 'Sending…');
+    try {
+        await DB.changeEmail(password, newEmail);
+        showToast('Confirmation sent to ' + newEmail + ' — click the link to finish.', 'success');
+        toggleForm('changeEmailForm'); // close panel
+        document.getElementById('newEmail').value        = '';
+        document.getElementById('emailCurrentPwd').value = '';
+    } catch (e) {
+        showToast(e.message || 'Failed to change email', 'error');
+    } finally {
+        setBtnReady(btn, '<i class="ri-send-plane-line"></i> Send confirmation');
+    }
+}
+
+/* ── Change password ──────────────────────────────────────────── */
+async function changePassword() {
+    const current  = document.getElementById('currentPwd').value;
+    const next     = document.getElementById('newPwd').value;
+    const confirm  = document.getElementById('confirmPwd').value;
+    const btn      = document.getElementById('changePasswordBtn');
+
+    if (!current)          { showToast('Enter your current password', 'error'); return; }
+    if (next.length < 6)   { showToast('New password must be at least 6 characters', 'error'); return; }
+    if (next !== confirm)  { showToast('Passwords do not match', 'error'); return; }
+    if (next === current)  { showToast('New password must differ from current', 'error'); return; }
+
+    setBtnLoading(btn, 'Updating…');
+    try {
+        await DB.changePassword(current, next);
+        showToast('Password updated ✓', 'success');
+        toggleForm('changePasswordForm');
+        ['currentPwd','newPwd','confirmPwd'].forEach(id => document.getElementById(id).value = '');
+    } catch (e) {
+        showToast(e.message || 'Failed to update password', 'error');
+    } finally {
+        setBtnReady(btn, '<i class="ri-check-line"></i> Update password');
+    }
+}
+
+/* ── Delete account ───────────────────────────────────────────── */
+async function deleteAccount() {
+    const confirmText = document.getElementById('deleteConfirmText').value.trim();
+    const password    = document.getElementById('deletePwd').value;
+    const btn         = document.getElementById('deleteAccountBtn');
+
+    if (confirmText !== 'DELETE') { showToast('Type DELETE in capitals to confirm', 'error'); return; }
+    if (!password)                { showToast('Enter your password to confirm', 'error'); return; }
+
+    setBtnLoading(btn, 'Deleting…');
+    try {
+        await DB.deleteAccount(password);
+        // deleteAccount signs out internally; redirect to setup
+        DB._cacheClear();
+        window.location.replace('setup.html');
+    } catch (e) {
+        showToast(e.message || 'Failed to delete account', 'error');
+        setBtnReady(btn, '<i class="ri-delete-bin-line"></i> Permanently delete');
+    }
+}
+
+/* ── Password visibility toggle ──────────────────────────────── */
+function togglePwd(inputId, iconId) {
+    const inp  = document.getElementById(inputId);
+    const icon = document.getElementById(iconId);
+    if (!inp || !icon) return;
+    if (inp.type === 'password') { inp.type = 'text';     icon.className = 'ri-eye-off-line'; }
+    else                         { inp.type = 'password'; icon.className = 'ri-eye-line'; }
+}
+
+/* ── Native date dropdowns ───────────────────────────────────── */
 function initDateDropdowns(containerId, isoValue) {
     const container = document.getElementById(containerId);
     if (!container) return;
@@ -53,29 +154,24 @@ function initDateDropdowns(containerId, isoValue) {
     daySel.className   = 'form-input date-sel date-sel-day';
     monthSel.className = 'form-input date-sel date-sel-month';
     yearSel.className  = 'form-input date-sel date-sel-year';
-
     daySel.id   = containerId + '_day';
     monthSel.id = containerId + '_month';
     yearSel.id  = containerId + '_year';
 
     daySel.innerHTML = '<option value="">Day</option>' +
         Array.from({length:31},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('');
-
     monthSel.innerHTML = '<option value="">Month</option>' +
         MONTHS.map((m,i)=>`<option value="${i+1}">${m}</option>`).join('');
 
     const now = new Date();
-    const y0  = now.getFullYear() - 3;
-    const y1  = now.getFullYear() + 6;
+    const y0  = now.getFullYear() - 3, y1 = now.getFullYear() + 6;
     yearSel.innerHTML = '<option value="">Year</option>' +
         Array.from({length: y1-y0+1},(_,i)=>`<option value="${y0+i}">${y0+i}</option>`).join('');
 
     if (isoValue) {
         const d = new Date(isoValue);
         if (!isNaN(d)) {
-            daySel.value   = d.getDate();
-            monthSel.value = d.getMonth() + 1;
-            yearSel.value  = d.getFullYear();
+            daySel.value = d.getDate(); monthSel.value = d.getMonth() + 1; yearSel.value = d.getFullYear();
         }
     }
 
@@ -94,6 +190,7 @@ function getDateFromDropdowns(containerId) {
     return isNaN(d) ? null : d.toISOString().split('T')[0];
 }
 
+/* ── Status badge ────────────────────────────────────────────── */
 function updateStatus(state) {
     const badge = document.getElementById('statusBadge');
     if (!badge) return;
@@ -107,7 +204,7 @@ function updateStatus(state) {
     badge.className   = cls;
 }
 
-/* ---- Study Period ---- */
+/* ── Study Period ────────────────────────────────────────────── */
 async function saveStudyPeriod() {
     const start = getDateFromDropdowns('startDateDropdowns');
     const end   = getDateFromDropdowns('endDateDropdowns');
@@ -122,11 +219,10 @@ async function saveStudyPeriod() {
     } catch (e) { showToast('Save failed: ' + e.message, 'error'); }
 }
 
-/* ---- Curriculum ---- */
+/* ── Curriculum ──────────────────────────────────────────────── */
 async function changeCurriculum() {
     const val = document.getElementById('syllabusSelect').value;
-    const confirmed = window.confirm('Changing curriculum resets your chapter list. Your dates are kept. Continue?');
-    if (!confirmed) return;
+    if (!window.confirm('Changing curriculum resets your chapter list. Your dates are kept. Continue?')) return;
     try {
         const chapters = await DB.loadSyllabus(val);
         const data     = await DB.pull() || {};
@@ -138,7 +234,7 @@ async function changeCurriculum() {
     } catch (e) { showToast('Failed: ' + e.message, 'error'); }
 }
 
-/* ---- Export ---- */
+/* ── Export ──────────────────────────────────────────────────── */
 async function exportCSV() {
     try {
         const data     = await DB.pull();
@@ -162,7 +258,7 @@ async function exportCSV() {
     } catch (e) { showToast('Export failed: ' + e.message, 'error'); }
 }
 
-/* ---- Danger actions — use native confirm ---- */
+/* ── Danger actions ──────────────────────────────────────────── */
 async function confirmResetChapters() {
     if (!window.confirm('Reset all chapter progress? This cannot be undone.')) return;
     try {
@@ -181,7 +277,16 @@ async function confirmLogout() {
     await DB.logout();
 }
 
-/* ---- Toast ---- */
+/* ── Helpers ─────────────────────────────────────────────────── */
+function setBtnLoading(btn, label) {
+    btn.disabled = true;
+    btn.innerHTML = `<span class="spinner"></span> ${label}`;
+}
+function setBtnReady(btn, html) {
+    btn.disabled = false;
+    btn.innerHTML = html;
+}
+
 function showToast(msg, type = 'success') {
     const el = document.getElementById('toast');
     el.className = 'toast ' + type;
@@ -189,7 +294,15 @@ function showToast(msg, type = 'success') {
     document.getElementById('toastMsg').textContent = msg;
     clearTimeout(el._t);
     el.classList.remove('hidden');
-    el._t = setTimeout(() => el.classList.add('hidden'), 3500);
+    el._t = setTimeout(() => el.classList.add('hidden'), 4500);
 }
+
+/* ── Close open forms on Escape ──────────────────────────────── */
+document.addEventListener('keydown', e => {
+    if (e.key !== 'Escape') return;
+    document.querySelectorAll('.inline-form').forEach(f => {
+        if (!f.hidden) toggleForm(f.id);
+    });
+});
 
 init();

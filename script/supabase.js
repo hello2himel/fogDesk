@@ -94,6 +94,67 @@ const SB = (() => {
         if (_client) await _client.auth.signOut();
     }
 
+    /* ── Account mutations ──────────────────────────────────────────────
+       All three require an active session (user is already signed in).
+
+       changeEmail: Supabase sends a confirmation link to the NEW address.
+         The change only takes effect once the user clicks that link.
+         We re-authenticate first so the session token is fresh (avoids
+         the "requires recent sign-in" 401 Supabase can throw).
+
+       changePassword: re-authenticates then updates the password in one
+         roundtrip. Supabase does NOT send a confirmation email for this.
+
+       deleteAccount: calls a Postgres RPC `delete_account()` that runs
+         as the authenticated user (SECURITY DEFINER) and does:
+           DELETE FROM auth.users WHERE id = auth.uid();
+         The function must be created in the Supabase SQL editor — see
+         example/schema.sql for the exact definition.
+         We re-auth first to confirm intent, then RPC, then sign out.
+    ────────────────────────────────────────────────────────────────── */
+
+    async function changeEmail(currentPassword, newEmail) {
+        if (!_client) throw new Error('Not initialised');
+        // Re-authenticate to get a fresh session before sensitive op
+        const user = await getUser();
+        if (!user) throw new Error('Not signed in');
+        const { error: reAuthErr } = await _client.auth.signInWithPassword({
+            email: user.email, password: currentPassword
+        });
+        if (reAuthErr) throw new Error('Current password is incorrect');
+        // Now update the email — Supabase will email the new address for confirmation
+        const { error } = await _client.auth.updateUser({ email: newEmail });
+        if (error) throw error;
+    }
+
+    async function changePassword(currentPassword, newPassword) {
+        if (!_client) throw new Error('Not initialised');
+        const user = await getUser();
+        if (!user) throw new Error('Not signed in');
+        // Re-auth to verify current password before allowing change
+        const { error: reAuthErr } = await _client.auth.signInWithPassword({
+            email: user.email, password: currentPassword
+        });
+        if (reAuthErr) throw new Error('Current password is incorrect');
+        const { error } = await _client.auth.updateUser({ password: newPassword });
+        if (error) throw error;
+    }
+
+    async function deleteAccount(currentPassword) {
+        if (!_client) throw new Error('Not initialised');
+        const user = await getUser();
+        if (!user) throw new Error('Not signed in');
+        // Re-auth to confirm intent
+        const { error: reAuthErr } = await _client.auth.signInWithPassword({
+            email: user.email, password: currentPassword
+        });
+        if (reAuthErr) throw new Error('Password is incorrect');
+        // Call server-side RPC — see example/schema.sql for definition
+        const { error } = await _client.rpc('delete_account');
+        if (error) throw error;
+        await _client.auth.signOut();
+    }
+
     /* ---- Data (auth JWT is sent automatically by the SDK) ---- */
 
     async function fetchProgress() {
@@ -114,7 +175,7 @@ const SB = (() => {
         if (error) throw error;
     }
 
-    return { init, ready, getSession, getUser, isLoggedIn, signUp, signIn, verifyOtp, resendOtp, handleEmailCallback, signOut, fetchProgress, upsertProgress };
+    return { init, ready, getSession, getUser, isLoggedIn, signUp, signIn, verifyOtp, resendOtp, handleEmailCallback, signOut, changeEmail, changePassword, deleteAccount, fetchProgress, upsertProgress };
 })();
 
 /* Load Supabase SDK synchronously so it's available immediately */

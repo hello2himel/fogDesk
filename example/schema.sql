@@ -54,3 +54,39 @@ CREATE OR REPLACE TRIGGER trg_study_progress_updated_at
 -- Authentication → URL Configuration:
 --   Site URL: https://yourapp.netlify.app
 -- =============================================
+
+-- =============================================
+-- Account self-deletion RPC
+-- =============================================
+-- The Supabase client SDK cannot delete a user's own auth row directly.
+-- This function runs as the authenticated user (via auth.uid()) and
+-- deletes both their study_progress row and their auth account.
+--
+-- Run this in: Supabase Dashboard → SQL Editor
+-- =============================================
+
+CREATE OR REPLACE FUNCTION delete_account()
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  _uid UUID := auth.uid();
+BEGIN
+  -- Guard: only a signed-in user can delete themselves
+  IF _uid IS NULL THEN
+    RAISE EXCEPTION 'Not authenticated';
+  END IF;
+
+  -- Delete study progress (also cascades via FK, but explicit is clear)
+  DELETE FROM study_progress WHERE user_id = _uid;
+
+  -- Delete the auth account itself
+  DELETE FROM auth.users WHERE id = _uid;
+END;
+$$;
+
+-- Grant execute to authenticated users only
+REVOKE EXECUTE ON FUNCTION delete_account() FROM PUBLIC;
+GRANT  EXECUTE ON FUNCTION delete_account() TO authenticated;

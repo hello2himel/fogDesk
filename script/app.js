@@ -86,6 +86,55 @@ function hideLoader() {
     if (el) el.remove();
 }
 
+/* ---- Greeting ---- */
+function getGreeting(username) {
+    const h    = new Date().getHours();
+    const name = username ? username : null;
+    const tag  = name ? name : 'there';
+
+    // Time-of-day buckets with character
+    if (h >= 5  && h < 12) {
+        const lines = [
+            `Good morning, ${tag}. Ready to own the day?`,
+            `Rise and grind, ${tag}. Chapters won't check themselves.`,
+            `Morning, ${tag}! Coffee first, chapters second.`,
+        ];
+        return lines[new Date().getDate() % lines.length];
+    }
+    if (h >= 12 && h < 17) {
+        const lines = [
+            `Hey ${tag}. Afternoon slump? Push through.`,
+            `Good afternoon, ${tag}. How's the grind going?`,
+            `${tag.charAt(0).toUpperCase() + tag.slice(1)}, afternoon check-in. Still on track?`,
+        ];
+        return lines[new Date().getDate() % lines.length];
+    }
+    if (h >= 17 && h < 21) {
+        const lines = [
+            `Evening, ${tag}. Wind down or push on?`,
+            `Good evening, ${tag}. A few more chapters?`,
+            `Hey ${tag}, evening edition. Let's see those numbers.`,
+        ];
+        return lines[new Date().getDate() % lines.length];
+    }
+    // Late night / deep night
+    if (h >= 21 || h < 2) {
+        const lines = [
+            `Late night ${tag}, is it? Moonlit studying counts.`,
+            `Still up, ${tag}? Dedication noted.`,
+            `Night owl mode, ${tag}. The chapters respect the hustle.`,
+        ];
+        return lines[new Date().getDate() % lines.length];
+    }
+    // 2am–5am: the deep hours
+    const lines = [
+        `${tag.charAt(0).toUpperCase() + tag.slice(1)}… it's past 2am. You okay?`,
+        `Deep night, ${tag}. Seriously, sleep is studying too.`,
+        `The world is asleep, ${tag}. Just you and the syllabus.`,
+    ];
+    return lines[new Date().getDate() % lines.length];
+}
+
 /* ---- Dashboard ---- */
 function renderDashboard() {
     const app  = document.getElementById('app');
@@ -93,34 +142,38 @@ function renderDashboard() {
     const tP   = calcTime(s.startDate, s.endDate);
     const sP   = calcSyllabus();
     const ins  = insight(tP.pct, sP.pct);
-    const displayName = _user?.user_metadata?.username
-        ? '@' + _user.user_metadata.username
-        : (_user?.email || '');
+    const username    = _user?.user_metadata?.username || null;
+    const greeting    = getGreeting(username);
+    const dateRange   = fmtRange(s.startDate, s.endDate);
 
     app.innerHTML = `
-    <div class="app-shell fade-in">
-        <header class="app-header">
-            <div class="app-header-left">
-                <h1>Study <em>Buddy</em></h1>
-                <p>${fmtRange(s.startDate, s.endDate)}</p>
-            </div>
-            <div class="header-right">
-                <div class="sync-indicator">
-                    <div class="sync-dot ${syncState}" id="syncDot"></div>
-                    <span id="syncLabel">${syncLabel()}</span>
-                </div>
-                <div class="header-actions">
-                    <a href="settings.html" class="btn btn-ghost btn-sm">
-                        <i class="ri-settings-3-line"></i>
-                        <span class="btn-label">Settings</span>
-                    </a>
-                    <button class="btn btn-ghost btn-sm" onclick="triggerLogout()" title="Sign out">
-                        <i class="ri-logout-box-r-line"></i>
-                    </button>
-                </div>
-            </div>
-        </header>
+    <div class="app-page fade-in">
+      <div class="app-shell">
 
+        <!-- Top bar: sync status + nav -->
+        <div class="topbar">
+            <div class="sync-indicator">
+                <div class="sync-dot ${syncState}" id="syncDot"></div>
+                <span id="syncLabel">${syncLabel()}</span>
+            </div>
+            <div class="topbar-actions">
+                <a href="settings.html" class="btn btn-ghost btn-sm">
+                    <i class="ri-settings-3-line"></i>
+                    <span class="btn-label">Settings</span>
+                </a>
+                <button class="btn btn-ghost btn-sm" onclick="triggerLogout()" title="Sign out">
+                    <i class="ri-logout-box-r-line"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Greeting -->
+        <div class="dash-greeting">
+            <p class="greeting-text">${greeting}</p>
+            ${dateRange ? `<p class="greeting-range">${dateRange}</p>` : ''}
+        </div>
+
+        <!-- Progress cards -->
         <div class="progress-cards">
             <div class="progress-card">
                 <div class="progress-card-num" id="timePct">${tP.pct}%</div>
@@ -142,11 +195,13 @@ function renderDashboard() {
             </div>
         </div>
 
+        <!-- Insight -->
         <div class="insight-banner ${ins.type}">
             <i class="${ins.icon}"></i>
             <span>${ins.msg}</span>
         </div>
 
+        <!-- Actions -->
         <div class="action-row">
             <button class="btn btn-primary" onclick="openSyllabus()">
                 <i class="ri-edit-line"></i> Edit Progress
@@ -158,7 +213,9 @@ function renderDashboard() {
                 <i class="ri-cloud-line"></i> Sync
             </button>
         </div>
-    </div>
+
+      </div><!-- /.app-shell -->
+    </div><!-- /.app-page -->
 
     <footer class="app-footer">
         Made with ❤️ by <a href="https://github.com/hello2himel" target="_blank">@hello2himel</a> from 🇧🇩
@@ -314,11 +371,20 @@ function updateBars() {
     const s  = _settings || {};
     const tP = calcTime(s.startDate, s.endDate);
     const sP = calcSyllabus();
-    const $  = id => document.getElementById(id);
-    if ($('timePct'))  $('timePct').textContent   = tP.pct + '%';
-    if ($('timeFill')) $('timeFill').style.width   = tP.pct + '%';
-    if ($('sylPct'))   $('sylPct').textContent    = sP.pct + '%';
-    if ($('sylFill'))  $('sylFill').style.width    = sP.pct + '%';
+    const ins = insight(tP.pct, sP.pct);
+    const $   = id => document.getElementById(id);
+
+    if ($('timePct'))  $('timePct').textContent  = tP.pct + '%';
+    if ($('timeFill')) $('timeFill').style.width  = tP.pct + '%';
+    if ($('sylPct'))   $('sylPct').textContent   = sP.pct + '%';
+    if ($('sylFill'))  $('sylFill').style.width   = sP.pct + '%';
+
+    // Refresh insight banner in-place (no full re-render)
+    const banner = document.querySelector('.insight-banner');
+    if (banner) {
+        banner.className = `insight-banner ${ins.type}`;
+        banner.innerHTML = `<i class="${ins.icon}"></i><span>${ins.msg}</span>`;
+    }
 }
 
 /* ---- Sync ---- */
@@ -334,6 +400,9 @@ async function silentSync() {
     setSyncState('syncing');
     try {
         await DB.push(chapters, _settings || {}, enabledSubjects);
+        // Pull back immediately so local state is always a mirror of cloud
+        const fresh = await DB.pull();
+        if (fresh) reconcile(fresh);
         lastSyncTime = new Date().toISOString();
         setSyncState('success');
         setTimeout(() => setSyncState('idle'), 2500);
@@ -347,6 +416,9 @@ async function manualSync() {
     setSyncState('syncing');
     try {
         await DB.push(chapters, _settings || {}, enabledSubjects);
+        // Pull back to confirm cloud state and refresh UI
+        const fresh = await DB.pull();
+        if (fresh) reconcile(fresh);
         lastSyncTime = new Date().toISOString();
         setSyncState('success');
         showToast('Saved to cloud ✓', 'success');
@@ -355,6 +427,25 @@ async function manualSync() {
         setSyncState('error');
         showToast('Save failed: ' + e.message, 'error');
         setTimeout(() => setSyncState('idle'), 3000);
+    }
+}
+
+/* ── reconcile: apply fresh cloud data to local state and refresh UI ──
+   Called after every successful push→pull cycle.
+   Does NOT re-render the whole dashboard (avoids flash/scroll-reset);
+   updates bars, syllabus modal panels, and local variables in place. */
+function reconcile(data) {
+    chapters        = data.chapters || chapters;
+    const s         = data.settings || {};
+    enabledSubjects = s.enabledSubjects || enabledSubjects;
+    _settings       = { syllabus: s.syllabus || _settings?.syllabus || '',
+                        startDate: s.startDate || _settings?.startDate || '',
+                        endDate:   s.endDate   || _settings?.endDate   || '' };
+    // Refresh bars and open modal panels without a full re-render
+    updateBars();
+    if (!document.getElementById('syllabusModal').classList.contains('hidden')) {
+        renderSubjectList();
+        renderChapters();
     }
 }
 
