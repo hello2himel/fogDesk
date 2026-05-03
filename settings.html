@@ -11,183 +11,68 @@
     <script src="_env.js" onerror="window.SB_CONFIG={url:'',key:''};"></script>
 </head>
 <body>
+<div class="pg-wrap">
 
-<div class="settings-shell">
-
-    <header class="settings-header">
-        <a href="index.html" class="settings-back" aria-label="Back to dashboard">
+    <!-- Header -->
+    <header class="pg-header">
+        <a href="index.html" class="pg-back" aria-label="Back to dashboard">
             <i class="ri-arrow-left-line"></i>
         </a>
-        <h1>Settings</h1>
-        <span id="statusBadge" class="sync-badge offline">Offline</span>
+        <h1 class="pg-title">Settings</h1>
+        <span id="statusBadge" class="status-badge"></span>
     </header>
 
-    <main class="settings-main">
+    <main class="pg-main">
 
-        <!-- ── Account ── -->
-        <section class="settings-section">
-            <div class="section-heading">
-                <i class="ri-user-line"></i>
-                <h2>Account</h2>
-            </div>
-
-            <!-- Identity chip — clickable, opens account modal -->
-            <button class="account-info account-info-btn" id="accountInfoBtn" onclick="openAccountModal()" aria-label="Open account info">
-                <div class="account-avatar" id="accountAvatar">?</div>
-                <div class="account-info-text">
-                    <div class="account-username" id="accountUsername">—</div>
-                    <div class="account-email" id="accountEmail">—</div>
-                    <div class="account-label">Signed in · synced to cloud</div>
+        <!-- ─── Account ─────────────────────────────── -->
+        <div class="section-label">Account</div>
+        <div class="card">
+            <button class="acct-row" id="acctRow" onclick="openAccountModal()">
+                <div class="acct-avatar" id="accountAvatar">?</div>
+                <div class="acct-info">
+                    <span class="acct-name" id="accountUsername">—</span>
+                    <span class="acct-email" id="accountEmail">—</span>
                 </div>
-                <i class="ri-arrow-right-s-line account-info-arrow"></i>
+                <i class="ri-arrow-right-s-line acct-chevron"></i>
             </button>
+        </div>
 
-            <!-- Account settings label -->
-            <div class="account-settings-divider">
-                <i class="ri-settings-3-line"></i>
-                <span>Account settings</span>
-            </div>
-
-            <!-- Change username -->
-                <div class="inline-form-block">
-                    <button class="inline-form-toggle" onclick="toggleForm('changeUsernameForm')" aria-expanded="false">
-                        <span><i class="ri-at-line"></i> Change username</span>
-                        <i class="ri-arrow-down-s-line toggle-chevron"></i>
-                    </button>
-                    <div class="inline-form" id="changeUsernameForm" hidden>
-                        <div class="form-group">
-                            <label for="newUsername">New username</label>
-                            <div class="input-icon-wrap">
-                                <i class="ri-at-line"></i>
-                                <input type="text" id="newUsername" class="form-input"
-                                    placeholder="e.g. studymaster42" autocomplete="username" spellcheck="false">
-                            </div>
-                            <small>Letters, numbers, and underscores only. 3–20 characters.</small>
-                        </div>
-                        <div class="inline-form-actions">
-                            <button class="btn btn-ghost btn-sm" onclick="toggleForm('changeUsernameForm')">Cancel</button>
-                            <button class="btn btn-primary btn-sm" id="changeUsernameBtn" onclick="changeUsername()">
-                                <i class="ri-check-line"></i> Save username
-                            </button>
-                        </div>
-                    </div>
+        <!-- ─── Study Period ─────────────────────────── -->
+        <div class="section-label">Study Period</div>
+        <div class="card">
+            <div class="field-row">
+                <div class="field-label-wrap">
+                    <i class="ri-calendar-line field-icon"></i>
+                    <label class="field-label">Start date</label>
                 </div>
-
-            <!-- Change email -->
-            <div class="inline-form-block">
-                <button class="inline-form-toggle" onclick="toggleForm('changeEmailForm')" aria-expanded="false">
-                    <span><i class="ri-mail-line"></i> Change email address</span>
-                    <i class="ri-arrow-down-s-line toggle-chevron"></i>
-                </button>
-                <div class="inline-form" id="changeEmailForm" hidden>
-                    <div class="form-group">
-                        <label for="newEmail">New email address</label>
-                        <div class="input-icon-wrap">
-                            <i class="ri-mail-line"></i>
-                            <input type="email" id="newEmail" class="form-input"
-                                placeholder="new@example.com" autocomplete="email">
-                        </div>
-                        <small>Supabase will send a confirmation link to the new address before switching.</small>
-                    </div>
-                    <div class="form-group">
-                        <label for="emailCurrentPwd">Current password</label>
-                        <div class="input-icon-wrap">
-                            <i class="ri-lock-line"></i>
-                            <input type="password" id="emailCurrentPwd" class="form-input"
-                                placeholder="Enter your current password" autocomplete="current-password">
-                            <button type="button" class="toggle-visible"
-                                onclick="togglePwd('emailCurrentPwd','eyeEmailPwd')">
-                                <i class="ri-eye-line" id="eyeEmailPwd"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="inline-form-actions">
-                        <button class="btn btn-ghost btn-sm" onclick="toggleForm('changeEmailForm')">Cancel</button>
-                        <button class="btn btn-primary btn-sm" id="changeEmailBtn" onclick="changeEmail()">
-                            <i class="ri-send-plane-line"></i> Send confirmation
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Change password -->
-            <div class="inline-form-block">
-                <button class="inline-form-toggle" onclick="toggleForm('changePasswordForm')" aria-expanded="false">
-                    <span><i class="ri-lock-line"></i> Change password</span>
-                    <i class="ri-arrow-down-s-line toggle-chevron"></i>
-                </button>
-                <div class="inline-form" id="changePasswordForm" hidden>
-                    <div class="form-group">
-                        <label for="currentPwd">Current password</label>
-                        <div class="input-icon-wrap">
-                            <i class="ri-lock-line"></i>
-                            <input type="password" id="currentPwd" class="form-input"
-                                placeholder="Your current password" autocomplete="current-password">
-                            <button type="button" class="toggle-visible"
-                                onclick="togglePwd('currentPwd','eyeCurrent')">
-                                <i class="ri-eye-line" id="eyeCurrent"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="newPwd">New password</label>
-                        <div class="input-icon-wrap">
-                            <i class="ri-lock-line"></i>
-                            <input type="password" id="newPwd" class="form-input"
-                                placeholder="Min. 6 characters" autocomplete="new-password">
-                            <button type="button" class="toggle-visible"
-                                onclick="togglePwd('newPwd','eyeNew')">
-                                <i class="ri-eye-line" id="eyeNew"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="confirmPwd">Confirm new password</label>
-                        <div class="input-icon-wrap">
-                            <i class="ri-lock-line"></i>
-                            <input type="password" id="confirmPwd" class="form-input"
-                                placeholder="Repeat new password" autocomplete="new-password">
-                        </div>
-                    </div>
-                    <div class="inline-form-actions">
-                        <button class="btn btn-ghost btn-sm" onclick="toggleForm('changePasswordForm')">Cancel</button>
-                        <button class="btn btn-primary btn-sm" id="changePasswordBtn" onclick="changePassword()">
-                            <i class="ri-check-line"></i> Update password
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- ── Study Period ── -->
-        <section class="settings-section">
-            <div class="section-heading">
-                <i class="ri-calendar-line"></i>
-                <h2>Study Period</h2>
-            </div>
-            <div class="form-group">
-                <label>Study Start Date</label>
                 <div class="date-dropdowns" id="startDateDropdowns"></div>
-                <small>The day you began or plan to begin preparation.</small>
+                <p class="field-hint">The day you began or plan to begin preparation.</p>
             </div>
-            <div class="form-group">
-                <label>Exam / Target Date</label>
+            <div class="card-divider"></div>
+            <div class="field-row">
+                <div class="field-label-wrap">
+                    <i class="ri-flag-line field-icon"></i>
+                    <label class="field-label">Exam / target date</label>
+                </div>
                 <div class="date-dropdowns" id="endDateDropdowns"></div>
-                <small>Your exam date or last day of preparation.</small>
+                <p class="field-hint">Your exam date or last day of preparation.</p>
             </div>
-            <button class="btn btn-primary" onclick="saveStudyPeriod()">
-                <i class="ri-save-line"></i> Save dates
-            </button>
-        </section>
+            <div class="card-divider"></div>
+            <div class="field-row field-row--action">
+                <button class="btn btn-primary btn-sm" onclick="saveStudyPeriod()">
+                    <i class="ri-save-line"></i> Save dates
+                </button>
+            </div>
+        </div>
 
-        <!-- ── Curriculum ── -->
-        <section class="settings-section">
-            <div class="section-heading">
-                <i class="ri-book-open-line"></i>
-                <h2>Curriculum</h2>
-            </div>
-            <div class="form-group">
-                <label for="syllabusSelect">Active Syllabus</label>
+        <!-- ─── Curriculum ───────────────────────────── -->
+        <div class="section-label">Curriculum</div>
+        <div class="card">
+            <div class="field-row">
+                <div class="field-label-wrap">
+                    <i class="ri-book-open-line field-icon"></i>
+                    <label class="field-label" for="syllabusSelect">Active syllabus</label>
+                </div>
                 <select id="syllabusSelect" class="form-input form-select">
                     <option value="syllabus-bangladesh-hsc.json">Bangladesh HSC — Science</option>
                     <option value="syllabus-bangladesh-hsc-commerce.json">Bangladesh HSC — Commerce</option>
@@ -195,125 +80,272 @@
                     <option value="syllabus-uk-alevels.json">UK A-Levels</option>
                     <option value="syllabus-ib-diploma.json">IB Diploma Programme</option>
                 </select>
+                <p class="field-hint field-hint--warn">
+                    <i class="ri-alert-line"></i>
+                    Changing curriculum resets your chapter list. Your dates are kept.
+                </p>
             </div>
-            <p class="warning-text">
-                <i class="ri-alert-line"></i>
-                Changing curriculum resets your chapter list. Your dates are kept.
-            </p>
-            <button class="btn btn-primary" onclick="changeCurriculum()">
-                <i class="ri-refresh-line"></i> Apply curriculum
-            </button>
-        </section>
-
-        <!-- ── Data ── -->
-        <section class="settings-section">
-            <div class="section-heading">
-                <i class="ri-database-line"></i>
-                <h2>Data</h2>
-            </div>
-            <div class="data-actions">
-                <div class="data-action-row">
-                    <div>
-                        <strong>Export progress</strong>
-                        <p>Download your chapter completion as a CSV file.</p>
-                    </div>
-                    <button class="btn btn-ghost btn-sm" onclick="exportCSV()">
-                        <i class="ri-download-line"></i> Export
-                    </button>
-                </div>
-                <div class="data-action-row">
-                    <div>
-                        <strong>Reset chapter progress</strong>
-                        <p>Mark all chapters as incomplete. Dates and settings are kept.</p>
-                    </div>
-                    <button class="btn btn-danger btn-sm" onclick="confirmResetChapters()">
-                        <i class="ri-refresh-line"></i> Reset
-                    </button>
-                </div>
-                <div class="data-action-row">
-                    <div>
-                        <strong>Sign out</strong>
-                        <p>Clears this device's session. Your progress stays in the cloud.</p>
-                    </div>
-                    <button class="btn btn-danger btn-sm" onclick="confirmLogout()">
-                        <i class="ri-logout-box-r-line"></i> Sign out
-                    </button>
-                </div>
-            </div>
-        </section>
-
-        <!-- ── Danger Zone ── -->
-        <section class="settings-section danger-section">
-            <div class="section-heading">
-                <i class="ri-error-warning-line"></i>
-                <h2>Danger Zone</h2>
-            </div>
-
-            <div class="inline-form-block danger-block">
-                <button class="inline-form-toggle danger-toggle" onclick="toggleForm('deleteAccountForm')" aria-expanded="false">
-                    <span><i class="ri-delete-bin-line"></i> Delete account</span>
-                    <i class="ri-arrow-down-s-line toggle-chevron"></i>
+            <div class="card-divider"></div>
+            <div class="field-row field-row--action">
+                <button class="btn btn-primary btn-sm" onclick="changeCurriculum()">
+                    <i class="ri-refresh-line"></i> Apply curriculum
                 </button>
-                <div class="inline-form" id="deleteAccountForm" hidden>
-                    <p class="danger-warning">
-                        This permanently deletes your account and all study progress. There is no undo.
-                    </p>
-                    <div class="form-group">
-                        <label for="deleteConfirmText">Type <strong>DELETE</strong> to confirm</label>
-                        <input type="text" id="deleteConfirmText" class="form-input"
-                            placeholder="DELETE" autocomplete="off" spellcheck="false">
-                    </div>
-                    <div class="form-group">
-                        <label for="deletePwd">Your password</label>
-                        <div class="input-icon-wrap">
-                            <i class="ri-lock-line"></i>
-                            <input type="password" id="deletePwd" class="form-input"
-                                placeholder="Confirm with your password" autocomplete="current-password">
-                            <button type="button" class="toggle-visible"
-                                onclick="togglePwd('deletePwd','eyeDelete')">
-                                <i class="ri-eye-line" id="eyeDelete"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="inline-form-actions">
-                        <button class="btn btn-ghost btn-sm" onclick="toggleForm('deleteAccountForm')">Cancel</button>
-                        <button class="btn btn-danger btn-sm" id="deleteAccountBtn" onclick="deleteAccount()">
-                            <i class="ri-delete-bin-line"></i> Permanently delete
-                        </button>
-                    </div>
-                </div>
             </div>
-        </section>
+        </div>
+
+        <!-- ─── Data ─────────────────────────────────── -->
+        <div class="section-label">Data</div>
+        <div class="card">
+            <button class="action-row" onclick="exportCSV()">
+                <div class="action-row-icon neutral"><i class="ri-download-2-line"></i></div>
+                <div class="action-row-text">
+                    <span class="action-row-title">Export progress</span>
+                    <span class="action-row-sub">Download chapter completion as CSV</span>
+                </div>
+                <i class="ri-arrow-right-s-line action-row-chevron"></i>
+            </button>
+            <div class="card-divider"></div>
+            <button class="action-row" onclick="confirmResetChapters()">
+                <div class="action-row-icon danger"><i class="ri-restart-line"></i></div>
+                <div class="action-row-text">
+                    <span class="action-row-title danger-text">Reset chapter progress</span>
+                    <span class="action-row-sub">Mark all chapters as incomplete</span>
+                </div>
+                <i class="ri-arrow-right-s-line action-row-chevron"></i>
+            </button>
+            <div class="card-divider"></div>
+            <button class="action-row" onclick="confirmLogout()">
+                <div class="action-row-icon danger"><i class="ri-logout-box-r-line"></i></div>
+                <div class="action-row-text">
+                    <span class="action-row-title danger-text">Sign out</span>
+                    <span class="action-row-sub">Progress stays safely in the cloud</span>
+                </div>
+                <i class="ri-arrow-right-s-line action-row-chevron"></i>
+            </button>
+        </div>
 
     </main>
 
-    <footer class="settings-footer">
+    <footer class="pg-footer">
         Made with ❤️ by <a href="https://github.com/hello2himel" target="_blank">@hello2himel</a> from 🇧🇩
         <span class="footer-sep">·</span>
-        Open source software.
-        <a href="https://github.com/hello2himel/fogdesk" target="_blank">View Source Code</a>
+        Open source.
+        <a href="https://github.com/hello2himel/fogdesk" target="_blank">Source code</a>
     </footer>
 
 </div>
 
-<!-- Account Info Modal -->
-<div class="acct-modal-backdrop" id="acctModalBackdrop" onclick="closeAccountModal()"></div>
-<div class="acct-modal" id="acctModal" role="dialog" aria-modal="true" aria-label="Account details">
-    <div class="acct-modal-header">
-        <span class="acct-modal-title">Account</span>
-        <button class="acct-modal-close" onclick="closeAccountModal()" aria-label="Close">
-            <i class="ri-close-line"></i>
-        </button>
-    </div>
-    <div class="acct-modal-body">
-        <div class="acct-modal-avatar" id="modalAvatar">?</div>
-        <div class="acct-modal-username" id="modalUsername">loading...</div>
-        <div class="acct-modal-email" id="modalEmail">loading...</div>
-        <div class="acct-modal-badge">
-            <i class="ri-cloud-line"></i> Synced to cloud
+
+<!-- ══════════════════════════════════════════════════
+     ACCOUNT MODAL
+     Single overlay, screens swap with JS (no accordion)
+     ══════════════════════════════════════════════════ -->
+<div class="modal-overlay hidden" id="acctOverlay">
+    <div class="modal modal-sm" id="acctModal" role="dialog" aria-modal="true">
+
+        <!-- Screen: main (identity + nav list) -->
+        <div id="scr-main">
+            <div class="modal-header">
+                <h3>Account</h3>
+                <button class="icon-btn" onclick="closeAccountModal()" aria-label="Close">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <!-- Identity block -->
+            <div class="acct-hero">
+                <div class="acct-hero-avatar" id="modalAvatar">?</div>
+                <div class="acct-hero-info">
+                    <span class="acct-hero-name" id="modalName">—</span>
+                    <span class="acct-hero-email" id="modalEmail">—</span>
+                </div>
+                <span class="acct-hero-badge"><i class="ri-cloud-line"></i> Synced</span>
+            </div>
+            <!-- Nav list -->
+            <div class="acct-nav">
+                <button class="acct-nav-row" onclick="showScreen('scr-username')">
+                    <span class="acct-nav-icon"><i class="ri-at-line"></i></span>
+                    <span class="acct-nav-label">Change username</span>
+                    <i class="ri-arrow-right-s-line acct-nav-chevron"></i>
+                </button>
+                <div class="acct-nav-divider"></div>
+                <button class="acct-nav-row" onclick="showScreen('scr-email')">
+                    <span class="acct-nav-icon"><i class="ri-mail-line"></i></span>
+                    <span class="acct-nav-label">Change email</span>
+                    <i class="ri-arrow-right-s-line acct-nav-chevron"></i>
+                </button>
+                <div class="acct-nav-divider"></div>
+                <button class="acct-nav-row" onclick="showScreen('scr-password')">
+                    <span class="acct-nav-icon"><i class="ri-lock-line"></i></span>
+                    <span class="acct-nav-label">Change password</span>
+                    <i class="ri-arrow-right-s-line acct-nav-chevron"></i>
+                </button>
+                <div class="acct-nav-divider"></div>
+                <button class="acct-nav-row acct-nav-row--danger" onclick="showScreen('scr-delete')">
+                    <span class="acct-nav-icon"><i class="ri-delete-bin-line"></i></span>
+                    <span class="acct-nav-label">Delete account</span>
+                    <i class="ri-arrow-right-s-line acct-nav-chevron"></i>
+                </button>
+            </div>
         </div>
-    </div>
-</div>
+
+        <!-- Screen: change username -->
+        <div id="scr-username" class="hidden">
+            <div class="modal-header">
+                <button class="icon-btn" onclick="showScreen('scr-main')" aria-label="Back">
+                    <i class="ri-arrow-left-line"></i>
+                </button>
+                <h3>Change username</h3>
+                <div style="width:34px"></div>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="newUsername">New username</label>
+                    <div class="input-icon-wrap">
+                        <i class="ri-at-line"></i>
+                        <input type="text" id="newUsername" class="form-input"
+                            placeholder="e.g. fogdesk_user" autocomplete="username" spellcheck="false">
+                    </div>
+                    <small>Letters, numbers, and underscores. 3–20 characters.</small>
+                </div>
+                <div class="modal-actions" style="margin-top:1rem">
+                    <button class="btn btn-ghost btn-sm" onclick="showScreen('scr-main')">Cancel</button>
+                    <button class="btn btn-primary btn-sm" id="changeUsernameBtn" onclick="changeUsername()">
+                        <i class="ri-check-line"></i> Save
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen: change email -->
+        <div id="scr-email" class="hidden">
+            <div class="modal-header">
+                <button class="icon-btn" onclick="showScreen('scr-main')" aria-label="Back">
+                    <i class="ri-arrow-left-line"></i>
+                </button>
+                <h3>Change email</h3>
+                <div style="width:34px"></div>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="newEmail">New email address</label>
+                    <div class="input-icon-wrap">
+                        <i class="ri-mail-line"></i>
+                        <input type="email" id="newEmail" class="form-input"
+                            placeholder="new@example.com" autocomplete="email">
+                    </div>
+                    <small>A confirmation link will be sent before switching.</small>
+                </div>
+                <div class="form-group" style="margin-top:.85rem">
+                    <label for="emailCurrentPwd">Current password</label>
+                    <div class="input-icon-wrap">
+                        <i class="ri-lock-line"></i>
+                        <input type="password" id="emailCurrentPwd" class="form-input"
+                            placeholder="Your current password" autocomplete="current-password">
+                        <button type="button" class="toggle-visible" onclick="togglePwd('emailCurrentPwd','eyeEmailPwd')">
+                            <i class="ri-eye-line" id="eyeEmailPwd"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="modal-actions" style="margin-top:1rem">
+                    <button class="btn btn-ghost btn-sm" onclick="showScreen('scr-main')">Cancel</button>
+                    <button class="btn btn-primary btn-sm" id="changeEmailBtn" onclick="changeEmail()">
+                        <i class="ri-send-plane-line"></i> Send link
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen: change password -->
+        <div id="scr-password" class="hidden">
+            <div class="modal-header">
+                <button class="icon-btn" onclick="showScreen('scr-main')" aria-label="Back">
+                    <i class="ri-arrow-left-line"></i>
+                </button>
+                <h3>Change password</h3>
+                <div style="width:34px"></div>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="currentPwd">Current password</label>
+                    <div class="input-icon-wrap">
+                        <i class="ri-lock-line"></i>
+                        <input type="password" id="currentPwd" class="form-input"
+                            placeholder="Your current password" autocomplete="current-password">
+                        <button type="button" class="toggle-visible" onclick="togglePwd('currentPwd','eyeCurrent')">
+                            <i class="ri-eye-line" id="eyeCurrent"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="form-group" style="margin-top:.85rem">
+                    <label for="newPwd">New password</label>
+                    <div class="input-icon-wrap">
+                        <i class="ri-lock-line"></i>
+                        <input type="password" id="newPwd" class="form-input"
+                            placeholder="Min. 6 characters" autocomplete="new-password">
+                        <button type="button" class="toggle-visible" onclick="togglePwd('newPwd','eyeNew')">
+                            <i class="ri-eye-line" id="eyeNew"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="form-group" style="margin-top:.85rem">
+                    <label for="confirmPwd">Confirm new password</label>
+                    <div class="input-icon-wrap">
+                        <i class="ri-lock-line"></i>
+                        <input type="password" id="confirmPwd" class="form-input"
+                            placeholder="Repeat new password" autocomplete="new-password">
+                    </div>
+                </div>
+                <div class="modal-actions" style="margin-top:1rem">
+                    <button class="btn btn-ghost btn-sm" onclick="showScreen('scr-main')">Cancel</button>
+                    <button class="btn btn-primary btn-sm" id="changePasswordBtn" onclick="changePassword()">
+                        <i class="ri-check-line"></i> Update
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen: delete account -->
+        <div id="scr-delete" class="hidden">
+            <div class="modal-header">
+                <button class="icon-btn" onclick="showScreen('scr-main')" aria-label="Back">
+                    <i class="ri-arrow-left-line"></i>
+                </button>
+                <h3>Delete account</h3>
+                <div style="width:34px"></div>
+            </div>
+            <div class="modal-body">
+                <div class="delete-warn">
+                    <i class="ri-error-warning-line"></i>
+                    This permanently deletes your account and all study progress. There is no undo.
+                </div>
+                <div class="form-group" style="margin-top:1rem">
+                    <label for="deleteConfirmText">Type <strong>DELETE</strong> to confirm</label>
+                    <input type="text" id="deleteConfirmText" class="form-input"
+                        placeholder="DELETE" autocomplete="off" spellcheck="false">
+                </div>
+                <div class="form-group" style="margin-top:.85rem">
+                    <label for="deletePwd">Your password</label>
+                    <div class="input-icon-wrap">
+                        <i class="ri-lock-line"></i>
+                        <input type="password" id="deletePwd" class="form-input"
+                            placeholder="Confirm with your password" autocomplete="current-password">
+                        <button type="button" class="toggle-visible" onclick="togglePwd('deletePwd','eyeDelete')">
+                            <i class="ri-eye-line" id="eyeDelete"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="modal-actions" style="margin-top:1rem">
+                    <button class="btn btn-ghost btn-sm" onclick="showScreen('scr-main')">Cancel</button>
+                    <button class="btn btn-danger btn-sm" id="deleteAccountBtn" onclick="deleteAccount()">
+                        <i class="ri-delete-bin-line"></i> Delete forever
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- /.modal -->
+</div><!-- /.modal-overlay -->
+
 
 <div id="toast" class="toast hidden">
     <i id="toastIcon" class="ri-check-line"></i>
@@ -323,25 +355,5 @@
 <script src="script/supabase.js"></script>
 <script src="script/db.js"></script>
 <script src="script/settings.js"></script>
-<script>
-function openAccountModal() {
-    const modal = document.getElementById('acctModal');
-    const backdrop = document.getElementById('acctModalBackdrop');
-    document.getElementById('modalUsername').textContent = document.getElementById('accountUsername').textContent;
-    document.getElementById('modalEmail').textContent    = document.getElementById('accountEmail').textContent;
-    document.getElementById('modalAvatar').textContent   = document.getElementById('accountAvatar').textContent;
-    backdrop.classList.add('open');
-    modal.classList.add('open');
-    document.body.style.overflow = 'hidden';
-}
-function closeAccountModal() {
-    document.getElementById('acctModal').classList.remove('open');
-    document.getElementById('acctModalBackdrop').classList.remove('open');
-    document.body.style.overflow = '';
-}
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') closeAccountModal();
-});
-</script>
 </body>
 </html>
