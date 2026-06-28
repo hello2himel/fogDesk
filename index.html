@@ -49,6 +49,52 @@
     </div>
 </div>
 
+<!-- Final Revision Modal -->
+<div id="revisionModal" class="modal-overlay hidden" onclick="handleRevisionOverlayClick(event)">
+    <div class="modal modal-xl revision-modal">
+        <div class="modal-header">
+            <h3>Final Revision Planner</h3>
+            <div class="modal-actions">
+                <button class="icon-btn" id="revisionPrintBtn" onclick="printRevisionPlan()" title="Print / Save as PDF" style="display:none">
+                    <i class="ri-printer-line"></i>
+                </button>
+                <button class="icon-btn" onclick="closeRevisionModal()" aria-label="Close">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+        </div>
+        <div class="modal-body" id="revisionModalBody">
+            <!-- Date picker state -->
+            <div id="revisionDatePicker">
+                <div class="rev-subject-header">
+                    <div class="rev-subject-icon math-icon"><i class="ri-function-line"></i></div>
+                    <div>
+                        <div class="rev-subject-name">Mathematics</div>
+                        <div class="rev-subject-meta">HSC Science · 20 chapters · 72 study days</div>
+                    </div>
+                    <span class="coming-soon-badge">More subjects coming soon</span>
+                </div>
+
+                <div class="rev-date-form">
+                    <label class="rev-date-label">When do you want to start?</label>
+                    <p class="rev-date-hint">Pick your first study day. Saturdays &amp; Sundays are automatically skipped.</p>
+                    <div class="rev-date-row">
+                        <input type="date" id="revStartDate" class="form-input rev-date-input"
+                            min="${new Date().toISOString().slice(0,10)}"
+                            value="${new Date().toISOString().slice(0,10)}" />
+                        <button class="btn btn-primary" onclick="generateRevisionPlan()">
+                            <i class="ri-sparkling-line"></i> Generate Plan
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Plan output (hidden until generated) -->
+            <div id="revisionPlanOutput" class="hidden"></div>
+        </div>
+    </div>
+</div>
+
 <!-- Toast -->
 <div id="toast" class="toast hidden">
     <i id="toastIcon" class="ri-check-line"></i>
