@@ -757,3 +757,289 @@ em { font-style: italic; }
 .topbar-love-btn:hover { color: #e53e3e; background: #fff5f5; border-color: #fed7d7 !important; }
 .topbar-love-btn i { transition: transform 0.2s ease; }
 .topbar-love-btn:hover i { transform: scale(1.2); }
+
+/* =============================================
+   FINAL REVISION PLANNER
+   ============================================= */
+
+/* ── Panel on home screen ── */
+.final-revision-panel {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 1rem 1.15rem;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    cursor: pointer;
+    transition: border-color var(--transition), box-shadow var(--transition), background var(--transition);
+    text-align: left;
+}
+.final-revision-panel:hover {
+    border-color: var(--ink);
+    box-shadow: var(--shadow);
+    background: var(--surface-2);
+}
+
+.frp-left { display: flex; align-items: center; gap: 0.85rem; }
+
+.frp-badge {
+    width: 40px; height: 40px;
+    background: var(--ink);
+    color: #fff;
+    border-radius: var(--radius);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.frp-title { font-size: 0.9rem; font-weight: 600; color: var(--ink); line-height: 1.2; }
+.frp-sub   { font-size: 0.78rem; color: var(--text-3); margin-top: 0.15rem; }
+.frp-arrow { color: var(--text-3); font-size: 1.3rem; flex-shrink: 0; }
+
+/* ── Revision modal overrides ── */
+.revision-modal .modal-body { padding: 1.25rem 1.4rem; }
+
+/* ── Date picker state ── */
+.rev-subject-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.85rem;
+    padding: 1rem 1.1rem;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.rev-subject-icon {
+    width: 42px; height: 42px;
+    border-radius: var(--radius);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+.math-icon { background: #eff6ff; color: var(--blue); }
+
+.rev-subject-name { font-weight: 600; font-size: 0.95rem; color: var(--ink); }
+.rev-subject-meta { font-size: 0.78rem; color: var(--text-3); margin-top: 0.15rem; }
+
+.coming-soon-badge {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    padding: 0.2rem 0.6rem;
+    background: var(--amber-bg);
+    color: var(--amber);
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 500;
+    white-space: nowrap;
+    align-self: flex-start;
+    border: 1px solid #fde68a;
+}
+
+.rev-date-label {
+    display: block;
+    font-size: 1rem;
+    font-weight: 600;
+    font-family: var(--font-display);
+    color: var(--ink);
+    margin-bottom: 0.3rem;
+}
+.rev-date-hint {
+    font-size: 0.82rem;
+    color: var(--text-3);
+    margin-bottom: 1rem;
+}
+.rev-date-row {
+    display: flex;
+    gap: 0.65rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+.rev-date-input { max-width: 200px; flex: 1; min-width: 140px; }
+
+/* ── Plan output ── */
+.rev-plan-top-actions {
+    margin-bottom: 1.1rem;
+}
+
+.rev-plan-header {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 0.9rem 1.1rem;
+    margin-bottom: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.rev-plan-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.2rem;
+    font-size: 0.82rem;
+    color: var(--text-2);
+}
+.rev-plan-meta span { display: flex; align-items: center; gap: 0.3rem; }
+.rev-plan-meta i { color: var(--text-3); }
+
+.rev-plan-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+    font-size: 0.78rem;
+    color: var(--text-3);
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--border);
+}
+.legend-item { display: flex; align-items: center; gap: 0.3rem; }
+
+/* ── Month group ── */
+.rev-month-group { margin-bottom: 1.5rem; }
+.rev-month-label {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 1.05rem;
+    color: var(--text-2);
+    padding: 0.35rem 0;
+    margin-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border);
+}
+.rev-entries { display: flex; flex-direction: column; gap: 0; }
+
+/* ── Entry row ── */
+.rev-entry {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.7rem 0.6rem;
+    border-bottom: 1px solid var(--border);
+    border-radius: 0;
+    transition: background var(--transition);
+}
+.rev-entry:last-child { border-bottom: none; }
+.rev-entry:hover { background: var(--surface-2); border-radius: var(--radius-sm); }
+
+.rev-entry--final { background: #fffbeb; }
+.rev-entry--final:hover { background: #fef3c7; }
+.rev-entry--revision { background: var(--surface-2); }
+
+.rev-entry-day-col {
+    flex-shrink: 0;
+    min-width: 80px;
+    text-align: right;
+}
+.rev-entry-num     { font-size: 0.65rem; color: var(--text-3); font-weight: 500; }
+.rev-entry-date    { font-size: 0.72rem; color: var(--text-2); font-weight: 500; white-space: nowrap; }
+.rev-entry-weekday { font-size: 0.68rem; color: var(--text-3); }
+
+.rev-entry-icon-col {
+    flex-shrink: 0;
+    width: 22px;
+    display: flex;
+    justify-content: center;
+    padding-top: 0.1rem;
+}
+
+.type-icon        { font-size: 1rem; }
+.concept-icon     { color: var(--blue); }
+.problem-icon     { color: var(--ink); }
+.revision-icon    { color: var(--amber); }
+.final-icon       { color: #d97706; }
+
+.rev-entry-content { flex: 1; min-width: 0; }
+.rev-entry-title {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--ink);
+    line-height: 1.3;
+}
+.rev-entry-sub {
+    font-size: 0.75rem;
+    color: var(--text-3);
+    margin-top: 0.1rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.rev-entry-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    margin-top: 0.35rem;
+}
+
+/* Type pills */
+.type-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.1rem 0.45rem;
+    border-radius: 999px;
+    font-size: 0.68rem;
+    font-weight: 500;
+    border: 1px solid transparent;
+}
+.type-pill--concept  { background: #eff6ff; color: var(--blue);  border-color: #bfdbfe; }
+.type-pill--problems { background: var(--surface-2); color: var(--text-2); border-color: var(--border); }
+.type-pill--revision { background: var(--amber-bg); color: var(--amber); border-color: #fde68a; }
+.type-pill--final    { background: #fffbeb; color: #b45309; border-color: #fde68a; }
+
+.paper-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.1rem 0.45rem;
+    border-radius: 999px;
+    font-size: 0.68rem;
+    background: var(--surface-2);
+    color: var(--text-3);
+    border: 1px solid var(--border);
+}
+
+/* Difficulty badges */
+.diff-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.1rem 0.45rem;
+    border-radius: 999px;
+    font-size: 0.68rem;
+    font-weight: 500;
+}
+.badge-easy   { background: #d8f3dc; color: var(--green);  }
+.badge-medium { background: var(--amber-bg); color: var(--amber); }
+.badge-hard   { background: var(--red-bg);   color: var(--red);   }
+
+/* ── Print styles ── */
+@media print {
+    body * { visibility: hidden; }
+    #revisionModal, #revisionModal * { visibility: visible; }
+    #revisionModal {
+        position: static !important;
+        background: none !important;
+        backdrop-filter: none !important;
+    }
+    .revision-modal {
+        box-shadow: none !important;
+        max-height: none !important;
+        border: none !important;
+    }
+    .modal-header .modal-actions,
+    .rev-plan-top-actions,
+    .rev-subject-header { display: none !important; }
+    .rev-entry:hover { background: transparent !important; }
+}
+
+/* ── Responsive ── */
+@media (max-width: 480px) {
+    .rev-entry-day-col { min-width: 60px; }
+    .rev-date-input { max-width: 100%; }
+    .coming-soon-badge { display: none; }
+    .rev-entry-sub { white-space: normal; }
+}
