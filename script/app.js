@@ -73,6 +73,8 @@ async function boot() {
     if (!activeTab || !chapters[activeTab]) activeTab = Object.keys(chapters)[0] || '';
     renderDashboard();
     hideLoader();
+
+    Revision.init(_settings?.syllabus).then(() => Revision.renderTodaysRevisionCard());
 }
 
 function defaultEnabled(chs) {
@@ -214,17 +216,23 @@ function renderDashboard() {
             </button>
         </div>
 
+        <!-- Today's Revision (only shown once a plan has been started) -->
+        <div id="todaysRevisionSlot"></div>
+
         <!-- Final Revision Panel -->
-        <div class="final-revision-panel" onclick="openRevisionModal()">
+        <div class="final-revision-panel" onclick="Revision.openSubjectList()">
             <div class="frp-left">
                 <div class="frp-badge"><i class="ri-calendar-schedule-line"></i></div>
                 <div class="frp-text">
                     <div class="frp-title">Final Revision Planner</div>
-                    <div class="frp-sub">Generate your personalised day-by-day math schedule</div>
+                    <div class="frp-sub">Day-by-day revision schedules, subject by subject</div>
                 </div>
             </div>
             <i class="ri-arrow-right-s-line frp-arrow"></i>
         </div>
+        <button class="edit-revision-link" onclick="Revision.openSubjectList(true)">
+            <i class="ri-list-settings-line"></i> Edit revision data
+        </button>
 
       </div><!-- /.app-shell -->
     </div><!-- /.app-page -->
@@ -236,6 +244,8 @@ function renderDashboard() {
         <a href="https://github.com/hello2himel/fogdesk" target="_blank">View Source</a>
     </footer>
     `;
+
+    Revision.renderTodaysRevisionCard();
 }
 
 /* ---- Progress ---- */
@@ -525,7 +535,7 @@ function showToast(msg, type = 'success') {
 
 /* ---- Keyboard ---- */
 document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') { closeSyllabus(); closeRevisionModal(); }
+    if (e.key === 'Escape') { closeSyllabus(); Revision.closeModal(); }
     if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); manualSync(); }
     if ((e.ctrlKey || e.metaKey) && e.key === 'e') { e.preventDefault(); exportCSV(); }
 });
@@ -535,236 +545,7 @@ document.getElementById('syllabusModal').addEventListener('click', e => {
 
 // boot() is called via patchedBoot() below (with donate tracking)
 
-/* ──────────────────────────────────────────────────────────────────────
-   FINAL REVISION PLANNER — Math (HSC Science)
-   Full study schedule generated from a user-supplied start date.
-   Weekends (Sat=6, Sun=0) are skipped.
-   ────────────────────────────────────────────────────────────────────── */
-
-// ── Master chapter list ──────────────────────────────────────────────
-const MATH_CHAPTERS = [
-    // 1st Paper
-    { title: 'Vector',                   bn: 'ভেক্টর',                                               paper: '1st Paper', difficulty: 'Easy',   problemDays: 1 },
-    { title: 'Straight Line',            bn: 'সরলরেখা',                                              paper: '1st Paper', difficulty: 'Medium', problemDays: 2 },
-    { title: 'Circle',                   bn: 'বৃত্ত',                                                paper: '1st Paper', difficulty: 'Medium', problemDays: 2 },
-    { title: 'Matrix & Determinant',     bn: 'ম্যাট্রিক্স ও নির্ণায়ক',                             paper: '1st Paper', difficulty: 'Medium', problemDays: 2 },
-    { title: 'Permutation & Combination',bn: 'বিন্যাস ও সমাবেশ',                                   paper: '1st Paper', difficulty: 'Medium', problemDays: 2 },
-    { title: 'Trigonometric Ratio',      bn: 'ত্রিকোণমিতিক অনুপাত',                                paper: '1st Paper', difficulty: 'Easy',   problemDays: 1 },
-    { title: 'Compound Angle Trig',      bn: 'সংযুক্ত ও যৌগিক কোণের ত্রিকোণমিতিক অনুপাত',       paper: '1st Paper', difficulty: 'Medium', problemDays: 2 },
-    { title: 'Functions & Graphs',       bn: 'ফাংশন ও ফাংশনের লেখচিত্র',                           paper: '1st Paper', difficulty: 'Hard',   problemDays: 3 },
-    { title: 'Differentiation',          bn: 'অন্তরীকরণ',                                           paper: '1st Paper', difficulty: 'Hard',   problemDays: 3 },
-    { title: 'Integration',              bn: 'যোগজীকরণ',                                            paper: '1st Paper', difficulty: 'Hard',   problemDays: 3 },
-    // 2nd Paper
-    { title: 'Real Numbers & Inequality',bn: 'বাস্তব সংখ্যা ও অসমতা',                              paper: '2nd Paper', difficulty: 'Easy',   problemDays: 1 },
-    { title: 'Linear Programming',       bn: 'যোগাশ্রয়ী প্রোগ্রাম',                               paper: '2nd Paper', difficulty: 'Medium', problemDays: 2 },
-    { title: 'Complex Numbers',          bn: 'জটিল সংখ্যা',                                         paper: '2nd Paper', difficulty: 'Hard',   problemDays: 3 },
-    { title: 'Polynomial & Equations',   bn: 'বহুপদী ও বহুপদী সমীকরণ',                            paper: '2nd Paper', difficulty: 'Hard',   problemDays: 3 },
-    { title: 'Binomial Expansion',       bn: 'দ্বিপদী বিস্তৃতি',                                   paper: '2nd Paper', difficulty: 'Medium', problemDays: 2 },
-    { title: 'Conic Sections',           bn: 'কণিক',                                                paper: '2nd Paper', difficulty: 'Hard',   problemDays: 3 },
-    { title: 'Inverse Trig Functions',   bn: 'বিপরীত ত্রিকোণমিতিক ফাংশন',                         paper: '2nd Paper', difficulty: 'Hard',   problemDays: 3 },
-    { title: 'Statics',                  bn: 'স্থিতিবিদ্যা',                                        paper: '2nd Paper', difficulty: 'Easy',   problemDays: 1 },
-    { title: 'Particle Motion in Plane', bn: 'সমতলে বস্তুকণার গতি',                                paper: '2nd Paper', difficulty: 'Medium', problemDays: 2 },
-    { title: 'Dispersion & Probability', bn: 'বিস্তার পরিমাপ ও সম্ভাবনা',                         paper: '2nd Paper', difficulty: 'Medium', problemDays: 2 },
-];
-
-// Revision groups (chapters 1-indexed; every N chapters gets a revision day)
-const REVISION_GROUPS = [
-    { after: 4,  covers: 'Vector, Straight Line, Circle, Matrix & Determinant' },
-    { after: 7,  covers: 'Permutation & Combination, Trig Ratio, Compound Angle Trig' },
-    { after: 10, covers: 'Functions & Graphs, Differentiation, Integration' },
-    { after: 12, covers: 'Real Numbers, Linear Programming' },
-    { after: 14, covers: 'Complex Numbers, Polynomial & Equations' },
-    { after: 16, covers: 'Binomial Expansion, Conic Sections' },
-    { after: 18, covers: 'Inverse Trig, Statics' },
-    { after: 20, covers: 'Particle Motion, Dispersion & Probability' },
-];
-
-function isWeekend(date) {
-    const d = date.getDay(); // 0=Sun, 6=Sat
-    return d === 0 || d === 6;
-}
-
-function nextStudyDay(date) {
-    const d = new Date(date);
-    d.setDate(d.getDate() + 1);
-    while (isWeekend(d)) d.setDate(d.getDate() + 1);
-    return d;
-}
-
-function fmtPlanDate(date) {
-    return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-}
-function fmtPlanDay(date) {
-    return date.toLocaleDateString('en-GB', { weekday: 'short' });
-}
-
-function buildMathPlan(startDateStr) {
-    // Parse start date, ensure it's not a weekend
-    let cur = new Date(startDateStr + 'T00:00:00');
-    while (isWeekend(cur)) cur = nextStudyDay(cur);
-
-    const entries = []; // { date, day, type, title, subtitle, paper?, dayNum? }
-    let studyDayNum = 0;
-    let chapterIdx  = 0;       // 0..19
-    let revGroupIdx = 0;       // into REVISION_GROUPS
-
-    function addEntry(e) { entries.push({ ...e, date: new Date(cur), day: fmtPlanDay(cur) }); }
-    function advance()   { cur = nextStudyDay(cur); }
-
-    while (chapterIdx < MATH_CHAPTERS.length) {
-        const ch = MATH_CHAPTERS[chapterIdx];
-
-        // Concept day
-        studyDayNum++;
-        addEntry({ studyDayNum, type: 'concept', title: ch.title, subtitle: ch.bn, paper: ch.paper, difficulty: ch.difficulty });
-        advance();
-
-        // Problem-solving days
-        for (let p = 1; p <= ch.problemDays; p++) {
-            studyDayNum++;
-            addEntry({ studyDayNum, type: 'problems', title: ch.title, subtitle: `${ch.bn} — Day ${p}/${ch.problemDays}`, paper: ch.paper, difficulty: ch.difficulty });
-            advance();
-        }
-
-        chapterIdx++;
-
-        // Check if a revision day is due after this chapter (1-indexed)
-        while (revGroupIdx < REVISION_GROUPS.length && REVISION_GROUPS[revGroupIdx].after === chapterIdx) {
-            studyDayNum++;
-            addEntry({ studyDayNum, type: 'revision', title: '📝 Revision Day', subtitle: REVISION_GROUPS[revGroupIdx].covers });
-            advance();
-            revGroupIdx++;
-        }
-    }
-
-    // Final 2-day full revision
-    for (let f = 1; f <= 2; f++) {
-        studyDayNum++;
-        addEntry({ studyDayNum, type: 'final', title: '🏆 Final Revision', subtitle: `Full syllabus — all 20 chapters (Day ${f}/2)` });
-        if (f < 2) advance();
-    }
-
-    const endDate = cur;
-    return { entries, totalStudyDays: studyDayNum, startDate: new Date(startDateStr + 'T00:00:00'), endDate };
-}
-
-function difficultyBadge(d) {
-    if (!d) return '';
-    const map = { Easy: 'badge-easy', Medium: 'badge-medium', Hard: 'badge-hard' };
-    return `<span class="diff-badge ${map[d] || ''}">${d}</span>`;
-}
-
-function typeIcon(type) {
-    if (type === 'concept')  return '<i class="ri-book-open-line type-icon concept-icon"></i>';
-    if (type === 'problems') return '<i class="ri-pencil-line type-icon problem-icon"></i>';
-    if (type === 'revision') return '<i class="ri-refresh-line type-icon revision-icon"></i>';
-    if (type === 'final')    return '<i class="ri-trophy-line type-icon final-icon"></i>';
-    return '';
-}
-
-function typeLabel(type) {
-    if (type === 'concept')  return 'Concept';
-    if (type === 'problems') return 'Problems';
-    if (type === 'revision') return 'Revision';
-    if (type === 'final')    return 'Final Revision';
-    return '';
-}
-
-function generateRevisionPlan() {
-    const input = document.getElementById('revStartDate');
-    if (!input || !input.value) { showToast('Please pick a start date', 'error'); return; }
-
-    const { entries, totalStudyDays, startDate, endDate } = buildMathPlan(input.value);
-
-    // Group entries by month for rendering
-    const byMonth = {};
-    entries.forEach(e => {
-        const key = e.date.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
-        if (!byMonth[key]) byMonth[key] = [];
-        byMonth[key].push(e);
-    });
-
-    let html = `
-    <div class="rev-plan-header">
-        <div class="rev-plan-meta">
-            <span><i class="ri-calendar-line"></i> ${fmtPlanDate(startDate)} — ${fmtPlanDate(endDate)}</span>
-            <span><i class="ri-time-line"></i> ${totalStudyDays} study days</span>
-            <span><i class="ri-book-3-line"></i> 20 chapters</span>
-        </div>
-        <div class="rev-plan-legend">
-            <span class="legend-item"><i class="ri-book-open-line concept-icon"></i> Concept</span>
-            <span class="legend-item"><i class="ri-pencil-line problem-icon"></i> Problems</span>
-            <span class="legend-item"><i class="ri-refresh-line revision-icon"></i> Revision</span>
-            <span class="legend-item"><i class="ri-trophy-line final-icon"></i> Final</span>
-        </div>
-    </div>`;
-
-    Object.entries(byMonth).forEach(([month, monthEntries]) => {
-        html += `<div class="rev-month-group">
-            <div class="rev-month-label">${month}</div>
-            <div class="rev-entries">`;
-
-        monthEntries.forEach(e => {
-            const rowClass = `rev-entry rev-entry--${e.type}`;
-            html += `
-            <div class="${rowClass}">
-                <div class="rev-entry-day-col">
-                    <div class="rev-entry-num">#${e.studyDayNum}</div>
-                    <div class="rev-entry-date">${fmtPlanDate(e.date)}</div>
-                    <div class="rev-entry-weekday">${e.day}</div>
-                </div>
-                <div class="rev-entry-icon-col">${typeIcon(e.type)}</div>
-                <div class="rev-entry-content">
-                    <div class="rev-entry-title">${e.title}</div>
-                    <div class="rev-entry-sub">${e.subtitle}</div>
-                    <div class="rev-entry-tags">
-                        <span class="type-pill type-pill--${e.type}">${typeLabel(e.type)}</span>
-                        ${e.paper ? `<span class="paper-pill">${e.paper}</span>` : ''}
-                        ${e.difficulty ? difficultyBadge(e.difficulty) : ''}
-                    </div>
-                </div>
-            </div>`;
-        });
-
-        html += `</div></div>`;
-    });
-
-    document.getElementById('revisionDatePicker').classList.add('hidden');
-    const out = document.getElementById('revisionPlanOutput');
-    out.innerHTML = `
-        <div class="rev-plan-top-actions">
-            <button class="btn btn-ghost btn-sm" onclick="resetRevisionPlan()">
-                <i class="ri-arrow-left-line"></i> Change date
-            </button>
-        </div>
-        ${html}`;
-    out.classList.remove('hidden');
-    document.getElementById('revisionPrintBtn').style.display = 'flex';
-}
-
-function resetRevisionPlan() {
-    document.getElementById('revisionPlanOutput').classList.add('hidden');
-    document.getElementById('revisionPlanOutput').innerHTML = '';
-    document.getElementById('revisionDatePicker').classList.remove('hidden');
-    document.getElementById('revisionPrintBtn').style.display = 'none';
-}
-
-function openRevisionModal() {
-    resetRevisionPlan();
-    document.getElementById('revisionModal').classList.remove('hidden');
-}
-
-function closeRevisionModal() {
-    document.getElementById('revisionModal').classList.add('hidden');
-}
-
-function handleRevisionOverlayClick(e) {
-    if (e.target === document.getElementById('revisionModal')) closeRevisionModal();
-}
-
-function printRevisionPlan() {
-    window.print();
-}
+/* Final Revision Planner logic now lives in script/revision.js — see the Revision module. */
 
 /* ── Donate system ───────────────────────────────────────────────
    Shows a polite modal once after 7+ days of use.

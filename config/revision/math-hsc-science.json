@@ -1,0 +1,46 @@
+{
+  "subjectKey": "math-hsc-science",
+  "displayName": "Mathematics",
+  "meta": "HSC Science",
+  "icon": "ri-function-line",
+
+  "rules": {
+    "skipWeekends": true,
+    "finalRevisionDays": 2
+  },
+
+  "chapters": [
+    { "title": "Vector",                    "subtitle": "ভেক্টর",                                          "paper": "1st Paper", "difficulty": "Easy",   "problemDays": 1 },
+    { "title": "Straight Line",             "subtitle": "সরলরেখা",                                         "paper": "1st Paper", "difficulty": "Medium", "problemDays": 2 },
+    { "title": "Circle",                    "subtitle": "বৃত্ত",                                           "paper": "1st Paper", "difficulty": "Medium", "problemDays": 2 },
+    { "title": "Matrix & Determinant",      "subtitle": "ম্যাট্রিক্স ও নির্ণায়ক",                        "paper": "1st Paper", "difficulty": "Medium", "problemDays": 2 },
+    { "title": "Permutation & Combination", "subtitle": "বিন্যাস ও সমাবেশ",                              "paper": "1st Paper", "difficulty": "Medium", "problemDays": 2 },
+    { "title": "Trigonometric Ratio",       "subtitle": "ত্রিকোণমিতিক অনুপাত",                           "paper": "1st Paper", "difficulty": "Easy",   "problemDays": 1 },
+    { "title": "Compound Angle Trig",       "subtitle": "সংযুক্ত ও যৌগিক কোণের ত্রিকোণমিতিক অনুপাত",  "paper": "1st Paper", "difficulty": "Medium", "problemDays": 2 },
+    { "title": "Functions & Graphs",        "subtitle": "ফাংশন ও ফাংশনের লেখচিত্র",                      "paper": "1st Paper", "difficulty": "Hard",   "problemDays": 3 },
+    { "title": "Differentiation",           "subtitle": "অন্তরীকরণ",                                       "paper": "1st Paper", "difficulty": "Hard",   "problemDays": 3 },
+    { "title": "Integration",               "subtitle": "যোগজীকরণ",                                        "paper": "1st Paper", "difficulty": "Hard",   "problemDays": 3 },
+
+    { "title": "Real Numbers & Inequality", "subtitle": "বাস্তব সংখ্যা ও অসমতা",                        "paper": "2nd Paper", "difficulty": "Easy",   "problemDays": 1 },
+    { "title": "Linear Programming",        "subtitle": "যোগাশ্রয়ী প্রোগ্রাম",                           "paper": "2nd Paper", "difficulty": "Medium", "problemDays": 2 },
+    { "title": "Complex Numbers",           "subtitle": "জটিল সংখ্যা",                                     "paper": "2nd Paper", "difficulty": "Hard",   "problemDays": 3 },
+    { "title": "Polynomial & Equations",    "subtitle": "বহুপদী ও বহুপদী সমীকরণ",                       "paper": "2nd Paper", "difficulty": "Hard",   "problemDays": 3 },
+    { "title": "Binomial Expansion",        "subtitle": "দ্বিপদী বিস্তৃতি",                               "paper": "2nd Paper", "difficulty": "Medium", "problemDays": 2 },
+    { "title": "Conic Sections",            "subtitle": "কণিক",                                            "paper": "2nd Paper", "difficulty": "Hard",   "problemDays": 3 },
+    { "title": "Inverse Trig Functions",    "subtitle": "বিপরীত ত্রিকোণমিতিক ফাংশন",                    "paper": "2nd Paper", "difficulty": "Hard",   "problemDays": 3 },
+    { "title": "Statics",                   "subtitle": "স্থিতিবিদ্যা",                                   "paper": "2nd Paper", "difficulty": "Easy",   "problemDays": 1 },
+    { "title": "Particle Motion in Plane",  "subtitle": "সমতলে বস্তুকণার গতি",                           "paper": "2nd Paper", "difficulty": "Medium", "problemDays": 2 },
+    { "title": "Dispersion & Probability",  "subtitle": "বিস্তার পরিমাপ ও সম্ভাবনা",                    "paper": "2nd Paper", "difficulty": "Medium", "problemDays": 2 }
+  ],
+
+  "revisionCheckpoints": [
+    { "after": 4,  "covers": "Vector, Straight Line, Circle, Matrix & Determinant" },
+    { "after": 7,  "covers": "Permutation & Combination, Trig Ratio, Compound Angle Trig" },
+    { "after": 10, "covers": "Functions & Graphs, Differentiation, Integration" },
+    { "after": 12, "covers": "Real Numbers, Linear Programming" },
+    { "after": 14, "covers": "Complex Numbers, Polynomial & Equations" },
+    { "after": 16, "covers": "Binomial Expansion, Conic Sections" },
+    { "after": 18, "covers": "Inverse Trig, Statics" },
+    { "after": 20, "covers": "Particle Motion, Dispersion & Probability" }
+  ]
+}
