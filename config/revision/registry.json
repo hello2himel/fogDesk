@@ -1,0 +1,49 @@
+{
+  "_comment": "Maps each syllabus file to the subjects it offers a Final Revision plan for. 'plan' points to a file in /config/revision/. Subjects with no entry, or status !== 'available', render as 'Coming soon' in the Final Revision subject list. icon must be a valid Remix Icon class.",
+
+  "syllabus-bangladesh-hsc.json": {
+    "subjects": {
+      "Higher Mathematics": { "status": "available", "plan": "math-hsc-science.json", "icon": "ri-function-line" },
+      "Physics":            { "status": "coming-soon", "icon": "ri-magnet-line" },
+      "Chemistry":           { "status": "coming-soon", "icon": "ri-flask-line" },
+      "Biology":             { "status": "coming-soon", "icon": "ri-leaf-line" }
+    }
+  },
+
+  "syllabus-bangladesh-hsc-commerce.json": {
+    "subjects": {
+      "Accounting":            { "status": "coming-soon", "icon": "ri-calculator-line" },
+      "Business Organization": { "status": "coming-soon", "icon": "ri-briefcase-line" },
+      "Economics":              { "status": "coming-soon", "icon": "ri-line-chart-line" },
+      "Mathematics":            { "status": "coming-soon", "icon": "ri-function-line" },
+      "English":                { "status": "coming-soon", "icon": "ri-book-2-line" },
+      "Bangla":                 { "status": "coming-soon", "icon": "ri-translate-2" }
+    }
+  },
+
+  "syllabus-india-cbse.json": {
+    "subjects": {
+      "Mathematics":        { "status": "coming-soon", "icon": "ri-function-line" },
+      "Physics":            { "status": "coming-soon", "icon": "ri-magnet-line" },
+      "Chemistry":           { "status": "coming-soon", "icon": "ri-flask-line" },
+      "Biology":             { "status": "coming-soon", "icon": "ri-leaf-line" },
+      "English":             { "status": "coming-soon", "icon": "ri-book-2-line" },
+      "Computer Science":    { "status": "coming-soon", "icon": "ri-code-line" }
+    }
+  },
+
+  "syllabus-uk-alevels.json": {
+    "subjects": {
+      "Mathematics":      { "status": "coming-soon", "icon": "ri-function-line" },
+      "Physics":          { "status": "coming-soon", "icon": "ri-magnet-line" },
+      "Chemistry":         { "status": "coming-soon", "icon": "ri-flask-line" },
+      "Biology":           { "status": "coming-soon", "icon": "ri-leaf-line" },
+      "Computer Science":  { "status": "coming-soon", "icon": "ri-code-line" },
+      "Psychology":        { "status": "coming-soon", "icon": "ri-brain-line" }
+    }
+  },
+
+  "syllabus-ib-diploma.json": {
+    "subjects": {}
+  }
+}

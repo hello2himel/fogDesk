@@ -186,7 +186,62 @@ const SB = (() => {
         if (error) throw error;
     }
 
-    return { init, ready, getSession, getUser, isLoggedIn, signUp, signIn, verifyOtp, resendOtp, handleEmailCallback, signOut, changeEmail, changeUsername, changePassword, deleteAccount, fetchProgress, upsertProgress };
+    /* ── Final Revision Planner — revision_progress table ──────────────
+       One row per (user, subject_key). See example/schema.sql for the
+       table definition and the shape of `entries`.
+    ──────────────────────────────────────────────────────────────────── */
+
+    async function fetchAllRevisionPlans() {
+        if (!_client) throw new Error('Not initialised');
+        const { data, error } = await _client.from('revision_progress').select('*');
+        if (error) throw error;
+        return data || [];
+    }
+
+    async function fetchRevisionPlan(subjectKey) {
+        if (!_client) throw new Error('Not initialised');
+        const { data, error } = await _client
+            .from('revision_progress')
+            .select('*')
+            .eq('subject_key', subjectKey)
+            .maybeSingle();
+        if (error) throw error;
+        return data || null;
+    }
+
+    async function upsertRevisionPlan(subjectKey, startDate, entries) {
+        if (!_client) throw new Error('Not initialised');
+        const user = await getUser();
+        if (!user) throw new Error('Not signed in');
+        const { error } = await _client.from('revision_progress').upsert(
+            {
+                user_id: user.id,
+                subject_key: subjectKey,
+                start_date: startDate,
+                entries,
+                updated_at: new Date().toISOString(),
+            },
+            { onConflict: 'user_id,subject_key' }
+        );
+        if (error) throw error;
+    }
+
+    async function deleteRevisionPlan(subjectKey) {
+        if (!_client) throw new Error('Not initialised');
+        const user = await getUser();
+        if (!user) throw new Error('Not signed in');
+        const { error } = await _client
+            .from('revision_progress')
+            .delete()
+            .eq('user_id', user.id)
+            .eq('subject_key', subjectKey);
+        if (error) throw error;
+    }
+
+    return {
+        init, ready, getSession, getUser, isLoggedIn, signUp, signIn, verifyOtp, resendOtp, handleEmailCallback, signOut, changeEmail, changeUsername, changePassword, deleteAccount, fetchProgress, upsertProgress,
+        fetchAllRevisionPlans, fetchRevisionPlan, upsertRevisionPlan, deleteRevisionPlan,
+    };
 })();
 
 /* Load Supabase SDK synchronously so it's available immediately */

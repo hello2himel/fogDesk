@@ -133,8 +133,10 @@ const DB = (() => {
         try {
             const data = await SB.fetchProgress();
             if (data) {
-                // Cloud data always wins — overwrite local cache
-                _cacheWrite(data);
+                // Cloud data always wins — overwrite local cache, but keep
+                // any cached revisionPlans (a separate domain) intact.
+                const existing = _cacheRead() || {};
+                _cacheWrite({ ...data, revisionPlans: existing.revisionPlans });
             }
             return data;
         } catch (e) {
@@ -148,8 +150,80 @@ const DB = (() => {
     async function push(chapters, settings, enabledSubjects) {
         if (!(await ensureReady())) throw new Error('Not ready');
         await SB.upsertProgress(chapters, { ...settings, enabledSubjects });
-        // Mirror to local cache after successful push
-        _cacheWrite({ chapters, settings: { ...settings, enabledSubjects } });
+        // Mirror to local cache after successful push, keeping revisionPlans intact
+        const existing = _cacheRead() || {};
+        _cacheWrite({ chapters, settings: { ...settings, enabledSubjects }, revisionPlans: existing.revisionPlans });
+    }
+
+    /* ---- Final Revision Planner ---- */
+
+    async function loadRevisionConfig(filename) {
+        const res = await fetch(`config/revision/${filename}`);
+        if (!res.ok) throw new Error(`Cannot load ${filename}`);
+        return res.json();
+    }
+
+    async function loadRevisionRegistry() {
+        const res = await fetch(`config/revision/registry.json`);
+        if (!res.ok) throw new Error('Cannot load revision registry');
+        return res.json();
+    }
+
+    async function pullAllRevisionPlans() {
+        if (!(await ensureReady())) {
+            const cached = _cacheRead();
+            return (cached && cached.revisionPlans) || [];
+        }
+        try {
+            const rows = await SB.fetchAllRevisionPlans();
+            const cached = _cacheRead() || {};
+            _cacheWrite({ ...cached, revisionPlans: rows });
+            return rows;
+        } catch (e) {
+            const cached = _cacheRead();
+            if (cached && cached.revisionPlans) return cached.revisionPlans;
+            throw e;
+        }
+    }
+
+    async function pullRevisionPlan(subjectKey) {
+        if (!(await ensureReady())) {
+            const cached = _cacheRead();
+            const rows = (cached && cached.revisionPlans) || [];
+            return rows.find(r => r.subject_key === subjectKey) || null;
+        }
+        try {
+            const row = await SB.fetchRevisionPlan(subjectKey);
+            return row;
+        } catch (e) {
+            const cached = _cacheRead();
+            const rows = (cached && cached.revisionPlans) || [];
+            const fallback = rows.find(r => r.subject_key === subjectKey);
+            if (fallback) return fallback;
+            throw e;
+        }
+    }
+
+    async function pushRevisionPlan(subjectKey, startDate, entries) {
+        if (!(await ensureReady())) throw new Error('Not ready');
+        await SB.upsertRevisionPlan(subjectKey, startDate, entries);
+        // Refresh the cached list of plans so offline fallback stays current
+        try {
+            const cached = _cacheRead() || {};
+            const rows = (cached.revisionPlans || []).filter(r => r.subject_key !== subjectKey);
+            rows.push({ subject_key: subjectKey, start_date: startDate, entries });
+            _cacheWrite({ ...cached, revisionPlans: rows });
+        } catch (_) { /* cache is best-effort */ }
+    }
+
+    async function deleteRevisionPlan(subjectKey) {
+        if (!(await ensureReady())) throw new Error('Not ready');
+        await SB.deleteRevisionPlan(subjectKey);
+        try {
+            const cached = _cacheRead() || {};
+            const rows = (cached.revisionPlans || []).filter(r => r.subject_key !== subjectKey);
+            _cacheWrite({ ...cached, revisionPlans: rows });
+        } catch (_) {}
     }
 
     return {
@@ -158,5 +232,7 @@ const DB = (() => {
         changeEmail, changeUsername, changePassword, deleteAccount,
         logout, loadSyllabus, pull, push, _cfg,
         _cacheRead, _cacheWrite, _cacheClear,
+        loadRevisionConfig, loadRevisionRegistry,
+        pullAllRevisionPlans, pullRevisionPlan, pushRevisionPlan, deleteRevisionPlan,
     };
 })();
