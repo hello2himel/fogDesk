@@ -230,9 +230,6 @@ function renderDashboard() {
             </div>
             <i class="ri-arrow-right-s-line frp-arrow"></i>
         </div>
-        <button class="edit-revision-link" onclick="Revision.openSubjectList(true)">
-            <i class="ri-list-settings-line"></i> Edit revision data
-        </button>
 
       </div><!-- /.app-shell -->
     </div><!-- /.app-page -->

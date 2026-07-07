@@ -93,6 +93,47 @@
             </div>
         </div>
 
+        <!-- ─── Final Revision ──────────────────────── -->
+        <div class="section-label">Final Revision</div>
+        <div class="card">
+            <div class="field-row">
+                <div class="field-label-wrap">
+                    <i class="ri-calendar-event-line field-icon"></i>
+                    <label class="field-label">Weekend day</label>
+                </div>
+                <select id="revWeekendDay" class="form-input form-select">
+                    <option value="friday">Friday</option>
+                    <option value="sunday">Sunday</option>
+                </select>
+                <p class="field-hint">Your one no-study day of the week. It's skipped when scheduling revision tasks.</p>
+            </div>
+            <div class="card-divider"></div>
+            <div class="field-row">
+                <div class="field-label-wrap">
+                    <i class="ri-speed-up-line field-icon"></i>
+                    <label class="field-label">Intensity</label>
+                </div>
+                <select id="revTasksPerDay" class="form-input form-select">
+                    <option value="1">Light — 1 task / day</option>
+                    <option value="2">Standard — 2 tasks / day</option>
+                    <option value="3">Focused — 3 tasks / day</option>
+                    <option value="4">Intensive — 4 tasks / day</option>
+                    <option value="5">Maximum — 5 tasks / day</option>
+                </select>
+                <p class="field-hint">Combining every subject's revision tasks together, how many should land on one day.</p>
+            </div>
+            <div class="card-divider"></div>
+            <div class="field-row field-row--action">
+                <button class="btn btn-primary btn-sm" id="saveRevisionSettingsBtn" onclick="saveRevisionSettings()">
+                    <i class="ri-save-line"></i> Save &amp; replan
+                </button>
+            </div>
+            <p class="field-hint" style="padding: 0 1rem 1rem;">
+                <i class="ri-information-line"></i>
+                This replans your upcoming routine for every subject. Anything already ticked off stays exactly as it is.
+            </p>
+        </div>
+
         <!-- ─── Data ─────────────────────────────────── -->
         <div class="section-label">Data</div>
         <div class="card">
@@ -354,6 +395,7 @@
 
 <script src="script/supabase.js"></script>
 <script src="script/db.js"></script>
+<script src="script/revision.js"></script>
 <script src="script/settings.js"></script>
 </body>
 </html>

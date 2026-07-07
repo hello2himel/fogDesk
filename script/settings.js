@@ -22,13 +22,17 @@ async function init() {
         if (av) av.textContent = (username || email || '?')[0].toUpperCase();
     }
 
+    let syllabusFilename = 'syllabus-bangladesh-hsc.json';
     try {
         const data = await DB.pull();
         if (data?.settings) {
             const s = data.settings;
             initDateDropdowns('startDateDropdowns', s.startDate);
             initDateDropdowns('endDateDropdowns',   s.endDate);
-            if (s.syllabus) document.getElementById('syllabusSelect').value = s.syllabus;
+            if (s.syllabus) { document.getElementById('syllabusSelect').value = s.syllabus; syllabusFilename = s.syllabus; }
+            const rev = s.revision || {};
+            document.getElementById('revWeekendDay').value  = rev.weekendDay  || 'friday';
+            document.getElementById('revTasksPerDay').value = String(rev.tasksPerDay || 2);
         } else {
             initDateDropdowns('startDateDropdowns', null);
             initDateDropdowns('endDateDropdowns',   null);
@@ -40,6 +44,9 @@ async function init() {
         initDateDropdowns('startDateDropdowns', null);
         initDateDropdowns('endDateDropdowns',   null);
     }
+
+    // Warm the Revision engine (registry + all plans) so Save & Replan can run
+    try { await Revision.init(syllabusFilename); } catch (e) { /* best-effort */ }
 }
 
 /* ── Account modal ──────────────────────────────────────────── */
@@ -266,6 +273,29 @@ async function saveStudyPeriod() {
         await DB.push(data.chapters || {}, settings, data.settings?.enabledSubjects || {});
         showToast('Dates saved ✓', 'success');
     } catch (e) { showToast('Save failed: ' + e.message, 'error'); }
+}
+
+/* ── Save Final Revision settings (weekend day + intensity) ───── */
+async function saveRevisionSettings() {
+    const weekendDay  = document.getElementById('revWeekendDay').value;
+    const tasksPerDay = parseInt(document.getElementById('revTasksPerDay').value, 10);
+    const btn = document.getElementById('saveRevisionSettingsBtn');
+
+    setBtnLoading(btn, 'Replanning…');
+    try {
+        const data     = await DB.pull() || {};
+        const settings = { ...(data.settings || {}), revision: { weekendDay, tasksPerDay } };
+        await DB.push(data.chapters || {}, settings, data.settings?.enabledSubjects || {});
+
+        await Revision.init(settings.syllabus);
+        await Revision.replanAll(weekendDay, tasksPerDay);
+
+        showToast('Revision settings saved — upcoming routine replanned ✓', 'success');
+    } catch (e) {
+        showToast('Failed: ' + e.message, 'error');
+    } finally {
+        setBtnReady(btn, '<i class="ri-save-line"></i> Save & replan');
+    }
 }
 
 /* ── Change curriculum ──────────────────────────────────────── */

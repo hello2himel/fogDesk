@@ -1,0 +1,33 @@
+{
+  "subjectKey": "chemistry-hsc-science",
+  "displayName": "Chemistry",
+  "meta": "HSC Science",
+  "icon": "ri-flask-line",
+
+  "rules": {
+    "skipWeekends": true,
+    "finalRevisionDays": 2
+  },
+
+  "chapters": [
+    { "title": "Safe Use of Laboratory",                 "subtitle": "ল্যাবরেটরির নিরাপদ ব্যবহার",                      "paper": "1st Paper", "difficulty": "Easy",   "problemDays": 1 },
+    { "title": "Qualitative Chemistry",                  "subtitle": "গুণগত রসায়ন",                                      "paper": "1st Paper", "difficulty": "Medium", "problemDays": 2 },
+    { "title": "Periodic Properties & Chemical Bonding", "subtitle": "মৌলের পর্যায়বৃত্ত ধর্ম ও রাসায়নিক বন্ধন",      "paper": "1st Paper", "difficulty": "Hard",   "problemDays": 3 },
+    { "title": "Chemical Change",                        "subtitle": "রাসায়নিক পরিবর্তন",                               "paper": "1st Paper", "difficulty": "Hard",   "problemDays": 3 },
+    { "title": "Applied Chemistry",                      "subtitle": "কর্মমুখী রসায়ন",                                   "paper": "1st Paper", "difficulty": "Medium", "problemDays": 2 },
+
+    { "title": "Environmental Chemistry",                "subtitle": "পরিবেশ রসায়ন",                                     "paper": "2nd Paper", "difficulty": "Easy",   "problemDays": 1 },
+    { "title": "Organic Compounds",                      "subtitle": "জৈব যৌগ",                                          "paper": "2nd Paper", "difficulty": "Hard",   "problemDays": 3 },
+    { "title": "Quantitative Chemistry",                 "subtitle": "পরিমাণগত রসায়ন",                                  "paper": "2nd Paper", "difficulty": "Hard",   "problemDays": 3 },
+    { "title": "Electrochemistry",                       "subtitle": "তড়িৎ রসায়ন",                                      "paper": "2nd Paper", "difficulty": "Medium", "problemDays": 2 },
+    { "title": "Economic Chemistry",                     "subtitle": "অর্থনৈতিক রসায়ন",                                 "paper": "2nd Paper", "difficulty": "Medium", "problemDays": 2 }
+  ],
+
+  "revisionCheckpoints": [
+    { "after": 3,  "covers": "Safe Use of Laboratory, Qualitative Chemistry, Periodic Properties & Chemical Bonding" },
+    { "after": 5,  "covers": "Chemical Change, Applied Chemistry" },
+    { "after": 7,  "covers": "Environmental Chemistry, Organic Compounds" },
+    { "after": 9,  "covers": "Quantitative Chemistry, Electrochemistry" },
+    { "after": 10, "covers": "Economic Chemistry" }
+  ]
+}
