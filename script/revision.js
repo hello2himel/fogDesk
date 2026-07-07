@@ -20,7 +20,12 @@ const Revision = (() => {
     let activeStartDate   = '';
     let activeEntries     = [];   // current plan entries (live, mutable)
     let screen            = 'subjects'; // 'subjects' | 'setup' | 'table'
-    let managerMode       = false; // true when opened via "Edit revision data"
+    let managerMode       = false; // true when opened via manager mode
+
+    // Global revision settings — one shared logic across every subject.
+    // weekendDay: 'friday' | 'sunday' (the single no-study day of the week)
+    // tasksPerDay: how many tasks, combined across ALL subjects, land on one day
+    let revSettings = { weekendDay: 'friday', tasksPerDay: 2 };
 
     let initPromise = null;
 
@@ -43,8 +48,24 @@ const Revision = (() => {
             } catch (e) {
                 plansCache = {};
             }
+
+            // Load the user's global revision settings (weekend day + intensity)
+            try {
+                const data = await DB.pull();
+                const rs = data?.settings?.revision;
+                revSettings = {
+                    weekendDay: (rs && rs.weekendDay) || 'friday',
+                    tasksPerDay: (rs && rs.tasksPerDay) || 2,
+                };
+            } catch (e) {
+                // keep defaults
+            }
         })();
         return initPromise;
+    }
+
+    function getSettings() {
+        return { ...revSettings };
     }
 
     function availableSubjectKeys() {
@@ -67,15 +88,19 @@ const Revision = (() => {
        No subject-specific logic here; everything comes from the config.
        ────────────────────────────────────────────────────────────────── */
 
+    const WEEKDAY_NUM = { sunday: 0, monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6 };
+
+    // The single no-study day of the week, as chosen in Settings.
     function isWeekend(date) {
-        const d = date.getDay();
-        return d === 0 || d === 6;
+        const target = WEEKDAY_NUM[revSettings.weekendDay];
+        const num = target === undefined ? 5 /* friday default */ : target;
+        return date.getDay() === num;
     }
 
     function nextStudyDay(date, skipWeekends) {
         const d = new Date(date);
         d.setDate(d.getDate() + 1);
-        if (skipWeekends) while (isWeekend(d)) d.setDate(d.getDate() + 1);
+        if (skipWeekends !== false) while (isWeekend(d)) d.setDate(d.getDate() + 1);
         return d;
     }
 
@@ -152,6 +177,83 @@ const Revision = (() => {
         }
 
         return entries;
+    }
+
+    /* ──────────────────────────────────────────────────────────────────
+       Replan — one shared logic for every subject.
+       Combines the still-pending (not done) tasks of every started
+       subject, keeps everything already ticked exactly where it is, and
+       redistributes the upcoming routine across days according to the
+       chosen weekend day and how many tasks (total, across subjects)
+       should land on one day.
+       ────────────────────────────────────────────────────────────────── */
+    async function replanAll(weekendDay, tasksPerDay) {
+        revSettings = {
+            weekendDay: WEEKDAY_NUM[weekendDay] !== undefined ? weekendDay : revSettings.weekendDay,
+            tasksPerDay: Math.max(1, parseInt(tasksPerDay, 10) || revSettings.tasksPerDay || 2),
+        };
+
+        const keys = availableSubjectKeys().filter(k => plansCache[k] && (plansCache[k].entries || []).length > 0);
+        if (keys.length === 0) return revSettings;
+
+        const perSubject = {};
+        keys.forEach(key => {
+            const plan = plansCache[key];
+            const sorted = [...plan.entries].sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+            perSubject[key] = {
+                startDate: plan.start_date,
+                fixed: sorted.filter(e => e.done),      // untouched — progress stays
+                pending: sorted.filter(e => !e.done),   // upcoming — gets replanned
+            };
+        });
+
+        // Round-robin merge so no single subject monopolises a day.
+        const queues = keys.map(k => [...perSubject[k].pending]);
+        const combined = [];
+        let more = true;
+        while (more) {
+            more = false;
+            for (let i = 0; i < keys.length; i++) {
+                if (queues[i].length) {
+                    combined.push({ key: keys[i], entry: queues[i].shift() });
+                    more = true;
+                }
+            }
+        }
+
+        let cur = new Date();
+        cur.setHours(0, 0, 0, 0);
+        if (isWeekend(cur)) cur = nextStudyDay(cur, true);
+
+        const rebuilt = {};
+        keys.forEach(k => { rebuilt[k] = [...perSubject[k].fixed]; });
+
+        let countToday = 0;
+        combined.forEach(({ key, entry }) => {
+            if (countToday >= revSettings.tasksPerDay) {
+                cur = nextStudyDay(cur, true);
+                countToday = 0;
+            }
+            rebuilt[key].push({ ...entry, date: toISODate(cur) });
+            countToday++;
+        });
+
+        for (const key of keys) {
+            const entries = rebuilt[key].sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+            plansCache[key] = { start_date: perSubject[key].startDate, entries };
+            try {
+                await DB.pushRevisionPlan(key, perSubject[key].startDate, entries);
+            } catch (e) { /* best-effort — will retry on next sync */ }
+        }
+
+        // Reflect any changes in whatever's currently on screen
+        if (activeConfig && rebuilt[activeConfig.subjectKey]) {
+            activeEntries = plansCache[activeConfig.subjectKey].entries;
+            if (screen === 'table') renderTableScreen();
+        }
+        renderTodaysRevisionCard();
+
+        return revSettings;
     }
 
     /* ---- Merge entries into display rows (one row per chapter) ---- */
@@ -332,7 +434,7 @@ const Revision = (() => {
 
             <div class="rev-date-form">
                 <label class="rev-date-label">When do you want to start?</label>
-                <p class="rev-date-hint">Pick your first study day.${activeConfig.rules?.skipWeekends !== false ? ' Saturdays &amp; Sundays are automatically skipped.' : ''}</p>
+                <p class="rev-date-hint">Pick your first study day. ${revSettings.weekendDay.charAt(0).toUpperCase() + revSettings.weekendDay.slice(1)}s are automatically skipped, and the pace follows your revision settings.</p>
                 <div class="rev-date-row">
                     <input type="date" id="revStartDateInput" class="form-input rev-date-input" min="${today}" value="${today}" />
                     <button class="btn btn-primary" onclick="Revision.generatePlan()">
@@ -358,6 +460,11 @@ const Revision = (() => {
         } catch (e) {
             showToast('Saved locally — will sync when online', 'error');
         }
+
+        // Apply the shared weekend/intensity logic across every subject now
+        // that this one has joined the mix.
+        try { await replanAll(revSettings.weekendDay, revSettings.tasksPerDay); } catch (e) { /* best-effort */ }
+        activeEntries = (plansCache[activeConfig.subjectKey] || { entries: activeEntries }).entries;
 
         screen = 'table';
         renderTableScreen();
@@ -545,6 +652,9 @@ const Revision = (() => {
             showToast('Saved locally — will sync when online', 'error');
         }
 
+        try { await replanAll(revSettings.weekendDay, revSettings.tasksPerDay); } catch (e) { /* best-effort */ }
+        activeEntries = (plansCache[activeConfig.subjectKey] || { entries: activeEntries }).entries;
+
         screen = 'table';
         renderTableScreen();
         renderTodaysRevisionCard();
@@ -662,5 +772,6 @@ const Revision = (() => {
         init, openSubjectList, openSubject, closeModal, handleOverlayClick, backToSubjects,
         generatePlan, toggleEntry, toggleEditMenu, startEditStartDate, applyEditedStartDate,
         confirmResetProgress, renderTodaysRevisionCard, toggleTodayEntry, renderTableScreen,
+        getSettings, replanAll,
     };
 })();

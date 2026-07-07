@@ -1,0 +1,46 @@
+{
+  "subjectKey": "physics-hsc-science",
+  "displayName": "Physics",
+  "meta": "HSC Science",
+  "icon": "ri-magnet-line",
+
+  "rules": {
+    "skipWeekends": true,
+    "finalRevisionDays": 3
+  },
+
+  "chapters": [
+    { "title": "Physical World & Measurement",              "subtitle": "ভৌত জগত ও পরিমাপ",                              "paper": "1st Paper", "difficulty": "Easy",   "problemDays": 1 },
+    { "title": "Vector",                                     "subtitle": "ভেক্টর",                                          "paper": "1st Paper", "difficulty": "Easy",   "problemDays": 1 },
+    { "title": "Dynamics",                                    "subtitle": "গতিবিদ্যা",                                       "paper": "1st Paper", "difficulty": "Medium", "problemDays": 2 },
+    { "title": "Newtonian Mechanics",                         "subtitle": "নিউটনিয়ান বলবিদ্যা",                            "paper": "1st Paper", "difficulty": "Hard",   "problemDays": 3 },
+    { "title": "Work, Energy & Power",                        "subtitle": "কাজ, শক্তি ও ক্ষমতা",                           "paper": "1st Paper", "difficulty": "Medium", "problemDays": 2 },
+    { "title": "Gravitation",                                 "subtitle": "মহাকর্ষ ও অভিকর্ষ",                             "paper": "1st Paper", "difficulty": "Medium", "problemDays": 2 },
+    { "title": "Properties of Matter",                        "subtitle": "পদার্থের গাঠনিক ধর্ম",                          "paper": "1st Paper", "difficulty": "Medium", "problemDays": 2 },
+    { "title": "Periodic Motion",                             "subtitle": "পর্যায়বৃত্ত ধর্ম ও গতি",                       "paper": "1st Paper", "difficulty": "Medium", "problemDays": 2 },
+    { "title": "Waves",                                       "subtitle": "তরঙ্গ",                                          "paper": "1st Paper", "difficulty": "Hard",   "problemDays": 3 },
+    { "title": "Ideal Gas & Kinetic Theory",                  "subtitle": "আদর্শ গ্যাস ও গ্যাসের গতিতত্ব",                "paper": "1st Paper", "difficulty": "Medium", "problemDays": 2 },
+
+    { "title": "Thermodynamics",                              "subtitle": "তাপগতিবিদ্যা",                                    "paper": "2nd Paper", "difficulty": "Hard",   "problemDays": 3 },
+    { "title": "Electrostatics",                              "subtitle": "স্থির তড়িৎ",                                    "paper": "2nd Paper", "difficulty": "Medium", "problemDays": 2 },
+    { "title": "Current Electricity",                         "subtitle": "চল তড়িৎ",                                       "paper": "2nd Paper", "difficulty": "Hard",   "problemDays": 3 },
+    { "title": "Magnetic Effect of Current & Magnetism",      "subtitle": "তড়িত প্রবাহের চৌম্বক ক্রিয়া ও চৌম্বকত্ব",   "paper": "2nd Paper", "difficulty": "Hard",   "problemDays": 3 },
+    { "title": "Electromagnetic Induction",                   "subtitle": "তড়িৎচৌম্বকীয় আবেশ",                           "paper": "2nd Paper", "difficulty": "Medium", "problemDays": 2 },
+    { "title": "Geometric Optics",                            "subtitle": "জ্যামিতিক আলোকবিজ্ঞান",                        "paper": "2nd Paper", "difficulty": "Medium", "problemDays": 2 },
+    { "title": "Physical Optics",                             "subtitle": "ভৌত আলোকবিজ্ঞান",                               "paper": "2nd Paper", "difficulty": "Hard",   "problemDays": 3 },
+    { "title": "Modern Physics",                              "subtitle": "আধুনিক পদার্থবিজ্ঞান",                          "paper": "2nd Paper", "difficulty": "Medium", "problemDays": 2 },
+    { "title": "Atomic Models & Nuclear Physics",             "subtitle": "পরমাণুর মডেল ও নিউক্লিয়ার পদার্থবিজ্ঞান",     "paper": "2nd Paper", "difficulty": "Hard",   "problemDays": 3 },
+    { "title": "Semiconductor & Electronics",                 "subtitle": "সেমিকন্ডাক্টর ও ইলেকট্রনিক্স",                 "paper": "2nd Paper", "difficulty": "Medium", "problemDays": 2 },
+    { "title": "Astronomy",                                   "subtitle": "জ্যোতির্বিজ্ঞান",                                "paper": "2nd Paper", "difficulty": "Easy",   "problemDays": 1 }
+  ],
+
+  "revisionCheckpoints": [
+    { "after": 4,  "covers": "Physical World, Vector, Dynamics, Newtonian Mechanics" },
+    { "after": 7,  "covers": "Work Energy Power, Gravitation, Properties of Matter" },
+    { "after": 10, "covers": "Periodic Motion, Waves, Ideal Gas & Kinetic Theory" },
+    { "after": 13, "covers": "Thermodynamics, Electrostatics, Current Electricity" },
+    { "after": 16, "covers": "Magnetic Effect & Magnetism, EM Induction, Geometric Optics" },
+    { "after": 19, "covers": "Physical Optics, Modern Physics, Atomic Models & Nuclear Physics" },
+    { "after": 21, "covers": "Semiconductor & Electronics, Astronomy" }
+  ]
+}

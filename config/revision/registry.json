@@ -4,8 +4,8 @@
   "syllabus-bangladesh-hsc.json": {
     "subjects": {
       "Higher Mathematics": { "status": "available", "plan": "math-hsc-science.json", "icon": "ri-function-line" },
-      "Physics":            { "status": "coming-soon", "icon": "ri-magnet-line" },
-      "Chemistry":           { "status": "coming-soon", "icon": "ri-flask-line" },
+      "Physics":            { "status": "available", "plan": "physics-hsc-science.json", "icon": "ri-magnet-line" },
+      "Chemistry":           { "status": "available", "plan": "chemistry-hsc-science.json", "icon": "ri-flask-line" },
       "Biology":             { "status": "coming-soon", "icon": "ri-leaf-line" }
     }
   },
