@@ -1,9 +1,20 @@
 /* =============================================
-   Revision — Final Revision Planner
+   Revision — Final Revision Planner (v2)
    All subject/chapter/schedule DATA lives in /config/revision/*.json.
    This file only contains the generic engine + UI that reads that data.
    Cloud-first: plans are stored in Supabase (table `revision_progress`),
    one row per (user, subjectKey), via DB.pullRevisionPlan / pushRevisionPlan.
+
+   v2 rethink:
+   - New "Overview" screen per subject: progress ring, pace indicator
+     (ahead/on track/behind), streak, today + up-next inline.
+   - Timeline replaces the flat table: grouped by week, filter chips
+     (type), a search box, and a "jump to today" control.
+   - Homescreen card gets a streak badge and a lightweight multi-subject
+     summary line.
+   - Same generic engine (generateEntries / replanAll) — it works and
+     nothing about the schedule *math* needed to change, only how it's
+     presented and navigated.
    ============================================= */
 
 const Revision = (() => {
@@ -19,12 +30,14 @@ const Revision = (() => {
     let activeConfig      = null; // loaded plan config for the active subject
     let activeStartDate   = '';
     let activeEntries     = [];   // current plan entries (live, mutable)
-    let screen            = 'subjects'; // 'subjects' | 'setup' | 'table'
+    let screen            = 'subjects'; // 'subjects' | 'setup' | 'overview' | 'timeline'
     let managerMode       = false; // true when opened via manager mode
 
+    // Timeline filter/search state (reset whenever a subject is opened)
+    let tlFilter = 'all';   // 'all' | 'concept' | 'problems' | 'revision' | 'final'
+    let tlQuery  = '';
+
     // Global revision settings — one shared logic across every subject.
-    // weekendDay: 'friday' | 'sunday' (the single no-study day of the week)
-    // tasksPerDay: how many tasks, combined across ALL subjects, land on one day
     let revSettings = { weekendDay: 'friday', tasksPerDay: 2 };
 
     let initPromise = null;
@@ -40,7 +53,6 @@ const Revision = (() => {
             }
             subjectsForSyllabus = (registry && registry[syllabusKey] && registry[syllabusKey].subjects) || {};
 
-            // Warm the plans cache so the homescreen "today" card can render immediately
             try {
                 const rows = await DB.pullAllRevisionPlans();
                 plansCache = {};
@@ -49,7 +61,6 @@ const Revision = (() => {
                 plansCache = {};
             }
 
-            // Load the user's global revision settings (weekend day + intensity)
             try {
                 const data = await DB.pull();
                 const rs = data?.settings?.revision;
@@ -85,15 +96,13 @@ const Revision = (() => {
     /* ──────────────────────────────────────────────────────────────────
        Generic plan engine — reads a config (chapters + rules +
        revisionCheckpoints) and a start date, returns generated entries.
-       No subject-specific logic here; everything comes from the config.
        ────────────────────────────────────────────────────────────────── */
 
     const WEEKDAY_NUM = { sunday: 0, monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6 };
 
-    // The single no-study day of the week, as chosen in Settings.
     function isWeekend(date) {
         const target = WEEKDAY_NUM[revSettings.weekendDay];
-        const num = target === undefined ? 5 /* friday default */ : target;
+        const num = target === undefined ? 5 : target;
         return date.getDay() === num;
     }
 
@@ -104,13 +113,7 @@ const Revision = (() => {
         return d;
     }
 
-    function toISODate(date) {
-        // NOTE: date.toISOString() reports the UTC calendar date, which
-        // silently shifts back a day for any timezone ahead of UTC
-        // (Bangladesh, India, etc. — this app's core audience). Always
-        // use the local-date formatter instead.
-        return DateUtils.toISODate(date);
-    }
+    function toISODate(date) { return DateUtils.toISODate(date); }
 
     function generateEntries(config, startDateStr) {
         const skipWeekends = config.rules?.skipWeekends !== false;
@@ -131,7 +134,6 @@ const Revision = (() => {
         while (chapterIdx < chapters.length) {
             const ch = chapters[chapterIdx];
 
-            // Concept day
             push({
                 id: `${config.subjectKey}-${chapterIdx}-concept`,
                 chapterIndex: chapterIdx, type: 'concept',
@@ -141,7 +143,6 @@ const Revision = (() => {
             });
             advance();
 
-            // Problem-solving days
             const pd = ch.problemDays || 0;
             for (let p = 1; p <= pd; p++) {
                 push({
@@ -156,7 +157,6 @@ const Revision = (() => {
 
             chapterIdx++;
 
-            // Revision checkpoint(s) due after this chapter
             while (cpIdx < checkpoints.length && checkpoints[cpIdx].after === chapterIdx) {
                 push({
                     id: `${config.subjectKey}-checkpoint-${cpIdx}`,
@@ -169,7 +169,6 @@ const Revision = (() => {
             }
         }
 
-        // Final full-syllabus revision
         for (let f = 1; f <= finalDays; f++) {
             push({
                 id: `${config.subjectKey}-final-${f}`,
@@ -185,11 +184,6 @@ const Revision = (() => {
 
     /* ──────────────────────────────────────────────────────────────────
        Replan — one shared logic for every subject.
-       Combines the still-pending (not done) tasks of every started
-       subject, keeps everything already ticked exactly where it is, and
-       redistributes the upcoming routine across days according to the
-       chosen weekend day and how many tasks (total, across subjects)
-       should land on one day.
        ────────────────────────────────────────────────────────────────── */
     async function replanAll(weekendDay, tasksPerDay) {
         revSettings = {
@@ -206,12 +200,11 @@ const Revision = (() => {
             const sorted = [...plan.entries].sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
             perSubject[key] = {
                 startDate: plan.start_date,
-                fixed: sorted.filter(e => e.done),      // untouched — progress stays
-                pending: sorted.filter(e => !e.done),   // upcoming — gets replanned
+                fixed: sorted.filter(e => e.done),
+                pending: sorted.filter(e => !e.done),
             };
         });
 
-        // Round-robin merge so no single subject monopolises a day.
         const queues = keys.map(k => [...perSubject[k].pending]);
         const combined = [];
         let more = true;
@@ -228,12 +221,6 @@ const Revision = (() => {
         let cur = new Date();
         cur.setHours(0, 0, 0, 0);
 
-        // Don't snap a task back to an earlier date than it's already
-        // scheduled for. Normally this just catches up an overdue
-        // backlog to today — but if every subject's soonest pending
-        // item is still in the future (e.g. a plan was just generated
-        // with a deliberately future start date), keep that future date
-        // instead of silently overriding the user's chosen start date.
         let earliestPendingStr = null;
         keys.forEach(k => {
             const first = perSubject[k].pending[0];
@@ -269,14 +256,36 @@ const Revision = (() => {
             } catch (e) { /* best-effort — will retry on next sync */ }
         }
 
-        // Reflect any changes in whatever's currently on screen
         if (activeConfig && rebuilt[activeConfig.subjectKey]) {
             activeEntries = plansCache[activeConfig.subjectKey].entries;
-            if (screen === 'table') renderTableScreen();
+            if (screen === 'timeline') renderTimelineScreen();
+            if (screen === 'overview') renderOverviewScreen();
         }
         renderTodaysRevisionCard();
 
         return revSettings;
+    }
+
+    /* ---- Push the whole remaining routine for ONE subject back by N days ---- */
+    async function postponePending(days) {
+        if (!activeConfig) return;
+        const n = Math.max(1, parseInt(days, 10) || 1);
+        activeEntries.forEach(e => {
+            if (e.done) return;
+            let d = DateUtils.parseISODate(e.date) || new Date();
+            for (let i = 0; i < n; i++) d = nextStudyDay(d, true);
+            e.date = toISODate(d);
+        });
+        activeEntries.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+        plansCache[activeConfig.subjectKey] = { start_date: activeStartDate, entries: activeEntries };
+        try {
+            await DB.pushRevisionPlan(activeConfig.subjectKey, activeStartDate, activeEntries);
+            showToast('Remaining tasks postponed', 'success');
+        } catch (e) {
+            showToast('Saved locally — will sync when online', 'error');
+        }
+        renderOverviewScreen();
+        renderTodaysRevisionCard();
     }
 
     /* ---- Merge entries into display rows (one row per chapter) ---- */
@@ -295,19 +304,40 @@ const Revision = (() => {
             }
             byChapter.get(e.chapterIndex).entries.push(e);
         });
-        // Preserve schedule order (rows array was already built in date order
-        // since chapter rows are inserted on first sight of that chapterIndex,
-        // which always happens before standalone entries for later chapters).
         return rows;
     }
 
-    function rowDateRange(row) {
-        const dates = row.entries.map(e => e.date).sort();
-        if (dates[0] === dates[dates.length - 1]) return fmtDate(dates[0]);
-        return fmtDate(dates[0]) + ' – ' + fmtDate(dates[dates.length - 1]);
+    function rowDone(row) { return row.entries.every(e => e.done); }
+    function rowFirstDate(row) { return row.entries.map(e => e.date).sort()[0]; }
+    function rowLastDate(row) { return row.entries.map(e => e.date).sort().slice(-1)[0]; }
+    function rowMatchesFilter(row, filter) {
+        if (filter === 'all') return true;
+        if (filter === 'concept' || filter === 'problems') {
+            return row.kind === 'chapter' ? true : row.entries[0].type === filter;
+        }
+        return row.entries[0].type === filter;
+    }
+    function rowMatchesQuery(row, q) {
+        if (!q) return true;
+        const hay = (row.entries[0].chapterTitle + ' ' + (row.entries[0].subtitle || '')).toLowerCase();
+        return hay.includes(q.toLowerCase());
     }
 
-    function rowDone(row) { return row.entries.every(e => e.done); }
+    function rowDateRange(row) {
+        const s = rowFirstDate(row), e = rowLastDate(row);
+        return s === e ? fmtShort(s) : fmtShort(s) + ' – ' + fmtShort(e);
+    }
+
+    function fmtShort(iso) {
+        const d = DateUtils.parseISODate(iso);
+        if (!d) return '';
+        return d.toLocaleDateString(navigator.language, { day: '2-digit', month: 'short' });
+    }
+    function fmtWeekday(iso) {
+        const d = DateUtils.parseISODate(iso);
+        if (!d) return '';
+        return d.toLocaleDateString(navigator.language, { weekday: 'short' });
+    }
 
     function typeIcon(type) {
         if (type === 'concept')  return '<i class="ri-book-open-line type-icon concept-icon"></i>';
@@ -326,6 +356,63 @@ const Revision = (() => {
     }
 
     /* ──────────────────────────────────────────────────────────────────
+       Stats — progress, pace, streak. Pure functions over entries so
+       they can be reused by the overview screen, the subject list and
+       the homescreen card alike.
+       ────────────────────────────────────────────────────────────────── */
+
+    function computeProgress(entries) {
+        const rows = buildRows(entries);
+        const total = rows.length;
+        const done = rows.filter(rowDone).length;
+        return { total, done, pct: total ? Math.round((done / total) * 100) : 0 };
+    }
+
+    // Pace: compare how many rows were *due* by today vs how many are
+    // actually done. Ahead = fewer overdue than a day's worth of slack.
+    function computePace(entries) {
+        const todayStr = DateUtils.todayISODate();
+        const rows = buildRows(entries);
+        const dueByNow = rows.filter(r => rowFirstDate(r) <= todayStr);
+        const overdue = dueByNow.filter(r => !rowDone(r)).length;
+        const doneEarly = rows.filter(r => rowDone(r) && rowFirstDate(r) > todayStr).length;
+        if (overdue === 0 && doneEarly > 0) return { label: 'Ahead of schedule', tone: 'ahead', overdue };
+        if (overdue === 0) return { label: 'On track', tone: 'ontrack', overdue };
+        if (overdue <= 2) return { label: `Slightly behind — ${overdue} pending`, tone: 'behind', overdue };
+        return { label: `Behind by ${overdue} tasks`, tone: 'behind', overdue };
+    }
+
+    // Consecutive study-days (most recent first, walking back from today)
+    // where every task scheduled that day is complete.
+    function computeStreak(entries) {
+        const byDate = {};
+        entries.forEach(e => { (byDate[e.date] = byDate[e.date] || []).push(e); });
+        const dates = Object.keys(byDate).sort();
+        const todayStr = DateUtils.todayISODate();
+        let i = dates.length - 1;
+        while (i >= 0 && dates[i] > todayStr) i--;
+        let streak = 0;
+        while (i >= 0) {
+            const d = dates[i];
+            const allDone = byDate[d].every(e => e.done);
+            if (d === todayStr && !allDone) { i--; continue; } // today in progress doesn't break it
+            if (!allDone) break;
+            streak++;
+            i--;
+        }
+        return streak;
+    }
+
+    function computeGlobalStreak() {
+        let best = 0;
+        Object.values(plansCache).forEach(p => {
+            if (!p || !p.entries || !p.entries.length) return;
+            best = Math.max(best, computeStreak(p.entries));
+        });
+        return best;
+    }
+
+    /* ──────────────────────────────────────────────────────────────────
        Modal lifecycle
        ────────────────────────────────────────────────────────────────── */
 
@@ -338,10 +425,6 @@ const Revision = (() => {
         managerMode = asManager;
         screen = 'subjects';
         if (registry === null && initPromise) {
-            // Defensive: dashboard's background init() hasn't resolved yet
-            // (e.g. user clicked within the first instant of page load) —
-            // wait for that same in-flight init instead of showing a false
-            // empty state or re-fetching with a guessed syllabus key.
             bodyEl().innerHTML = `<div class="rev-empty-state"><i class="ri-loader-4-line"></i><p>Loading…</p></div>`;
             modalEl().classList.remove('hidden');
             initPromise.then(renderSubjectListScreen);
@@ -381,14 +464,23 @@ const Revision = (() => {
             html = `<div class="rev-subject-list">` + entries.map(([name, def]) => {
                 const available = def.status === 'available' && def.plan;
                 const planKey = available ? def.plan.replace(/\.json$/, '') : null;
-                const started = available && !!plansCache[planKey];
+                const plan = available ? plansCache[planKey] : null;
+                const started = !!plan;
+                let progressHtml = '';
+                let metaText = available ? (started ? 'Tap to continue' : 'Tap to set up your plan') : 'Coming soon';
+                if (started) {
+                    const prog = computeProgress(plan.entries);
+                    metaText = `${prog.done}/${prog.total} chapters · ${prog.pct}%`;
+                    progressHtml = `<div class="rev-subject-row-bar"><div class="rev-subject-row-bar-fill" style="width:${prog.pct}%"></div></div>`;
+                }
                 return `
                 <button class="rev-subject-row ${available ? '' : 'rev-subject-row--disabled'}"
                     ${available ? `onclick="Revision.openSubject('${name.replace(/'/g, "\\'")}')"` : 'disabled'}>
                     <div class="rev-subject-row-icon"><i class="${def.icon || 'ri-book-line'}"></i></div>
                     <div class="rev-subject-row-text">
                         <div class="rev-subject-row-name">${name}</div>
-                        <div class="rev-subject-row-meta">${available ? (started ? 'Plan in progress — tap to continue' : 'Tap to set up your plan') : 'Coming soon'}</div>
+                        <div class="rev-subject-row-meta">${metaText}</div>
+                        ${progressHtml}
                     </div>
                     ${available
                         ? '<i class="ri-arrow-right-s-line rev-subject-row-arrow"></i>'
@@ -400,7 +492,7 @@ const Revision = (() => {
         bodyEl().innerHTML = html;
     }
 
-    /* ---- Open a specific subject: load plan, decide setup vs table ---- */
+    /* ---- Open a specific subject: load plan, decide setup vs overview ---- */
     async function openSubject(subjectName) {
         activeSubjectName = subjectName;
         activeSubjectDef  = subjectsForSyllabus[subjectName];
@@ -427,8 +519,9 @@ const Revision = (() => {
         if (plan) {
             activeStartDate = plan.start_date;
             activeEntries   = plan.entries;
-            screen = 'table';
-            renderTableScreen();
+            tlFilter = 'all'; tlQuery = '';
+            screen = 'overview';
+            renderOverviewScreen();
         } else {
             screen = 'setup';
             renderSetupScreen();
@@ -450,7 +543,7 @@ const Revision = (() => {
             <div class="rev-subject-header">
                 <div class="rev-subject-icon"><i class="${activeSubjectDef.icon || 'ri-book-line'}"></i></div>
                 <div>
-                    <div class="rev-subject-name">${activeSubjectDef ? activeSubjectName : ''}</div>
+                    <div class="rev-subject-name">${activeSubjectName}</div>
                     <div class="rev-subject-meta">${activeConfig.meta || ''} · ${totalDays} chapters</div>
                 </div>
             </div>
@@ -484,20 +577,102 @@ const Revision = (() => {
             showToast('Saved locally — will sync when online', 'error');
         }
 
-        // Apply the shared weekend/intensity logic across every subject now
-        // that this one has joined the mix.
         try { await replanAll(revSettings.weekendDay, revSettings.tasksPerDay); } catch (e) { /* best-effort */ }
         activeEntries = (plansCache[activeConfig.subjectKey] || { entries: activeEntries }).entries;
 
-        screen = 'table';
-        renderTableScreen();
+        tlFilter = 'all'; tlQuery = '';
+        screen = 'overview';
+        renderOverviewScreen();
         renderTodaysRevisionCard();
     }
 
-    /* ---- Screen: the plan table ---- */
-    function renderTableScreen() {
+    /* ──────────────────────────────────────────────────────────────────
+       Screen: Overview — the new subject home. Progress ring, pace,
+       streak, today's tasks and a peek at what's coming next, plus a
+       shortcut into the full timeline.
+       ────────────────────────────────────────────────────────────────── */
+    function renderOverviewScreen() {
         titleEl().textContent = activeSubjectName;
-        headerActionsEl().innerHTML = `
+        headerActionsEl().innerHTML = editMenuHtml() + `
+            <button class="icon-btn" onclick="Revision.backToSubjects()" title="Back to subjects">
+                <i class="ri-arrow-left-line"></i>
+            </button>`;
+
+        const rows = buildRows(activeEntries);
+        const prog = computeProgress(activeEntries);
+        const pace = computePace(activeEntries);
+        const streak = computeStreak(activeEntries);
+        const todayStr = DateUtils.todayISODate();
+
+        const todayRows = rows.filter(r => r.entries.some(e => e.date === todayStr));
+        const upNext = rows
+            .filter(r => !rowDone(r) && rowFirstDate(r) > todayStr)
+            .sort((a, b) => rowFirstDate(a) < rowFirstDate(b) ? -1 : 1)
+            .slice(0, 3);
+
+        const ringDeg = Math.round(prog.pct * 3.6);
+
+        bodyEl().innerHTML = `
+        <div class="rev-overview">
+            <div class="rev-overview-top">
+                <div class="rev-ring" style="--ring-deg:${ringDeg}deg">
+                    <div class="rev-ring-inner">
+                        <div class="rev-ring-pct">${prog.pct}%</div>
+                        <div class="rev-ring-label">${prog.done}/${prog.total}</div>
+                    </div>
+                </div>
+                <div class="rev-overview-stats">
+                    <div class="rev-stat-pill rev-stat-pill--${pace.tone}">
+                        <i class="ri-${pace.tone === 'behind' ? 'error-warning-line' : pace.tone === 'ahead' ? 'rocket-2-line' : 'checkbox-circle-line'}"></i>
+                        ${pace.label}
+                    </div>
+                    ${streak > 0 ? `
+                    <div class="rev-stat-pill rev-stat-pill--streak">
+                        <i class="ri-fire-line"></i> ${streak}-day streak
+                    </div>` : ''}
+                    <div class="rev-stat-pill">
+                        <i class="ri-calendar-line"></i> Started ${fmtShort(activeStartDate)}
+                    </div>
+                </div>
+            </div>
+
+            <button class="rev-view-timeline-btn" onclick="Revision.openTimeline()">
+                <span><i class="ri-list-check-2"></i> View full timeline</span>
+                <i class="ri-arrow-right-s-line"></i>
+            </button>
+
+            <div class="rev-overview-section">
+                <div class="rev-overview-section-title">Today · ${fmtShort(todayStr)}</div>
+                ${todayRows.length === 0
+                    ? `<div class="rev-overview-empty">Nothing scheduled for today. Enjoy the breather.</div>`
+                    : `<div class="rev-mini-rows">${todayRows.map(r => miniRowHtml(r)).join('')}</div>`}
+            </div>
+
+            ${upNext.length > 0 ? `
+            <div class="rev-overview-section">
+                <div class="rev-overview-section-title">Up next</div>
+                <div class="rev-mini-rows rev-mini-rows--muted">${upNext.map(r => miniRowHtml(r, true)).join('')}</div>
+            </div>` : ''}
+        </div>`;
+    }
+
+    function miniRowHtml(row, showDate = false) {
+        const done = rowDone(row);
+        const first = row.entries[0];
+        const type = row.kind === 'chapter' ? 'concept' : first.type;
+        return `
+        <div class="rev-mini-row ${done ? 'rev-mini-row--done' : ''}">
+            <div class="rev-mini-row-icon">${typeIcon(type)}</div>
+            <div class="rev-mini-row-text">
+                <div class="rev-mini-row-title ${done ? 'rev-mini-row-title--done' : ''}">${first.chapterTitle}</div>
+                <div class="rev-mini-row-sub">${showDate ? fmtShort(rowFirstDate(row)) + ' · ' : ''}${row.kind === 'chapter' ? row.entries.map(e => e.partLabel).join(', ') : (first.subtitle || typeLabel(first.type))}</div>
+            </div>
+            <div class="rev-row-check ${done ? 'done' : ''}">${done ? '<i class="ri-check-line"></i>' : ''}</div>
+        </div>`;
+    }
+
+    function editMenuHtml() {
+        return `
             <div class="rev-edit-menu-wrap">
                 <button class="icon-btn" onclick="Revision.toggleEditMenu(event)" title="Edit plan">
                     <i class="ri-more-2-fill"></i>
@@ -506,92 +681,191 @@ const Revision = (() => {
                     <button onclick="Revision.startEditStartDate()">
                         <i class="ri-calendar-event-line"></i> Edit start date
                     </button>
+                    <button onclick="Revision.startPostpone()">
+                        <i class="ri-time-line"></i> Postpone remaining tasks
+                    </button>
                     <button class="rev-edit-menu-danger" onclick="Revision.confirmResetProgress()">
                         <i class="ri-restart-line"></i> Reset progress
                     </button>
                 </div>
+            </div>`;
+    }
+
+    function startPostpone() {
+        closeEditMenu();
+        titleEl().textContent = activeSubjectName;
+        headerActionsEl().innerHTML = `
+            <button class="icon-btn" onclick="Revision.renderOverviewScreen()" title="Cancel">
+                <i class="ri-close-line"></i>
+            </button>`;
+        bodyEl().innerHTML = `
+            <div class="rev-edit-date-notice">
+                <i class="ri-information-line"></i>
+                <p>Push every remaining (not-yet-done) task forward by a number of study days. Anything already ticked stays exactly where it is.</p>
             </div>
-            <button class="icon-btn" onclick="Revision.backToSubjects()" title="Back to subjects">
+            <div class="rev-date-form">
+                <label class="rev-date-label">Postpone by</label>
+                <div class="rev-date-row">
+                    <input type="number" id="revPostponeInput" class="form-input rev-date-input" min="1" max="30" value="1" style="max-width:100px" />
+                    <span style="align-self:center;color:var(--text-3);font-size:0.85rem">study day(s)</span>
+                </div>
+                <div class="rev-date-row" style="margin-top:0.75rem">
+                    <button class="btn btn-primary" onclick="Revision.applyPostpone()">
+                        <i class="ri-check-line"></i> Apply
+                    </button>
+                    <button class="btn btn-ghost" onclick="Revision.renderOverviewScreen()">Cancel</button>
+                </div>
+            </div>`;
+    }
+
+    async function applyPostpone() {
+        const input = document.getElementById('revPostponeInput');
+        const days = input ? parseInt(input.value, 10) : 1;
+        await postponePending(days);
+        screen = 'overview';
+    }
+
+    /* ──────────────────────────────────────────────────────────────────
+       Screen: Timeline — grouped by week, filterable, searchable.
+       ────────────────────────────────────────────────────────────────── */
+    function openTimeline() {
+        screen = 'timeline';
+        renderTimelineScreen();
+    }
+
+    function weekKeyFor(dateStr) {
+        const d = DateUtils.parseISODate(dateStr);
+        const day = (d.getDay() + 6) % 7; // Monday = 0
+        const monday = new Date(d);
+        monday.setDate(d.getDate() - day);
+        return toISODate(monday);
+    }
+
+    function renderTimelineScreen() {
+        titleEl().textContent = activeSubjectName;
+        headerActionsEl().innerHTML = editMenuHtml() + `
+            <button class="icon-btn" onclick="Revision.renderOverviewScreen()" title="Back to overview">
                 <i class="ri-arrow-left-line"></i>
             </button>`;
 
-        const rows = buildRows(activeEntries);
-        const totalRows = rows.length;
-        const doneRows  = rows.filter(rowDone).length;
-        const pct = totalRows > 0 ? Math.round((doneRows / totalRows) * 100) : 0;
+        let rows = buildRows(activeEntries).filter(r => rowMatchesFilter(r, tlFilter) && rowMatchesQuery(r, tlQuery));
+        const prog = computeProgress(activeEntries);
+        const todayStr = DateUtils.todayISODate();
 
-        let tableHtml = `
-        <div class="rev-table-summary">
-            <span><i class="ri-calendar-line"></i> Started ${fmtDate(activeStartDate)}</span>
-            <span><i class="ri-checkbox-circle-line"></i> ${doneRows} / ${totalRows} done (${pct}%)</span>
-        </div>
-        <div class="rev-table-wrap">
-            <table class="rev-table">
-                <thead>
-                    <tr>
-                        <th class="rev-th-date">Date</th>
-                        <th class="rev-th-sub">Subject</th>
-                        <th class="rev-th-topic">Topic / Type</th>
-                        <th class="rev-th-tick">Done</th>
-                    </tr>
-                </thead>
-                <tbody>`;
-
-        rows.forEach((row, idx) => {
-            const done = rowDone(row);
-            if (row.kind === 'chapter') {
-                const first = row.entries[0];
-                const partsHtml = row.entries.map(e => `
-                    <label class="rev-subtask">
-                        <input type="checkbox" ${e.done ? 'checked' : ''}
-                            onchange="Revision.toggleEntry('${e.id}', this.checked)" />
-                        <span>${e.partLabel}</span>
-                    </label>`).join('');
-                tableHtml += `
-                <tr class="rev-row ${done ? 'rev-row--done' : ''}">
-                    <td class="rev-td-date">${rowDateRange(row)}</td>
-                    <td class="rev-td-sub">${activeSubjectName}</td>
-                    <td class="rev-td-topic">
-                        <div class="rev-topic-main">
-                            ${typeIcon('concept')}
-                            <span class="rev-topic-title ${done ? 'rev-topic-title--done' : ''}">${first.chapterTitle}</span>
-                            ${first.paper ? `<span class="paper-pill">${first.paper}</span>` : ''}
-                            ${first.difficulty ? difficultyBadge(first.difficulty) : ''}
-                        </div>
-                        ${first.subtitle ? `<div class="rev-topic-sub">${first.subtitle}</div>` : ''}
-                        <div class="rev-subtask-row">${partsHtml}</div>
-                    </td>
-                    <td class="rev-td-tick">
-                        <div class="rev-row-check ${done ? 'done' : ''}" title="${done ? 'All parts done' : 'Tick all parts to complete'}">
-                            ${done ? '<i class="ri-check-line"></i>' : ''}
-                        </div>
-                    </td>
-                </tr>`;
-            } else {
-                const e = row.entries[0];
-                tableHtml += `
-                <tr class="rev-row rev-row--${e.type} ${done ? 'rev-row--done' : ''}">
-                    <td class="rev-td-date">${fmtDate(e.date)}</td>
-                    <td class="rev-td-sub">${activeSubjectName}</td>
-                    <td class="rev-td-topic">
-                        <div class="rev-topic-main">
-                            ${typeIcon(e.type)}
-                            <span class="rev-topic-title ${done ? 'rev-topic-title--done' : ''}">${e.chapterTitle}</span>
-                            <span class="type-pill type-pill--${e.type}">${typeLabel(e.type)}</span>
-                        </div>
-                        ${e.subtitle ? `<div class="rev-topic-sub">${e.subtitle}</div>` : ''}
-                    </td>
-                    <td class="rev-td-tick">
-                        <div class="rev-row-check ${done ? 'done' : ''}" onclick="Revision.toggleEntry('${e.id}', ${!e.done})">
-                            ${done ? '<i class="ri-check-line"></i>' : ''}
-                        </div>
-                    </td>
-                </tr>`;
-            }
+        const groups = new Map();
+        rows.forEach(r => {
+            const wk = weekKeyFor(rowFirstDate(r));
+            if (!groups.has(wk)) groups.set(wk, []);
+            groups.get(wk).push(r);
         });
 
-        tableHtml += `</tbody></table></div>`;
-        bodyEl().innerHTML = tableHtml;
+        const chips = [
+            ['all', 'All'], ['concept', 'Concept'], ['problems', 'Problems'],
+            ['revision', 'Revision'], ['final', 'Final'],
+        ].map(([key, label]) => `
+            <button class="rev-chip ${tlFilter === key ? 'rev-chip--active' : ''}" onclick="Revision.setTimelineFilter('${key}')">${label}</button>
+        `).join('');
+
+        let groupsHtml = '';
+        if (groups.size === 0) {
+            groupsHtml = `<div class="rev-empty-state"><i class="ri-search-line"></i><p>No matching tasks.</p></div>`;
+        } else {
+            groupsHtml = [...groups.entries()].map(([wk, wrows], gi) => {
+                const wdone = wrows.filter(rowDone).length;
+                const wkEnd = new Date(DateUtils.parseISODate(wk)); wkEnd.setDate(wkEnd.getDate() + 6);
+                return `
+                <div class="rev-week-group">
+                    <div class="rev-week-header">
+                        <span>Week ${gi + 1} · ${fmtShort(wk)} – ${fmtShort(toISODate(wkEnd))}</span>
+                        <span class="rev-week-header-count">${wdone}/${wrows.length}</span>
+                    </div>
+                    <div class="rev-week-cards">
+                        ${wrows.map(r => cardHtml(r, todayStr)).join('')}
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        bodyEl().innerHTML = `
+            <div class="rev-table-summary">
+                <span><i class="ri-calendar-line"></i> Started ${fmtShort(activeStartDate)}</span>
+                <span><i class="ri-checkbox-circle-line"></i> ${prog.done} / ${prog.total} done (${prog.pct}%)</span>
+                <button class="rev-jump-today" onclick="Revision.jumpToToday()"><i class="ri-focus-3-line"></i> Jump to today</button>
+            </div>
+            <div class="rev-timeline-controls">
+                <div class="rev-chip-row">${chips}</div>
+                <div class="rev-search-wrap">
+                    <i class="ri-search-line"></i>
+                    <input type="text" class="rev-search-input" placeholder="Search chapters…" value="${tlQuery.replace(/"/g, '&quot;')}" oninput="Revision.setTimelineQuery(this.value)" />
+                </div>
+            </div>
+            <div class="rev-timeline-list" id="revTimelineList">${groupsHtml}</div>
+        `;
+    }
+
+    function cardHtml(row, todayStr) {
+        const done = rowDone(row);
+        const first = row.entries[0];
+        const isToday = row.entries.some(e => e.date === todayStr);
+        if (row.kind === 'chapter') {
+            const parts = row.entries.map(e => `
+                <label class="rev-subtask">
+                    <input type="checkbox" ${e.done ? 'checked' : ''}
+                        onchange="Revision.toggleEntry('${e.id}', this.checked)" />
+                    <span>${e.partLabel}</span>
+                </label>`).join('');
+            return `
+            <div class="tl-card ${done ? 'tl-card--done' : ''} ${isToday ? 'tl-card--today' : ''}" data-date="${rowFirstDate(row)}">
+                <div class="tl-card-date">
+                    <span class="tl-date-d">${fmtWeekday(rowFirstDate(row))}</span>
+                    <span class="tl-date-r">${rowDateRange(row)}</span>
+                </div>
+                <div class="tl-card-body">
+                    <div class="tl-card-head">
+                        ${typeIcon('concept')}
+                        <span class="rev-topic-title ${done ? 'rev-topic-title--done' : ''}">${first.chapterTitle}</span>
+                        ${first.paper ? `<span class="paper-pill">${first.paper}</span>` : ''}
+                        ${first.difficulty ? difficultyBadge(first.difficulty) : ''}
+                    </div>
+                    ${first.subtitle ? `<div class="rev-topic-sub">${first.subtitle}</div>` : ''}
+                    <div class="rev-subtask-row">${parts}</div>
+                </div>
+            </div>`;
+        }
+        const e = first;
+        return `
+        <div class="tl-card tl-card--${e.type} ${done ? 'tl-card--done' : ''} ${isToday ? 'tl-card--today' : ''}" data-date="${e.date}">
+            <div class="tl-card-date">
+                <span class="tl-date-d">${fmtWeekday(e.date)}</span>
+                <span class="tl-date-r">${fmtShort(e.date)}</span>
+            </div>
+            <div class="tl-card-body">
+                <div class="tl-card-head">
+                    ${typeIcon(e.type)}
+                    <span class="rev-topic-title ${done ? 'rev-topic-title--done' : ''}">${e.chapterTitle}</span>
+                    <span class="type-pill type-pill--${e.type}">${typeLabel(e.type)}</span>
+                </div>
+                ${e.subtitle ? `<div class="rev-topic-sub">${e.subtitle}</div>` : ''}
+            </div>
+            <div class="rev-row-check ${done ? 'done' : ''}" onclick="Revision.toggleEntry('${e.id}', ${!e.done})">
+                ${done ? '<i class="ri-check-line"></i>' : ''}
+            </div>
+        </div>`;
+    }
+
+    function setTimelineFilter(key) { tlFilter = key; renderTimelineScreen(); }
+    function setTimelineQuery(q) { tlQuery = q; renderTimelineScreen(); }
+
+    function jumpToToday() {
+        const list = document.getElementById('revTimelineList');
+        if (!list) return;
+        const todayStr = DateUtils.todayISODate();
+        let el = list.querySelector(`[data-date="${todayStr}"]`);
+        if (!el) {
+            const cards = [...list.querySelectorAll('[data-date]')];
+            el = cards.find(c => c.dataset.date >= todayStr) || cards[cards.length - 1];
+        }
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
     /* ---- Toggle a single entry; persist; refresh whatever is visible ---- */
@@ -600,7 +874,8 @@ const Revision = (() => {
         if (!e) return;
         e.done = done;
 
-        if (screen === 'table') renderTableScreen();
+        if (screen === 'timeline') renderTimelineScreen();
+        if (screen === 'overview') renderOverviewScreen();
         renderTodaysRevisionCard();
 
         try {
@@ -630,7 +905,7 @@ const Revision = (() => {
         closeEditMenu();
         titleEl().textContent = activeSubjectName;
         headerActionsEl().innerHTML = `
-            <button class="icon-btn" onclick="Revision.renderTableScreen()" title="Cancel">
+            <button class="icon-btn" onclick="Revision.renderOverviewScreen()" title="Cancel">
                 <i class="ri-close-line"></i>
             </button>`;
 
@@ -646,7 +921,7 @@ const Revision = (() => {
                     <button class="btn btn-primary" onclick="Revision.applyEditedStartDate()">
                         <i class="ri-check-line"></i> Save
                     </button>
-                    <button class="btn btn-ghost" onclick="Revision.renderTableScreen()">Cancel</button>
+                    <button class="btn btn-ghost" onclick="Revision.renderOverviewScreen()">Cancel</button>
                 </div>
             </div>`;
     }
@@ -655,9 +930,6 @@ const Revision = (() => {
         const input = document.getElementById('revEditDateInput');
         if (!input || !input.value) { showToast('Please pick a date', 'error'); return; }
 
-        // Preserve completion state per chapter/checkpoint id where the
-        // regenerated schedule produces the same ids (same config = same ids,
-        // since ids are derived from chapterIndex/type, not from date).
         const doneMap = {};
         activeEntries.forEach(e => { if (e.done) doneMap[e.id] = true; });
 
@@ -678,8 +950,8 @@ const Revision = (() => {
         try { await replanAll(revSettings.weekendDay, revSettings.tasksPerDay); } catch (e) { /* best-effort */ }
         activeEntries = (plansCache[activeConfig.subjectKey] || { entries: activeEntries }).entries;
 
-        screen = 'table';
-        renderTableScreen();
+        screen = 'overview';
+        renderOverviewScreen();
         renderTodaysRevisionCard();
     }
 
@@ -687,7 +959,7 @@ const Revision = (() => {
         closeEditMenu();
         if (!window.confirm(`Reset all progress for ${activeSubjectName}? This clears every tick mark but keeps your schedule and start date.`)) return;
         activeEntries.forEach(e => { e.done = false; });
-        renderTableScreen();
+        renderOverviewScreen();
         renderTodaysRevisionCard();
         DB.pushRevisionPlan(activeConfig.subjectKey, activeStartDate, activeEntries)
             .then(() => { plansCache[activeConfig.subjectKey] = { start_date: activeStartDate, entries: activeEntries }; })
@@ -714,15 +986,18 @@ const Revision = (() => {
             const todays = plan.entries.filter(e => e.date === todayStr);
             if (todays.length === 0) return;
 
-            // Group today's entries by chapter so a multi-part chapter
-            // still shows as one task row with its own ticks.
             const rows = buildRows(todays);
             cards.push({ name, key, def, rows });
         });
 
         if (cards.length === 0) { slot.innerHTML = ''; return; }
 
-        slot.innerHTML = cards.map(card => {
+        const streak = computeGlobalStreak();
+        const totalTasks = cards.reduce((n, c) => n + c.rows.length, 0);
+
+        slot.innerHTML = `
+        ${streak > 0 ? `<div class="trc-streak-banner"><i class="ri-fire-line"></i> ${streak}-day study streak — keep it going</div>` : ''}
+        ${cards.map(card => {
             const rowsHtml = card.rows.map(row => {
                 if (row.kind === 'chapter') {
                     const done = rowDone(row);
@@ -767,7 +1042,7 @@ const Revision = (() => {
                 </div>
                 <div class="trc-rows">${rowsHtml}</div>
             </div>`;
-        }).join('');
+        }).join('')}`;
     }
 
     async function toggleTodayEntry(subjectKey, entryId, done) {
@@ -778,10 +1053,10 @@ const Revision = (() => {
         e.done = done;
 
         renderTodaysRevisionCard();
-        // Keep the open table modal in sync if this subject is currently open
-        if (activeConfig && activeConfig.subjectKey === subjectKey && screen === 'table') {
+        if (activeConfig && activeConfig.subjectKey === subjectKey) {
             activeEntries = plan.entries;
-            renderTableScreen();
+            if (screen === 'timeline') renderTimelineScreen();
+            if (screen === 'overview') renderOverviewScreen();
         }
 
         try {
@@ -794,7 +1069,10 @@ const Revision = (() => {
     return {
         init, openSubjectList, openSubject, closeModal, handleOverlayClick, backToSubjects,
         generatePlan, toggleEntry, toggleEditMenu, startEditStartDate, applyEditedStartDate,
-        confirmResetProgress, renderTodaysRevisionCard, toggleTodayEntry, renderTableScreen,
+        confirmResetProgress, renderTodaysRevisionCard, toggleTodayEntry,
         getSettings, replanAll,
+        renderOverviewScreen, openTimeline, renderTimelineScreen,
+        setTimelineFilter, setTimelineQuery, jumpToToday,
+        startPostpone, applyPostpone,
     };
 })();
