@@ -421,16 +421,30 @@ const Revision = (() => {
     function titleEl()  { return document.getElementById('revisionModalTitle'); }
     function headerActionsEl() { return document.getElementById('revisionHeaderActions'); }
 
+    function hasAnyPlan() {
+        return availableSubjectKeys().some(k => plansCache[k] && (plansCache[k].entries || []).length > 0);
+    }
+
+    function decideInitialScreen() {
+        if (!managerMode && !hasAnyPlan() && availableSubjectKeys().length > 0) {
+            screen = 'combined-setup';
+            renderCombinedSetupScreen();
+        } else {
+            screen = 'subjects';
+            renderSubjectListScreen();
+        }
+    }
+
     function openSubjectList(asManager = false) {
         managerMode = asManager;
         screen = 'subjects';
         if (registry === null && initPromise) {
             bodyEl().innerHTML = `<div class="rev-empty-state"><i class="ri-loader-4-line"></i><p>Loading…</p></div>`;
             modalEl().classList.remove('hidden');
-            initPromise.then(renderSubjectListScreen);
+            initPromise.then(decideInitialScreen);
             return;
         }
-        renderSubjectListScreen();
+        decideInitialScreen();
         modalEl().classList.remove('hidden');
     }
 
@@ -528,7 +542,191 @@ const Revision = (() => {
         }
     }
 
-    /* ---- Screen: first-time start-date setup ---- */
+    /* ──────────────────────────────────────────────────────────────────
+       Screen: Combined setup — one decision instead of one-per-subject.
+       Shown the first time someone opens the planner with nothing set
+       up yet: pick which subjects, one shared start date, see the
+       shape of the plan (chapters / weeks / finish date) update live,
+       optionally check it against an exam date, generate everything
+       in one tap (or just tap Generate immediately for smart defaults).
+       ────────────────────────────────────────────────────────────────── */
+
+    let csSelected = {};     // subjectName -> bool, local to the combined-setup screen
+    let csStartDate = '';
+    let csExamDate  = '';
+
+    function combinedSetupSubjects() {
+        return Object.entries(subjectsForSyllabus).filter(([, def]) => def.status === 'available' && def.plan);
+    }
+
+    // Count-only dry run of generateEntries — how many rows (chapters +
+    // standalone days) a subject's config produces, independent of date.
+    function countRowsForConfig(cfg) {
+        return buildRows(generateEntries(cfg, DateUtils.todayISODate())).length;
+    }
+
+    function isWeekendDay(date, weekendDay) {
+        const target = WEEKDAY_NUM[weekendDay];
+        return date.getDay() === (target === undefined ? 5 : target);
+    }
+    function nextStudyDayFor(date, weekendDay) {
+        const d = new Date(date);
+        d.setDate(d.getDate() + 1);
+        while (isWeekendDay(d, weekendDay)) d.setDate(d.getDate() + 1);
+        return d;
+    }
+
+    // Simulate the combined round-robin scheduling (same shape as
+    // replanAll) purely to find the finish date, without touching state.
+    function estimateFinishDate(totalRows, startDateStr, weekendDay, tasksPerDay) {
+        if (totalRows <= 0 || !startDateStr) return null;
+        let cur = new Date(startDateStr + 'T00:00:00');
+        while (isWeekendDay(cur, weekendDay)) cur = nextStudyDayFor(cur, weekendDay);
+        const studyDaysNeeded = Math.ceil(totalRows / Math.max(1, tasksPerDay));
+        for (let i = 1; i < studyDaysNeeded; i++) cur = nextStudyDayFor(cur, weekendDay);
+        return toISODate(cur);
+    }
+
+    function renderCombinedSetupScreen() {
+        titleEl().textContent = 'Set up your revision plan';
+        headerActionsEl().innerHTML = '';
+
+        const subjects = combinedSetupSubjects();
+        if (Object.keys(csSelected).length === 0) {
+            subjects.forEach(([name]) => { csSelected[name] = true; });
+        }
+        if (!csStartDate) csStartDate = DateUtils.todayISODate();
+
+        bodyEl().innerHTML = `
+            <div class="rev-cs-intro">
+                <p>Pick which subjects you want a plan for and one start date — everything begins together. You can always add or adjust a subject later.</p>
+            </div>
+            <div class="rev-cs-subjects">
+                ${subjects.map(([name, def]) => `
+                    <label class="rev-cs-subject-row">
+                        <input type="checkbox" data-cs-subject="${name.replace(/"/g, '&quot;')}"
+                            ${csSelected[name] ? 'checked' : ''}
+                            onchange="Revision.toggleCombinedSubject('${name.replace(/'/g, "\\'")}', this.checked)" />
+                        <div class="rev-cs-subject-icon"><i class="${def.icon || 'ri-book-line'}"></i></div>
+                        <span class="rev-cs-subject-name">${name}</span>
+                    </label>`).join('')}
+            </div>
+
+            <div class="rev-date-form">
+                <label class="rev-date-label">Start date (applies to every subject above)</label>
+                <input type="date" id="csStartDateInput" class="form-input rev-date-input"
+                    min="${DateUtils.todayISODate()}" value="${csStartDate}"
+                    oninput="Revision.updateCombinedSetup()" />
+            </div>
+
+            <div class="rev-date-form">
+                <label class="rev-date-label">Exam date <span style="font-weight:400;color:var(--text-3)">(optional — checks your pace)</span></label>
+                <input type="date" id="csExamDateInput" class="form-input rev-date-input"
+                    value="${csExamDate}" oninput="Revision.updateCombinedSetup()" />
+            </div>
+
+            <div id="csPreview"></div>
+
+            <div class="rev-date-row" style="margin-top:0.9rem">
+                <button class="btn btn-primary" onclick="Revision.generateCombinedPlan()">
+                    <i class="ri-sparkling-line"></i> Generate my plan
+                </button>
+                <button class="btn btn-ghost" onclick="Revision.backToSubjects()">Set up one at a time instead</button>
+            </div>
+        `;
+        renderCombinedSetupPreview();
+    }
+
+    function toggleCombinedSubject(name, checked) {
+        csSelected[name] = checked;
+        renderCombinedSetupPreview();
+    }
+
+    function updateCombinedSetup() {
+        const startInput = document.getElementById('csStartDateInput');
+        const examInput  = document.getElementById('csExamDateInput');
+        if (startInput) csStartDate = startInput.value;
+        if (examInput)  csExamDate = examInput.value;
+        renderCombinedSetupPreview();
+    }
+
+    async function renderCombinedSetupPreview() {
+        const el = document.getElementById('csPreview');
+        if (!el) return;
+
+        const chosen = combinedSetupSubjects().filter(([name]) => csSelected[name]);
+        if (chosen.length === 0 || !csStartDate) {
+            el.innerHTML = `<div class="rev-overview-empty">Pick at least one subject to see your plan shape.</div>`;
+            return;
+        }
+
+        el.innerHTML = `<div class="rev-overview-empty"><i class="ri-loader-4-line"></i> Calculating…</div>`;
+
+        let totalChapters = 0, totalRows = 0;
+        for (const [, def] of chosen) {
+            try {
+                const cfg = await getConfig(def.plan);
+                totalChapters += (cfg.chapters || []).length;
+                totalRows += countRowsForConfig(cfg);
+            } catch (e) { /* skip subjects that fail to load */ }
+        }
+
+        const finishDate = estimateFinishDate(totalRows, csStartDate, revSettings.weekendDay, revSettings.tasksPerDay);
+        const weeks = finishDate ? Math.max(1, Math.round(
+            (DateUtils.parseISODate(finishDate) - DateUtils.parseISODate(csStartDate)) / (7 * 86400000)
+        )) : 0;
+
+        let examWarning = '';
+        if (csExamDate && finishDate && finishDate > csExamDate) {
+            examWarning = `
+                <div class="rev-stat-pill rev-stat-pill--behind" style="margin-top:0.6rem">
+                    <i class="ri-error-warning-line"></i>
+                    At ${revSettings.tasksPerDay} task${revSettings.tasksPerDay > 1 ? 's' : ''}/day you'll finish around
+                    ${fmtShort(finishDate)} — after your ${fmtShort(csExamDate)} exam. Consider raising tasks/day in Settings.
+                </div>`;
+        } else if (csExamDate && finishDate) {
+            examWarning = `
+                <div class="rev-stat-pill rev-stat-pill--ahead" style="margin-top:0.6rem">
+                    <i class="ri-checkbox-circle-line"></i> On pace to finish before your exam.
+                </div>`;
+        }
+
+        el.innerHTML = `
+            <div class="rev-cs-preview">
+                <i class="ri-bar-chart-2-line"></i>
+                <span>${totalChapters} chapter${totalChapters === 1 ? '' : 's'} · ~${weeks} week${weeks === 1 ? '' : 's'}
+                    ${finishDate ? ` · finishing around ${fmtShort(finishDate)}` : ''}</span>
+            </div>
+            ${examWarning}
+        `;
+    }
+
+    async function generateCombinedPlan() {
+        const chosen = combinedSetupSubjects().filter(([name]) => csSelected[name]);
+        if (chosen.length === 0) { showToast('Pick at least one subject', 'error'); return; }
+        if (!csStartDate) { showToast('Please pick a start date', 'error'); return; }
+
+        for (const [, def] of chosen) {
+            try {
+                const cfg = await getConfig(def.plan);
+                const entries = generateEntries(cfg, csStartDate);
+                plansCache[cfg.subjectKey] = { start_date: csStartDate, entries };
+                try { await DB.pushRevisionPlan(cfg.subjectKey, csStartDate, entries); } catch (e) { /* will sync later */ }
+            } catch (e) { /* skip subjects that fail to load */ }
+        }
+
+        try { await replanAll(revSettings.weekendDay, revSettings.tasksPerDay); } catch (e) { /* best-effort */ }
+
+        showToast(`Plan created for ${chosen.length} subject${chosen.length > 1 ? 's' : ''}`, 'success');
+        renderTodaysRevisionCard();
+
+        csSelected = {}; csStartDate = ''; csExamDate = '';
+        screen = 'subjects';
+        renderSubjectListScreen();
+    }
+
+    /* ---- Screen: first-time start-date setup (single subject, kept as
+       a fallback for setting up one subject on its own) ---- */
     function renderSetupScreen() {
         titleEl().textContent = activeSubjectName;
         headerActionsEl().innerHTML = `
@@ -636,10 +834,16 @@ const Revision = (() => {
                 </div>
             </div>
 
-            <button class="rev-view-timeline-btn" onclick="Revision.openTimeline()">
-                <span><i class="ri-list-check-2"></i> View full timeline</span>
-                <i class="ri-arrow-right-s-line"></i>
-            </button>
+            <div class="rev-overview-actions">
+                <button class="rev-view-timeline-btn" onclick="Revision.openThisWeek()">
+                    <span><i class="ri-calendar-2-line"></i> This week</span>
+                    <i class="ri-arrow-right-s-line"></i>
+                </button>
+                <button class="rev-view-timeline-btn" onclick="Revision.openTimeline()">
+                    <span><i class="ri-list-check-2"></i> View full timeline</span>
+                    <i class="ri-arrow-right-s-line"></i>
+                </button>
+            </div>
 
             <div class="rev-overview-section">
                 <div class="rev-overview-section-title">Today · ${fmtShort(todayStr)}</div>
@@ -723,6 +927,43 @@ const Revision = (() => {
         const days = input ? parseInt(input.value, 10) : 1;
         await postponePending(days);
         screen = 'overview';
+    }
+
+    /* ──────────────────────────────────────────────────────────────────
+       Screen: This week — a lightweight middle view between the daily
+       Overview and the full multi-week Timeline. Just the current
+       week's rows, nothing to filter or search.
+       ────────────────────────────────────────────────────────────────── */
+    function openThisWeek() {
+        screen = 'this-week';
+        renderThisWeekScreen();
+    }
+
+    function renderThisWeekScreen() {
+        titleEl().textContent = activeSubjectName;
+        headerActionsEl().innerHTML = editMenuHtml() + `
+            <button class="icon-btn" onclick="Revision.renderOverviewScreen()" title="Back to overview">
+                <i class="ri-arrow-left-line"></i>
+            </button>`;
+
+        const todayStr = DateUtils.todayISODate();
+        const thisWeekKey = weekKeyFor(todayStr);
+        const rows = buildRows(activeEntries).filter(r => weekKeyFor(rowFirstDate(r)) === thisWeekKey);
+        const wkEnd = new Date(DateUtils.parseISODate(thisWeekKey)); wkEnd.setDate(wkEnd.getDate() + 6);
+        const done = rows.filter(rowDone).length;
+
+        bodyEl().innerHTML = `
+            <div class="rev-table-summary">
+                <span><i class="ri-calendar-2-line"></i> ${fmtShort(thisWeekKey)} – ${fmtShort(toISODate(wkEnd))}</span>
+                <span><i class="ri-checkbox-circle-line"></i> ${done} / ${rows.length} done</span>
+                <button class="rev-jump-today" onclick="Revision.openTimeline()"><i class="ri-list-check-2"></i> Full timeline</button>
+            </div>
+            <div class="rev-timeline-list">
+                ${rows.length === 0
+                    ? `<div class="rev-empty-state"><i class="ri-calendar-check-line"></i><p>Nothing scheduled this week.</p></div>`
+                    : `<div class="rev-week-cards">${rows.map(r => cardHtml(r, todayStr)).join('')}</div>`}
+            </div>
+        `;
     }
 
     /* ──────────────────────────────────────────────────────────────────
@@ -875,6 +1116,7 @@ const Revision = (() => {
         e.done = done;
 
         if (screen === 'timeline') renderTimelineScreen();
+        if (screen === 'this-week') renderThisWeekScreen();
         if (screen === 'overview') renderOverviewScreen();
         renderTodaysRevisionCard();
 
@@ -994,10 +1236,9 @@ const Revision = (() => {
 
         const streak = computeGlobalStreak();
         const totalTasks = cards.reduce((n, c) => n + c.rows.length, 0);
+        const totalDone = cards.reduce((n, c) => n + c.rows.filter(rowDone).length, 0);
 
-        slot.innerHTML = `
-        ${streak > 0 ? `<div class="trc-streak-banner"><i class="ri-fire-line"></i> ${streak}-day study streak — keep it going</div>` : ''}
-        ${cards.map(card => {
+        const groupsHtml = cards.map(card => {
             const rowsHtml = card.rows.map(row => {
                 if (row.kind === 'chapter') {
                     const done = rowDone(row);
@@ -1032,17 +1273,27 @@ const Revision = (() => {
             }).join('');
 
             return `
-            <div class="todays-revision-card">
-                <div class="trc-header">
-                    <div class="trc-header-icon"><i class="${card.def.icon || 'ri-book-line'}"></i></div>
-                    <div class="trc-header-text">
-                        <div class="trc-title">Today's Revision</div>
-                        <div class="trc-sub">${card.name} · ${fmtDate(todayStr)}</div>
-                    </div>
+            <div class="trc-subject-group">
+                <div class="trc-subject-group-header">
+                    <i class="${card.def.icon || 'ri-book-line'}"></i>
+                    <span>${card.name}</span>
                 </div>
                 <div class="trc-rows">${rowsHtml}</div>
             </div>`;
-        }).join('')}`;
+        }).join('');
+
+        slot.innerHTML = `
+        <div class="todays-revision-card">
+            <div class="trc-header">
+                <div class="trc-header-icon"><i class="ri-calendar-check-line"></i></div>
+                <div class="trc-header-text">
+                    <div class="trc-title">Today's Revision</div>
+                    <div class="trc-sub">${fmtDate(todayStr)} · ${totalDone}/${totalTasks} done</div>
+                </div>
+            </div>
+            ${streak > 0 ? `<div class="trc-streak-banner"><i class="ri-fire-line"></i> ${streak}-day study streak — keep it going</div>` : ''}
+            ${groupsHtml}
+        </div>`;
     }
 
     async function toggleTodayEntry(subjectKey, entryId, done) {
@@ -1074,5 +1325,7 @@ const Revision = (() => {
         renderOverviewScreen, openTimeline, renderTimelineScreen,
         setTimelineFilter, setTimelineQuery, jumpToToday,
         startPostpone, applyPostpone,
+        renderCombinedSetupScreen, toggleCombinedSubject, updateCombinedSetup, generateCombinedPlan,
+        openThisWeek, renderThisWeekScreen,
     };
 })();
