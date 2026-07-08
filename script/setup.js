@@ -99,8 +99,8 @@ function makeDateDropdowns(containerId, defaults) {
 
     // Set defaults
     if (defaults) {
-        const d = new Date(defaults);
-        if (!isNaN(d)) {
+        const d = DateUtils.parseISODate(defaults);
+        if (d) {
             daySel.value   = d.getDate();
             monthSel.value = d.getMonth() + 1;
             yearSel.value  = d.getFullYear();
@@ -126,14 +126,14 @@ function getDateFromDropdowns(containerId) {
     if (!day || !month || !year) return null;
     const d = new Date(+year, +month - 1, +day);
     if (isNaN(d)) return null;
-    return d.toISOString().split('T')[0];
+    return DateUtils.toISODate(d);
 }
 
 function initDateDropdowns() {
     const now  = new Date();
     const exam = new Date(); exam.setFullYear(exam.getFullYear() + 1);
-    makeDateDropdowns('startDateDropdowns', now.toISOString().split('T')[0]);
-    makeDateDropdowns('endDateDropdowns',   exam.toISOString().split('T')[0]);
+    makeDateDropdowns('startDateDropdowns', DateUtils.toISODate(now));
+    makeDateDropdowns('endDateDropdowns',   DateUtils.toISODate(exam));
     updateDatePreview();
 }
 

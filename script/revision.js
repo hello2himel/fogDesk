@@ -105,7 +105,11 @@ const Revision = (() => {
     }
 
     function toISODate(date) {
-        return date.toISOString().slice(0, 10);
+        // NOTE: date.toISOString() reports the UTC calendar date, which
+        // silently shifts back a day for any timezone ahead of UTC
+        // (Bangladesh, India, etc. — this app's core audience). Always
+        // use the local-date formatter instead.
+        return DateUtils.toISODate(date);
     }
 
     function generateEntries(config, startDateStr) {
@@ -223,6 +227,25 @@ const Revision = (() => {
 
         let cur = new Date();
         cur.setHours(0, 0, 0, 0);
+
+        // Don't snap a task back to an earlier date than it's already
+        // scheduled for. Normally this just catches up an overdue
+        // backlog to today — but if every subject's soonest pending
+        // item is still in the future (e.g. a plan was just generated
+        // with a deliberately future start date), keep that future date
+        // instead of silently overriding the user's chosen start date.
+        let earliestPendingStr = null;
+        keys.forEach(k => {
+            const first = perSubject[k].pending[0];
+            if (first && (earliestPendingStr === null || first.date < earliestPendingStr)) {
+                earliestPendingStr = first.date;
+            }
+        });
+        if (earliestPendingStr) {
+            const earliestPendingDate = new Date(earliestPendingStr + 'T00:00:00');
+            if (earliestPendingDate > cur) cur = earliestPendingDate;
+        }
+
         if (isWeekend(cur)) cur = nextStudyDay(cur, true);
 
         const rebuilt = {};
@@ -420,7 +443,7 @@ const Revision = (() => {
                 <i class="ri-arrow-left-line"></i>
             </button>`;
 
-        const today = new Date().toISOString().slice(0, 10);
+        const today = DateUtils.todayISODate();
         const totalDays = (activeConfig.chapters || []).length;
 
         bodyEl().innerHTML = `
@@ -679,7 +702,7 @@ const Revision = (() => {
         const slot = document.getElementById('todaysRevisionSlot');
         if (!slot) return;
 
-        const todayStr = new Date().toISOString().slice(0, 10);
+        const todayStr = DateUtils.todayISODate();
         const cards = [];
 
         Object.entries(subjectsForSyllabus).forEach(([name, def]) => {
