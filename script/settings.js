@@ -223,8 +223,8 @@ function initDateDropdowns(containerId, isoValue) {
         Array.from({length: y1-y0+1},(_,i)=>`<option value="${y0+i}">${y0+i}</option>`).join('');
 
     if (isoValue) {
-        const d = new Date(isoValue);
-        if (!isNaN(d)) {
+        const d = DateUtils.parseISODate(isoValue);
+        if (d) {
             daySel.value   = d.getDate();
             monthSel.value = d.getMonth() + 1;
             yearSel.value  = d.getFullYear();
@@ -243,7 +243,7 @@ function getDateFromDropdowns(containerId) {
     const year  = document.getElementById(containerId + '_year')?.value;
     if (!day || !month || !year) return null;
     const d = new Date(+year, +month - 1, +day);
-    return isNaN(d) ? null : d.toISOString().split('T')[0];
+    return isNaN(d) ? null : DateUtils.toISODate(d);
 }
 
 /* ── Status badge ───────────────────────────────────────────── */

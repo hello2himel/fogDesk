@@ -1,0 +1,150 @@
+{
+  "Accounting": {
+    "Paper 1": [
+      {"id": "acc-1-01", "title": "Chapter 1: Introduction to Accounting", "done": false, "note": ""},
+      {"id": "acc-1-02", "title": "Chapter 2: Accounting Equation and Double Entry System", "done": false, "note": ""},
+      {"id": "acc-1-03", "title": "Chapter 3: Journal", "done": false, "note": ""},
+      {"id": "acc-1-04", "title": "Chapter 4: Ledger", "done": false, "note": ""},
+      {"id": "acc-1-05", "title": "Chapter 5: Cash Book", "done": false, "note": ""},
+      {"id": "acc-1-06", "title": "Chapter 6: Bank Reconciliation Statement", "done": false, "note": ""},
+      {"id": "acc-1-07", "title": "Chapter 7: Trial Balance", "done": false, "note": ""},
+      {"id": "acc-1-08", "title": "Chapter 8: Final Accounts of Sole Proprietorship", "done": false, "note": ""},
+      {"id": "acc-1-09", "title": "Chapter 9: Depreciation", "done": false, "note": ""},
+      {"id": "acc-1-10", "title": "Chapter 10: Bad Debts and Provision for Bad Debts", "done": false, "note": ""}
+    ],
+    "Paper 2": [
+      {"id": "acc-2-01", "title": "Chapter 1: Partnership Accounts", "done": false, "note": ""},
+      {"id": "acc-2-02", "title": "Chapter 2: Admission of New Partner", "done": false, "note": ""},
+      {"id": "acc-2-03", "title": "Chapter 3: Retirement of Partner", "done": false, "note": ""},
+      {"id": "acc-2-04", "title": "Chapter 4: Death of Partner", "done": false, "note": ""},
+      {"id": "acc-2-05", "title": "Chapter 5: Dissolution of Partnership", "done": false, "note": ""},
+      {"id": "acc-2-06", "title": "Chapter 6: Joint Stock Company Accounts", "done": false, "note": ""},
+      {"id": "acc-2-07", "title": "Chapter 7: Issue of Shares", "done": false, "note": ""},
+      {"id": "acc-2-08", "title": "Chapter 8: Issue of Debentures", "done": false, "note": ""},
+      {"id": "acc-2-09", "title": "Chapter 9: Final Accounts of Joint Stock Company", "done": false, "note": ""},
+      {"id": "acc-2-10", "title": "Chapter 10: Cash Flow Statement", "done": false, "note": ""}
+    ]
+  },
+  "Business Organization": {
+    "Paper 1": [
+      {"id": "biz-1-01", "title": "Chapter 1: Nature and Scope of Business", "done": false, "note": ""},
+      {"id": "biz-1-02", "title": "Chapter 2: Forms of Business Organization", "done": false, "note": ""},
+      {"id": "biz-1-03", "title": "Chapter 3: Private Company and Public Company", "done": false, "note": ""},
+      {"id": "biz-1-04", "title": "Chapter 4: Cooperative Society", "done": false, "note": ""},
+      {"id": "biz-1-05", "title": "Chapter 5: Multinational Company", "done": false, "note": ""},
+      {"id": "biz-1-06", "title": "Chapter 6: Small Scale and Cottage Industry", "done": false, "note": ""},
+      {"id": "biz-1-07", "title": "Chapter 7: Business Finance", "done": false, "note": ""},
+      {"id": "biz-1-08", "title": "Chapter 8: Banking", "done": false, "note": ""},
+      {"id": "biz-1-09", "title": "Chapter 9: Insurance", "done": false, "note": ""},
+      {"id": "biz-1-10", "title": "Chapter 10: Capital Market", "done": false, "note": ""}
+    ],
+    "Paper 2": [
+      {"id": "biz-2-01", "title": "Chapter 1: Management", "done": false, "note": ""},
+      {"id": "biz-2-02", "title": "Chapter 2: Planning", "done": false, "note": ""},
+      {"id": "biz-2-03", "title": "Chapter 3: Organizing", "done": false, "note": ""},
+      {"id": "biz-2-04", "title": "Chapter 4: Staffing", "done": false, "note": ""},
+      {"id": "biz-2-05", "title": "Chapter 5: Directing", "done": false, "note": ""},
+      {"id": "biz-2-06", "title": "Chapter 6: Controlling", "done": false, "note": ""},
+      {"id": "biz-2-07", "title": "Chapter 7: Marketing", "done": false, "note": ""},
+      {"id": "biz-2-08", "title": "Chapter 8: Marketing Mix", "done": false, "note": ""},
+      {"id": "biz-2-09", "title": "Chapter 9: Consumer Protection", "done": false, "note": ""},
+      {"id": "biz-2-10", "title": "Chapter 10: Business Ethics and Social Responsibility", "done": false, "note": ""}
+    ]
+  },
+  "Economics": {
+    "Paper 1": [
+      {"id": "eco-1-01", "title": "Chapter 1: Introduction to Economics", "done": false, "note": ""},
+      {"id": "eco-1-02", "title": "Chapter 2: Consumer Behavior", "done": false, "note": ""},
+      {"id": "eco-1-03", "title": "Chapter 3: Production and Costs", "done": false, "note": ""},
+      {"id": "eco-1-04", "title": "Chapter 4: Theory of the Firm", "done": false, "note": ""},
+      {"id": "eco-1-05", "title": "Chapter 5: Price Determination", "done": false, "note": ""},
+      {"id": "eco-1-06", "title": "Chapter 6: Factor Pricing", "done": false, "note": ""},
+      {"id": "eco-1-07", "title": "Chapter 7: Rent", "done": false, "note": ""},
+      {"id": "eco-1-08", "title": "Chapter 8: Wages", "done": false, "note": ""},
+      {"id": "eco-1-09", "title": "Chapter 9: Interest", "done": false, "note": ""},
+      {"id": "eco-1-10", "title": "Chapter 10: Profit", "done": false, "note": ""}
+    ],
+    "Paper 2": [
+      {"id": "eco-2-01", "title": "Chapter 1: Introduction to Macroeconomics", "done": false, "note": ""},
+      {"id": "eco-2-02", "title": "Chapter 2: National Income", "done": false, "note": ""},
+      {"id": "eco-2-03", "title": "Chapter 3: Consumption and Investment", "done": false, "note": ""},
+      {"id": "eco-2-04", "title": "Chapter 4: Money and Banking", "done": false, "note": ""},
+      {"id": "eco-2-05", "title": "Chapter 5: Public Finance", "done": false, "note": ""},
+      {"id": "eco-2-06", "title": "Chapter 6: Inflation", "done": false, "note": ""},
+      {"id": "eco-2-07", "title": "Chapter 7: Trade Cycles", "done": false, "note": ""},
+      {"id": "eco-2-08", "title": "Chapter 8: Economic Development", "done": false, "note": ""},
+      {"id": "eco-2-09", "title": "Chapter 9: International Trade", "done": false, "note": ""},
+      {"id": "eco-2-10", "title": "Chapter 10: Economic Problems of Bangladesh", "done": false, "note": ""}
+    ]
+  },
+  "Mathematics": {
+    "Paper 1": [
+      {"id": "math-1-01", "title": "Chapter 1: Matrices and Determinants", "done": false, "note": ""},
+      {"id": "math-1-02", "title": "Chapter 2: Sets, Relations and Functions", "done": false, "note": ""},
+      {"id": "math-1-03", "title": "Chapter 3: Quadratic Equations", "done": false, "note": ""},
+      {"id": "math-1-04", "title": "Chapter 4: Sequence and Series", "done": false, "note": ""},
+      {"id": "math-1-05", "title": "Chapter 5: Permutation and Combination", "done": false, "note": ""},
+      {"id": "math-1-06", "title": "Chapter 6: Binomial Theorem", "done": false, "note": ""},
+      {"id": "math-1-07", "title": "Chapter 7: Logarithms", "done": false, "note": ""},
+      {"id": "math-1-08", "title": "Chapter 8: Coordinate Geometry", "done": false, "note": ""},
+      {"id": "math-1-09", "title": "Chapter 9: Trigonometry", "done": false, "note": ""},
+      {"id": "math-1-10", "title": "Chapter 10: Limits and Derivatives", "done": false, "note": ""}
+    ],
+    "Paper 2": [
+      {"id": "math-2-01", "title": "Chapter 1: Statistics", "done": false, "note": ""},
+      {"id": "math-2-02", "title": "Chapter 2: Probability", "done": false, "note": ""},
+      {"id": "math-2-03", "title": "Chapter 3: Correlation and Regression", "done": false, "note": ""},
+      {"id": "math-2-04", "title": "Chapter 4: Index Numbers", "done": false, "note": ""},
+      {"id": "math-2-05", "title": "Chapter 5: Commercial Mathematics", "done": false, "note": ""},
+      {"id": "math-2-06", "title": "Chapter 6: Banking", "done": false, "note": ""},
+      {"id": "math-2-07", "title": "Chapter 7: Insurance and Annuity", "done": false, "note": ""},
+      {"id": "math-2-08", "title": "Chapter 8: Programming", "done": false, "note": ""}
+    ]
+  },
+  "English": {
+    "Paper 1": [
+      {"id": "eng-1-01", "title": "Unit 1: Introducing Oneself", "done": false, "note": ""},
+      {"id": "eng-1-02", "title": "Unit 2: Pastimes", "done": false, "note": ""},
+      {"id": "eng-1-03", "title": "Unit 3: Time and Seasons", "done": false, "note": ""},
+      {"id": "eng-1-04", "title": "Unit 4: Asking for and Giving Directions", "done": false, "note": ""},
+      {"id": "eng-1-05", "title": "Unit 5: Festivals and Celebrations", "done": false, "note": ""},
+      {"id": "eng-1-06", "title": "Unit 6: Food and Nutrition", "done": false, "note": ""},
+      {"id": "eng-1-07", "title": "Unit 7: Shopping", "done": false, "note": ""},
+      {"id": "eng-1-08", "title": "Unit 8: Games and Sports", "done": false, "note": ""},
+      {"id": "eng-1-09", "title": "Unit 9: People and Places", "done": false, "note": ""},
+      {"id": "eng-1-10", "title": "Unit 10: Peace and Conflict", "done": false, "note": ""}
+    ],
+    "Paper 2": [
+      {"id": "eng-2-01", "title": "Unit 1: Career Path", "done": false, "note": ""},
+      {"id": "eng-2-02", "title": "Unit 2: Education", "done": false, "note": ""},
+      {"id": "eng-2-03", "title": "Unit 3: Human Relationships", "done": false, "note": ""},
+      {"id": "eng-2-04", "title": "Unit 4: Telecommunication", "done": false, "note": ""},
+      {"id": "eng-2-05", "title": "Unit 5: Media and Advertising", "done": false, "note": ""},
+      {"id": "eng-2-06", "title": "Unit 6: Travel and Tourism", "done": false, "note": ""},
+      {"id": "eng-2-07", "title": "Unit 7: Environment", "done": false, "note": ""},
+      {"id": "eng-2-08", "title": "Unit 8: Globalization and Trade", "done": false, "note": ""},
+      {"id": "eng-2-09", "title": "Unit 9: Science and Technology", "done": false, "note": ""},
+      {"id": "eng-2-10", "title": "Unit 10: Culture and Heritage", "done": false, "note": ""}
+    ]
+  },
+  "Bangla": {
+    "Paper 1": [
+      {"id": "ban-1-01", "title": "Chapter 1: আমার পথ - কাজী নজরুল ইসলাম", "done": false, "note": ""},
+      {"id": "ban-1-02", "title": "Chapter 2: প্রতিদান - রবীন্দ্রনাথ ঠাকুর", "done": false, "note": ""},
+      {"id": "ban-1-03", "title": "Chapter 3: মানুষ - কাজী নজরুল ইসলাম", "done": false, "note": ""},
+      {"id": "ban-1-04", "title": "Chapter 4: নেকলেস - গী দ্য মোপাসাঁ", "done": false, "note": ""},
+      {"id": "ban-1-05", "title": "Chapter 5: জীবন ও বৃক্ষ - মোতাহের হোসেন চৌধুরী", "done": false, "note": ""},
+      {"id": "ban-1-06", "title": "Chapter 6: রেইনকোট - আখতারুজ্জামান ইলিয়াস", "done": false, "note": ""},
+      {"id": "ban-1-07", "title": "Chapter 7: আহবান - বিনয় মজুমদার", "done": false, "note": ""},
+      {"id": "ban-1-08", "title": "Chapter 8: নিমন্ত্রণ - রবীন্দ্রনাথ ঠাকুর", "done": false, "note": ""}
+    ],
+    "Paper 2": [
+      {"id": "ban-2-01", "title": "Chapter 1: ভাষা ও সাহিত্য", "done": false, "note": ""},
+      {"id": "ban-2-02", "title": "Chapter 2: নিবন্ধ রচনা", "done": false, "note": ""},
+      {"id": "ban-2-03", "title": "Chapter 3: পত্র লিখন", "done": false, "note": ""},
+      {"id": "ban-2-04", "title": "Chapter 4: সারাংশ ও সারমর্ম", "done": false, "note": ""},
+      {"id": "ban-2-05", "title": "Chapter 5: ব্যাকরণ", "done": false, "note": ""},
+      {"id": "ban-2-06", "title": "Chapter 6: ছন্দ", "done": false, "note": ""}
+    ]
+  }
+}
