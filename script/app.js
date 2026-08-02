@@ -246,6 +246,14 @@ function renderDashboard() {
 }
 
 /* ---- Progress ---- */
+// Chapters vary wildly in how much ground they cover — completing
+// "Integration" is not the same lift as finishing "Linear Programming",
+// even though both are "one chapter." Each chapter carries a weight
+// (1 = light, 5 = very heavy); syllabus % is a weighted sum, not a
+// flat chapter count. Older syllabus files without a weight field
+// just fall back to 1, so nothing breaks.
+function chWeight(ch) { return (ch && typeof ch.weight === 'number') ? ch.weight : 1; }
+
 function calcTime(startDate, endDate) {
     if (!startDate || !endDate) return { pct: 0, elapsed: 0, total: 0 };
     const s = new Date(startDate), e = new Date(endDate), n = new Date();
@@ -255,15 +263,29 @@ function calcTime(startDate, endDate) {
 }
 
 function calcSyllabus() {
-    let total = 0, done = 0, skipped = 0;
+    // Chapter counts drive the "X / Y chapters" sub-label (still simple and honest);
+    // weight sums drive the % (which is what actually reflects effort/progress).
+    let chapterTotal = 0, chapterDone = 0, chapterSkipped = 0;
+    let weightTotal = 0, weightDone = 0;
     Object.entries(chapters).forEach(([sub, papers]) => {
         const on = enabledSubjects[sub] !== false;
         Object.values(papers).forEach(chs => {
-            if (on) { total += chs.length; done += chs.filter(c => c.done).length; }
-            else    { skipped += chs.length; }
+            if (on) {
+                chapterTotal += chs.length;
+                chapterDone  += chs.filter(c => c.done).length;
+                weightTotal  += chs.reduce((a, c) => a + chWeight(c), 0);
+                weightDone   += chs.filter(c => c.done).reduce((a, c) => a + chWeight(c), 0);
+            } else {
+                chapterSkipped += chs.length;
+            }
         });
     });
-    return { total, done, skipped, pct: total > 0 ? Math.round((done / total) * 100) : 0 };
+    return {
+        total: chapterTotal,
+        done: chapterDone,
+        skipped: chapterSkipped,
+        pct: weightTotal > 0 ? Math.round((weightDone / weightTotal) * 100) : 0,
+    };
 }
 
 function insight(tP, sP) {
@@ -303,9 +325,9 @@ function renderSubjectList() {
     if (!container) return;
     container.innerHTML = Object.keys(chapters).map(sub => {
         const on    = enabledSubjects[sub] !== false;
-        const total = Object.values(chapters[sub]).reduce((a, c) => a + c.length, 0);
-        const done  = Object.values(chapters[sub]).reduce((a, c) => a + c.filter(x => x.done).length, 0);
-        const pct   = total > 0 ? Math.round((done/total)*100) : 0;
+        const wTotal = Object.values(chapters[sub]).reduce((a, c) => a + c.reduce((s, ch) => s + chWeight(ch), 0), 0);
+        const wDone  = Object.values(chapters[sub]).reduce((a, c) => a + c.filter(x => x.done).reduce((s, ch) => s + chWeight(ch), 0), 0);
+        const pct    = wTotal > 0 ? Math.round((wDone/wTotal)*100) : 0;
         return `
         <button class="subject-pill ${on ? 'enabled' : 'disabled'}" onclick="toggleSubject('${sub}')"
             title="${on ? 'Click to exclude from syllabus %' : 'Click to include in syllabus %'}">
@@ -357,6 +379,9 @@ function renderChapters() {
                                         onblur="saveNote('${activeTab}','${paper}','${ch.id}',this.value)"
                                     >${ch.note || ''}</textarea>
                                 </div>` : ''}
+                            </div>
+                            <div class="ch-weight" title="Intensity: ${chWeight(ch)}/5">
+                                ${[1,2,3,4,5].map(n => `<span class="wt-dot ${n <= chWeight(ch) ? 'filled' : ''}"></span>`).join('')}
                             </div>
                             <div class="ch-note-btn ${ch.note ? 'active' : ''}"
                                 title="Note" onclick="toggleNote('${ch.id}')">
@@ -478,12 +503,12 @@ function setSyncState(state) {
 
 /* ---- Export ---- */
 function exportCSV() {
-    const rows = ['Subject,Paper,Chapter,Done,Included in %,Note'];
+    const rows = ['Subject,Paper,Chapter,Intensity,Done,Included in %,Note'];
     Object.entries(chapters).forEach(([sub, papers]) => {
         const inc = enabledSubjects[sub] !== false ? 'Yes' : 'No';
         Object.entries(papers).forEach(([paper, chs]) => {
             chs.forEach(ch => {
-                rows.push(`"${sub}","${paper}","${ch.title.replace(/"/g,'""')}",${ch.done?'Yes':'No'},${inc},"${(ch.note||'').replace(/"/g,'""')}"`);
+                rows.push(`"${sub}","${paper}","${ch.title.replace(/"/g,'""')}",${chWeight(ch)},${ch.done?'Yes':'No'},${inc},"${(ch.note||'').replace(/"/g,'""')}"`);
             });
         });
     });

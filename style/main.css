@@ -361,6 +361,16 @@ em { font-style: italic; }
 }
 .ch-title.done { text-decoration: line-through; color: var(--text-3); }
 
+.ch-weight {
+    display: flex; align-items: center; gap: 2px;
+    flex-shrink: 0; margin-top: 6px;
+}
+.wt-dot {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: var(--border-strong); opacity: 0.4;
+}
+.wt-dot.filled { background: var(--ink); opacity: 1; }
+
 .ch-note-btn {
     color: var(--text-3); font-size: 0.875rem;
     padding: 0.15rem 0.3rem; border-radius: 4px;
